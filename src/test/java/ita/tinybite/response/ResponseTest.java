@@ -27,7 +27,7 @@ public class ResponseTest {
     @Test
     @DisplayName("응답 성공 시, APIResponse.success()의 리턴형식을 준수합니다.")
     public void success_response() throws Exception {
-        mockMvc.perform(get("/health"))
+        mockMvc.perform(get("/api/v1/test/health"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
                 .andExpect(jsonPath("$.code").doesNotExist())
@@ -39,7 +39,7 @@ public class ResponseTest {
     @Test
     @DisplayName("Business 에러 발생 시, APIResponse.businessError()의 리턴형식을 준수합니다.")
     public void business_error_response() throws Exception {
-        mockMvc.perform(get("/business-error"))
+        mockMvc.perform(get("/api/v1/test/error/business"))
                 .andExpect(result -> assertNotEquals(200, result.getResponse().getStatus()))
                 .andExpect(jsonPath("$.status").value(BUSINESS_ERRORCODE.getHttpStatus().value()))
                 .andExpect(jsonPath("$.code").value(BUSINESS_ERRORCODE.getCode()))
@@ -50,7 +50,7 @@ public class ResponseTest {
     @Test
     @DisplayName("Common 에러 발생 시, APIResponse.commonError()의 리턴형식을 준수합니다.")
     public void commonError() throws Exception {
-        mockMvc.perform(get("/common-error"))
+        mockMvc.perform(get("/api/v1/test/error/common"))
                 .andExpect(status().is5xxServerError())
                 .andExpect(jsonPath("$.status").value(500))
                 .andExpect(jsonPath("$.code").doesNotExist())
