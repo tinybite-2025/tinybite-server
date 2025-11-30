@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Error Codes</title>
+
+    <style>
+        h3 {
+            margin-top: 40px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+        }
+        th {
+            background: #efefef;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Error Code Documentation</h1>
+
+<div th:each="entry : ${codes}">
+    <h3 th:text="${entry.key}"></h3>
+
+    <table>
+        <thead>
+        <tr>
+            <th>HttpStatus</th>
+            <th>Code</th>
+            <th>Message</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr th:each="item : ${entry.value}">
+            <td th:text="${item.httpStatus}"></td>
+            <td th:text="${item.code}"></td>
+            <td th:text="${item.message}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>
