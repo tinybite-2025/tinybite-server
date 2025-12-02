@@ -3,12 +3,12 @@ version: '3.8'
 services:
   mysql:
     image: mysql:8.3
-    container_name: solitour-mysql
+    container_name: hanipman-mysql
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: 1234
-      MYSQL_DATABASE: growin
-      MYSQL_USER: growin
+      MYSQL_DATABASE: hanipman
+      MYSQL_USER: hanipman
       MYSQL_PASSWORD: 1234
       TZ: Asia/Seoul
     ports:

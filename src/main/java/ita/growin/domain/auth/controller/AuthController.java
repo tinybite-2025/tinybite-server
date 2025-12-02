@@ -54,7 +54,6 @@ public class AuthController {
     public ResponseEntity<APIResponse<AuthResponse>> kakaoSignup(
             @Valid @RequestBody KakaoSignupRequest request
     ) {
-        log.info("카카오 회원가입 요청");
         AuthResponse response = authService.kakaoSignup(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(APIResponse.success(response));
@@ -64,7 +63,6 @@ public class AuthController {
     public ResponseEntity<APIResponse<AuthResponse>> kakaoLogin(
             @Valid @RequestBody KakaoLoginRequest request
     ) {
-        log.info("카카오 로그인 요청");
         AuthResponse response = authService.kakaoLogin(request);
         return ResponseEntity.ok(APIResponse.success(response));
     }
@@ -73,7 +71,6 @@ public class AuthController {
     public ResponseEntity<APIResponse<AuthResponse>> refreshToken(
             @Valid @RequestBody RefreshTokenRequest request
     ) {
-        log.info("토큰 갱신 요청");
         AuthResponse response = authService.refreshToken(request);
         return ResponseEntity.ok(APIResponse.success(response));
     }
@@ -82,7 +79,6 @@ public class AuthController {
     public ResponseEntity<APIResponse<Void>> logout(
             @RequestAttribute("userId") Long userId
     ) {
-        log.info("로그아웃 요청 - User ID: {}", userId);
         authService.logout(userId);
         return ResponseEntity.ok(APIResponse.success(null));
     }

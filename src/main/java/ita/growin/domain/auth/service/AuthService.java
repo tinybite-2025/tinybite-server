@@ -46,9 +46,6 @@ public class AuthService {
             throw new RuntimeException("이미 가입된 이메일입니다.");
         }
 
-        // 닉네임 랜덤 생성
-        String randomNickname = nicknameGenerator.generate();
-
         // User 엔티티 생성 및 저장
         User user = User.builder()
                 .email(kakaoUser.getKakaoAccount().getEmail())
