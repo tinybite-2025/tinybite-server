@@ -49,12 +49,11 @@ public class AuthService {
         // User 엔티티 생성 및 저장
         User user = User.builder()
                 .email(kakaoUser.getKakaoAccount().getEmail())
-                .nickname(randomNickname)
+                .nickname(request.getNickname())
+                .location(request.getLocation())
                 .type(LoginType.KAKAO)
+                .phone(request.getPhone())
                 .status(UserStatus.ACTIVE)
-                .work(request.getWork())
-                .interestField(request.getInterestField())
-                .target(request.getTarget())
                 .build();
 
         userRepository.save(user);

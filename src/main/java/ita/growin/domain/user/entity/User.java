@@ -1,14 +1,11 @@
 package ita.growin.domain.user.entity;
 
-import ita.growin.domain.event.entity.Event;
-import ita.growin.domain.user.constant.*;
+import ita.growin.domain.user.constant.LoginType;
+import ita.growin.domain.user.constant.UserStatus;
 import ita.growin.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Comment;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -26,6 +23,9 @@ public class User extends BaseEntity {
     @Column(nullable = false, length = 50)
     private String email;
 
+    @Column(length = 50)
+    private String phone;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private LoginType type;
@@ -37,15 +37,6 @@ public class User extends BaseEntity {
     @Column(nullable = false, length = 100)
     private String nickname;
 
-    @Enumerated(EnumType.STRING)
-    private Work work;
-
-    @Enumerated(EnumType.STRING)
-    private InterestField interestField;
-
-    @Enumerated(EnumType.STRING)
-    private Target target;
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Event> events = new ArrayList<>();
+    @Column(nullable = false, length = 100)
+    private String location;
 }

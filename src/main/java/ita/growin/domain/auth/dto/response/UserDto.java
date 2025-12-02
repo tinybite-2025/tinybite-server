@@ -17,22 +17,20 @@ public class UserDto {
     private String nickname;
     private LoginType type;
     private UserStatus status;
-    private Work work;
-    private InterestField interestField;
-    private Target target;
+    private String location;
+    private String phone;
     private LocalDateTime createdAt;
     private Boolean isNewUser;
 
     public static UserDto from(User user) {
-        return UserDto.builder()
+            return UserDto.builder()
                 .userId(user.getUserId())
                 .email(user.getEmail())
                 .nickname(user.getNickname())
                 .type(user.getType())
                 .status(user.getStatus())
-                .work(user.getWork())
-                .interestField(user.getInterestField())
-                .target(user.getTarget())
+                .phone(user.getPhone())
+                .location(user.getLocation())
                 .createdAt(user.getCreatedAt())
                 .isNewUser(false)
                 .build();

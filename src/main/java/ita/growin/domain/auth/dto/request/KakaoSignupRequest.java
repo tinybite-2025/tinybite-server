@@ -14,14 +14,14 @@ public class KakaoSignupRequest {
     @NotBlank(message = "Code는 필수입니다.")
     private String code;
 
-    @NotNull(message = "직업 정보는 필수입니다.")
-    private Work work;
+    @NotNull(message = "동네 정보는 필수입니다.")
+    private String location;
 
-    @NotNull(message = "관심분야는 필수입니다.")
-    private InterestField interestField;
+    @NotNull(message = "닉네임은 필수입니다.")
+    private String nickname;
 
-    @NotNull(message = "목표는 필수입니다.")
-    private Target target;
+    @NotNull(message = "전화번호는 필수입니다.")
+    private String phone;
 
     private String deviceToken;
 }
