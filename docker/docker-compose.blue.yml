@@ -1,0 +1,14 @@
+services:
+  tinybite-api-blue:
+    image: ghcr.io/tinybite-2025/tinybite-server:latest
+    container_name: tinybite-api-blue
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    networks:
+      - tinybite-network
+
+networks:
+  tinybite-network:
+    external: true

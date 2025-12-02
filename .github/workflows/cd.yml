@@ -1,8 +1,10 @@
 name: CD
 
 on:
-  push:
-    branches: [ "main" ]
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
 
 jobs:
   deploy:
@@ -25,8 +27,8 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           port: 22
-          source: "docker-compose.yml,.env"
-          target: "/home/ubuntu/growin/"
+          source: "docker/*,.env,nginx/,deploy.sh"
+          target: "/home/ubuntu/tinybite/"
 
       # EC2에서 도커 컨테이너 재배포
       - name: Deploy to EC2
@@ -37,16 +39,11 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: 22
           script: |
-            cd /home/ubuntu/growin
+            cd /home/ubuntu/tinybite
             
             export GHCR_TOKEN=${{ secrets.GHCR_TOKEN }}
             export GHCR_USERNAME=${{ github.actor }}  
             echo $GHCR_TOKEN | docker login ghcr.io -u $GHCR_USERNAME --password-stdin
 
-            sudo docker-compose pull
-
-            sudo docker-compose down || true
-
-            sudo docker-compose up -d
-
-            sudo docker image prune -a -f
+            chmod +x deploy.sh
+            ./deploy.sh

@@ -1,8 +1,0 @@
-services:
-  growin-api:
-    image: ghcr.io/growin-2025/growin-server:latest
-    container_name: growin-api
-    ports:
-      - "8080:8080"
-    env_file:
-      - .env

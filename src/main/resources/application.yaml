@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: tinybite
+
+  profiles:
+    group:
+      local: "local"
+      dev: "dev"
+      test: "test"

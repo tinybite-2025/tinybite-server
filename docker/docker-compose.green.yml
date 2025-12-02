@@ -1,0 +1,14 @@
+services:
+  tinybite-api-green:
+    image: ghcr.io/tinybite-2025/tinybite-server:latest
+    container_name: tinybite-api-green
+    ports:
+      - "8081:8080"
+    env_file:
+      - .env
+    networks:
+      - tinybite-network
+
+networks:
+  tinybite-network:
+    external: true

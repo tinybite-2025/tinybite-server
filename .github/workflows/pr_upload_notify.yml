@@ -1,0 +1,49 @@
+name: Notify Slack on Pull Request Upload
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  slack_notification:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Slack notification
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          payload: |
+            {
+              "text": ":bell: *New Pull Request!*",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":sparkles: *${{ github.actor }}* opened a PR"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Title:*\n${{ github.event.pull_request.title }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Base Branch:*\n${{ github.base_ref }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*From Branch:*\n${{ github.head_ref }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Link:*\n<${{ github.event.pull_request.html_url }}|View PR>"
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
