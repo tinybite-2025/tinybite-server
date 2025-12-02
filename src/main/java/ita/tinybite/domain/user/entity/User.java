@@ -1,8 +1,8 @@
 package ita.tinybite.domain.user.entity;
 
-import ita.growin.domain.user.constant.LoginType;
-import ita.growin.domain.user.constant.UserStatus;
-import ita.growin.global.entity.BaseEntity;
+import ita.tinybite.domain.user.constant.LoginType;
+import ita.tinybite.domain.user.constant.UserStatus;
+import ita.tinybite.global.entity.BaseEntity;
 
 import jakarta.persistence.*;
 import lombok.*;
