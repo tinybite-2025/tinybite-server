@@ -1,4 +1,4 @@
-package ita.tinybite.response;
+package ita.tinybite.global.response;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
