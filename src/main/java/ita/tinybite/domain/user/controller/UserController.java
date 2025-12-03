@@ -3,6 +3,7 @@ package ita.tinybite.domain.user.controller;
 import ita.tinybite.domain.user.dto.req.UpdateUserReqDto;
 import ita.tinybite.domain.user.service.UserService;
 import ita.tinybite.global.response.APIResponse;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import static ita.tinybite.global.response.APIResponse.success;
@@ -23,7 +24,7 @@ public class UserController {
     }
 
     @PatchMapping
-    public APIResponse<?> updateUser(@RequestBody UpdateUserReqDto req) {
+    public APIResponse<?> updateUser(@Valid @RequestBody UpdateUserReqDto req) {
         userService.updateUser(req);
         return success();
     }

@@ -8,6 +8,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -20,6 +21,8 @@ public class LocationService {
     @Value("${naver.secret}")
     private String secret;
 
+    private final RestTemplate restTemplate = new RestTemplate();
+
     private static final String URL = "https://maps.apigw.ntruss.com/map-reversegeocode/v2";
     private static final String URI = "/gc";
 
@@ -30,19 +33,23 @@ public class LocationService {
                 .queryParam("output", "json")
                 .toUriString();
 
-        RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.add("x-ncp-apigw-api-key-id", clientId);
         headers.add("x-ncp-apigw-api-key", secret);
 
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
-        GcResDto res = restTemplate.exchange(
-                url,
-                HttpMethod.GET,
-                entity,
-                GcResDto.class
-        ).getBody();
+        GcResDto res;
+        try {
+             res = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    GcResDto.class
+            ).getBody();
+        } catch (RestClientException e) {
+            throw new RuntimeException(e);
+        }
 
         if(res == null) throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR);
         return res.getLocation();
