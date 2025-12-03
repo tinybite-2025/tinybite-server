@@ -3,7 +3,7 @@ package ita.tinybite.domain.auth.service;
 import ita.tinybite.domain.user.entity.User;
 import ita.tinybite.domain.user.repository.UserRepository;
 import ita.tinybite.global.exception.BusinessException;
-import ita.tinybite.global.exception.UserErrorCode;
+import ita.tinybite.global.exception.errorcode.UserErrorCode;
 import ita.tinybite.global.exception.errorcode.CommonErrorCode;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;

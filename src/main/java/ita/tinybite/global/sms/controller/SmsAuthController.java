@@ -1,5 +1,6 @@
 package ita.tinybite.global.sms.controller;
 
+import ita.tinybite.global.exception.errorcode.AuthErrorCode;
 import ita.tinybite.global.exception.errorcode.TaskErrorCode;
 import ita.tinybite.global.response.APIResponse;
 import ita.tinybite.global.sms.dto.req.CheckReqDto;
@@ -29,6 +30,6 @@ public class SmsAuthController {
     @PostMapping("/check")
     public APIResponse<?> check(@RequestBody CheckReqDto req) {
         if(smsAuthService.check(req)) return APIResponse.success();
-        return APIResponse.businessError(TaskErrorCode.TASK_NOT_FOUND);
+        return APIResponse.businessError(AuthErrorCode.INVALID_AUTHCODE);
     }
 }

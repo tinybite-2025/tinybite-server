@@ -33,7 +33,7 @@ public class SmsAuthService {
         validatePhoneNumber(phone);
 
         String smsAuthCode = authCodeGenerator.getAuthCode();
-        smsService.send(phone, smsAuthCode);
+        smsService.send(phone.replaceAll("-", ""), smsAuthCode);
         redisTemplate.opsForValue().set(phone, smsAuthCode, EXPIRE_TIME, TimeUnit.MILLISECONDS);
     }
 
