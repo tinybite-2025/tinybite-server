@@ -18,7 +18,7 @@ public class LocationController {
         this.locationService = locationService;
     }
 
-    @GetMapping()
+    @GetMapping
     public APIResponse<String> location(@RequestParam(defaultValue = "37.3623504988728") String latitude,
                                         @RequestParam(defaultValue = "127.117057453619") String longitude) {
         return success(locationService.getLocation(latitude, longitude));

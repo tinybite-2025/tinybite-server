@@ -7,37 +7,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class GcResDto {
 
-
     public String getLocation() {
-        List<String> address = new ArrayList<>();
+        GcRegion region = results.get(1).region;
 
-        GcRegion region = results.get(0).region;
-
-        if (region.area0 != null) address.add(region.area0.name);
-        if (region.area1 != null) address.add(region.area1.name);
-        if (region.area2 != null) address.add(region.area2.name);
-        if (region.area3 != null) address.add(region.area3.name);
-        if (region.area4 != null) address.add(region.area4.name);
-
-        return address.get(address.size() - 3) + " "  + address.get(address.size() - 2);
+        String[] tokens = region.area2.name.split(" ");
+        String large = tokens.length == 1 ? region.area2.name : tokens[tokens.length - 1];
+        String small = region.area3 != null ? region.area3.name : "";
+        return large + " " + small;
     }
 
-    private GcStatus status;
     private List<GcResult> results;
-
-    @Getter
-    static class GcStatus {
-        private int code;
-        private String name;
-        private String message;
-    }
 
     @Getter
     @JsonIgnoreProperties(ignoreUnknown = true)
     static class GcResult {
-        private String name;
         private GcRegion region;
     }
 
