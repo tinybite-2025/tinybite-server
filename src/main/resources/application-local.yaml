@@ -10,7 +10,6 @@ spring:
     password: ${LOCAL_DB_PASSWORD}
 
   jpa:
-    show-sql: true
     open-in-view: false
     hibernate:
       ddl-auto: create-drop
