@@ -2,6 +2,7 @@ package ita.tinybite.domain.user.entity;
 
 import ita.tinybite.domain.user.constant.LoginType;
 import ita.tinybite.domain.user.constant.UserStatus;
+import ita.tinybite.domain.user.dto.req.UpdateUserReqDto;
 import ita.tinybite.global.entity.BaseEntity;
 
 import jakarta.persistence.*;
@@ -21,7 +22,7 @@ public class User extends BaseEntity {
     @Comment("uid")
     private Long userId;
 
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false, length = 50, unique = true)
     private String email;
 
     @Column(length = 50)
@@ -40,4 +41,12 @@ public class User extends BaseEntity {
 
     @Column(nullable = false, length = 100)
     private String location;
+
+    public void update(UpdateUserReqDto req) {
+        this.nickname = req.nickname();
+    }
+
+    public void updateLocation(String location) {
+        this.location = location;
+    }
 }

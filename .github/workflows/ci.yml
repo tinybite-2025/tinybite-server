@@ -28,11 +28,6 @@ jobs:
           java-version: "17"
           cache: gradle
 
-      - name: Copy application.yml into runner
-        run: |
-          mkdir -p src/main/resources
-          echo "${{ secrets.APPLICATION_YML }}" > src/main/resources/application.yml
-
       - name: Build + Test(Gradle)
         if: ${{ hashFiles('**/build.gradle*') != '' }}
         run: |

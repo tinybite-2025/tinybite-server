@@ -17,6 +17,15 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private static final String[] WHITELIST = {
+            "/api/v1/auth/**",
+            "/oauth2/callback/kakao",
+            "/v3/api-docs/**",
+            "/swagger-ui/**",
+            "/api/v1/test/**",
+            "/test/health",
+            "/api/v1/error-code"
+    };
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -31,6 +40,7 @@ public class SecurityConfig {
 
                 // 요청 인증 설정 (최신 문법)
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(WHITELIST).permitAll()
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/oauth2/callback/kakao").permitAll()
                         .anyRequest().authenticated()
