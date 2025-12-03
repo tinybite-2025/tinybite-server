@@ -1,27 +1,43 @@
 package ita.tinybite.domain.user.entity;
 
+import ita.tinybite.domain.user.constant.LoginType;
+import ita.tinybite.domain.user.constant.UserStatus;
+import ita.tinybite.global.entity.BaseEntity;
 
-import ita.tinybite.domain.event.entity.Event;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
-import java.util.ArrayList;
-import java.util.List;
+import lombok.*;
+import org.hibernate.annotations.Comment;
 
 @Entity
+@Table(name = "users")
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
 @AllArgsConstructor
-public class User {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class User extends BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id")
-    private Long id;
+    @GeneratedValue
+    @Comment("uid")
+    private Long userId;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Event> events = new ArrayList<>();
+    @Column(nullable = false, length = 50)
+    private String email;
+
+    @Column(length = 50)
+    private String phone;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private LoginType type;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UserStatus status;
+
+    @Column(nullable = false, length = 100)
+    private String nickname;
+
+    @Column(nullable = false, length = 100)
+    private String location;
 }

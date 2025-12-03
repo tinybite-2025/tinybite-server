@@ -8,3 +8,17 @@ spring:
     url: ${DEV_DB_URL}
     username: ${DEV_DB_USERNAME}
     password: ${DEV_DB_PASSWORD}
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update  # 개발: update, 운영: validate 또는 none
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-validity: ${JWT_ACCESS_TOKEN_VALIDITY}
+  refresh-token-validity: ${JWT_REFRESH_TOKEN_VALIDITY}
+
+kakao:
+  client-id: ${KAKAO_CLIENT_ID}
+  redirect-uri: ${KAKAO_REDIRECT_URI}
