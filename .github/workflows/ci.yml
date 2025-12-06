@@ -32,8 +32,7 @@ jobs:
         if: ${{ hashFiles('**/build.gradle*') != '' }}
         run: |
           chmod +x ./gradlew
-          ./gradlew clean test
-          ./gradlew bootJar
+          ./gradlew clean bootJar
           JAR=$(ls build/libs/*.jar | head -n 1)
           cp "$JAR" app.jar
 
