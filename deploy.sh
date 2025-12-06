@@ -13,7 +13,7 @@ docker pull ghcr.io/tinybite-2025/tinybite-server:latest
 if ! docker ps --format '{{.Names}}' | grep -q "${APP_NAME}-blue" && \
    ! docker ps --format '{{.Names}}' | grep -q "${APP_NAME}-green"; then
   echo "First deployment detected — starting blue container..."
-  docker compose -f docker-compose.common.yml -f docker-compose.blue.yml up -d
+  docker compose -f docker/docker-compose.common.yml -f docker/docker-compose.blue.yml up -d
   exit 0
 fi
 
@@ -33,7 +33,7 @@ echo "Current Container : $CURRENT"
 echo "Next Container : $NEXT"
 
 echo "deploy $NEXT Container"
-docker compose -f docker-compose.common.yml -f docker-compose.${NEXT}.yml up -d
+docker compose -f docker/docker-compose.common.yml -f docker/docker-compose.${NEXT}.yml up -d
 
 
 echo "running health check on port ${NEXT_PORT}"
@@ -52,7 +52,7 @@ done
 # 실행 실패 시 -> 롤백 진행 후 종료
 if [ "$success" = false ]; then
   echo "Health check failed! Rolling back..."
-  docker compose -f docker-compose.${NEXT}.yml down
+  docker compose -f docker/docker-compose.${NEXT}.yml down
   exit 1
 fi
 

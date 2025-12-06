@@ -34,6 +34,9 @@ services:
     networks:
       - tinybite-network
 
+volumes:
+  redis_data:
+
 networks:
   tinybite-network:
     external: true
