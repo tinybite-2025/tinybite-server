@@ -1,14 +1,14 @@
 services:
-  growin-api-blue:
-    image: ghcr.io/growin-2025/growin-server:latest
-    container_name: growin-api-blue
+  tinybite-api-blue:
+    image: ghcr.io/tinybite-2025/tinybite-server:latest
+    container_name: tinybite-api-blue
     ports:
       - "8080:8080"
     env_file:
       - .env
     networks:
-      - growin-network
+      - tinybite-network
 
 networks:
-  growin-network:
+  tinybite-network:
     external: true

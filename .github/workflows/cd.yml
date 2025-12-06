@@ -28,7 +28,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: 22
           source: "docker/*,.env,nginx/,deploy.sh"
-          target: "/home/ubuntu/growin/"
+          target: "/home/ubuntu/tinybite/"
 
       # EC2에서 도커 컨테이너 재배포
       - name: Deploy to EC2
@@ -39,7 +39,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: 22
           script: |
-            cd /home/ubuntu/growin
+            cd /home/ubuntu/tinybite
             
             export GHCR_TOKEN=${{ secrets.GHCR_TOKEN }}
             export GHCR_USERNAME=${{ github.actor }}  

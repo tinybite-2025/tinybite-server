@@ -6,23 +6,34 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - /home/ubuntu/growin/nginx/default.conf:/etc/nginx/conf.d/default.conf
-      - /home/ubuntu/growin/data/certbot/conf:/etc/letsencrypt
-      - /home/ubuntu/growin/data/certbot/www:/var/www/certbot
+      - /home/ubuntu/tinybite/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - /home/ubuntu/tinybite/data/certbot/conf:/etc/letsencrypt
+      - /home/ubuntu/tinybite/data/certbot/www:/var/www/certbot
     restart: always
     networks:
-      - growin-network
+      - tinybite-network
+
+  redis:
+    container_name: redis
+    image: redis:7.2.4
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: always
+    networks:
+      - tinybite-network
 
   certbot:
     container_name: certbot
     image: certbot/certbot
     volumes:
-      - /home/ubuntu/growin/data/certbot/conf:/etc/letsencrypt
-      - /home/ubuntu/growin/data/certbot/www:/var/www/certbot
+      - /home/ubuntu/tinybite/data/certbot/conf:/etc/letsencrypt
+      - /home/ubuntu/tinybite/data/certbot/www:/var/www/certbot
     entrypoint: /bin/sh -c "trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;"
     networks:
-      - growin-network
+      - tinybite-network
 
 networks:
-  growin-network:
+  tinybite-network:
     external: true

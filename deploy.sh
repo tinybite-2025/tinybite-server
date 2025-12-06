@@ -1,14 +1,14 @@
 #!/bin/bash
 
-APP_NAME=growin-api
+APP_NAME=tinybite-api
 BLUE_PORT=8080
 GREEN_PORT=8081
-NGINX_CONF=/home/ubuntu/growin/nginx/default.conf
+NGINX_CONF=/home/ubuntu/tinybite/nginx/default.conf
 
 echo "deploy start"
 
 echo "Pulling latest image..."
-docker pull ghcr.io/growin-2025/growin-server:latest
+docker pull ghcr.io/tinybite-2025/tinybite-server:latest
 
 if ! docker ps --format '{{.Names}}' | grep -q "${APP_NAME}-blue" && \
    ! docker ps --format '{{.Names}}' | grep -q "${APP_NAME}-green"; then
