@@ -40,6 +40,7 @@ jobs:
           port: 22
           script: |
             cd /home/ubuntu/tinybite
+            mv /home/ubuntu/tinybite/docker/* /home/ubuntu/tinybite/
             
             export GHCR_TOKEN=${{ secrets.GHCR_TOKEN }}
             export GHCR_USERNAME=${{ github.actor }}  
