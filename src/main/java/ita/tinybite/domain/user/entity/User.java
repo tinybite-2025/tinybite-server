@@ -18,7 +18,7 @@ import org.hibernate.annotations.Comment;
 public class User extends BaseEntity {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Comment("uid")
     private Long userId;
 
