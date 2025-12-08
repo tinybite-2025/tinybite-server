@@ -3,9 +3,12 @@ spring:
     activate:
       on-profile: "test"
 
-# h2 사용하기?
-#  datasource:
-#    driver-class-name: com.mysql.cj.jdbc.Driver
-#    url: ${TEST_DB_URL}
-#    username: ${TEST_DB_USERNAME}
-#    password: ${TEST_DB_PASSWORD}
+  profiles:
+    active: "test"
+
+# h2 사용
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
