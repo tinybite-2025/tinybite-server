@@ -25,6 +25,9 @@ public class User extends BaseEntity {
     @Column(nullable = false, length = 50, unique = true)
     private String email;
 
+    @Column(nullable = false, length = 30, unique = true)
+    private String nickname;
+
     @Column(length = 50)
     private String phone;
 
@@ -35,9 +38,6 @@ public class User extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserStatus status;
-
-    @Column(nullable = false, length = 100)
-    private String nickname;
 
     @Column(nullable = false, length = 100)
     private String location;
