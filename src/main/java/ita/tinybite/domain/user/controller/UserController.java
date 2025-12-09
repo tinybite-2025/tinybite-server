@@ -18,6 +18,7 @@ public class UserController {
         this.userService = userService;
     }
 
+    @GetMapping("/me")
     public APIResponse<?> getUser() {
         return success(userService.getUser());
     }
