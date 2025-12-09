@@ -18,7 +18,6 @@ public class SwaggerConfig {
     @Bean
     public OpenAPI openAPI() {
         return new OpenAPI()
-                .servers(List.of(new Server().url("https://growinserver.shop")))
                 .addSecurityItem(new SecurityRequirement().addList("BearerAuth"))
                 .components(
                         new Components()

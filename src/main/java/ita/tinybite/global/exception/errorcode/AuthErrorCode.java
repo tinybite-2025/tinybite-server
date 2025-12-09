@@ -7,7 +7,11 @@ import org.springframework.http.HttpStatus;
 public enum AuthErrorCode implements ErrorCode {
 
     INVALID_PHONE_NUMBER(HttpStatus.BAD_REQUEST, "INVALID_PHONE_NUMBER", "유효하지 않은 번호입니다."),
-    INVALID_AUTHCODE(HttpStatus.UNAUTHORIZED, "INVALID_AUTHCODE", "인증코드가 만료되었거나, 일치하지 않습니다.")
+    INVALID_AUTHCODE(HttpStatus.UNAUTHORIZED, "INVALID_AUTHCODE", "인증코드가 일치하지 않습니다."),
+    EXPIRED_AUTH_CODE(HttpStatus.BAD_REQUEST, "EXPIRED_AUTH_CODE", "인증시간이 만료되었습니다."),
+
+    DUPLICATED_NICKNAME(HttpStatus.BAD_REQUEST, "DUPLICATED_NICKNAME", "중복된 닉네임입니다."),
+
     ;
 
     private final HttpStatus httpStatus;

@@ -27,7 +27,7 @@ public class SmsAuthService {
     /**
      * 1. 인증코드 생성 <br>
      * 2. 주어진 폰번호로 인증코드 전송 <br>
-     * 3. DB에 {번호, 인증코드}쌍으로 저장 or 메모리에 저장 (ttl 설정 고려하기) <br>
+     * 3. redis에 {번호, 인증코드}쌍으로 저장 (ttl 설정 고려) <br>
      */
     public void send(String phone) {
         validatePhoneNumber(phone);
@@ -40,14 +40,17 @@ public class SmsAuthService {
     /**
      * req.phone으로 redis 조회 <br>
      * 조회한 authCode와 요청받은 authcode를 비교 <br>
-     * 같으면 true, 다르면 false <br>
+     * 조회된 authCode가 없을 시, 만료 혹은 요청 X <br>
      */
-    public boolean check(CheckReqDto req) {
+    public void check(CheckReqDto req) {
         validatePhoneNumber(req.phone());
 
         String authCode = redisTemplate.opsForValue().get(req.phone());
-        if(authCode == null) return false;
-        return authCode.equals(req.authCode());
+        if(authCode == null)
+            throw BusinessException.of(AuthErrorCode.EXPIRED_AUTH_CODE);
+
+        if(!authCode.equals(req.authCode()))
+            throw BusinessException.of(AuthErrorCode.INVALID_AUTHCODE);
     }
 
     private void validatePhoneNumber(String phone) {
