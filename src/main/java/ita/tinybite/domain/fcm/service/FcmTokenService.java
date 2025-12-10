@@ -1,0 +1,44 @@
+package ita.tinybite.domain.fcm.service;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import ita.tinybite.domain.fcm.entity.FcmToken;
+import ita.tinybite.domain.fcm.repository.FcmTokenRepository;
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class FcmTokenService {
+	private final FcmTokenRepository fcmTokenRepository;
+
+	@Transactional
+	public void saveOrUpdateToken(Long userId, String token) {
+		Optional<FcmToken> existingToken = fcmTokenRepository.findByUserIdAndToken(userId, token);
+
+		if (existingToken.isPresent()) {
+			FcmToken fcmToken = existingToken.get();
+			if (!Boolean.TRUE.equals(fcmToken.getIsActive())) {
+				fcmToken.updateToken(token);
+			}
+		} else {
+			FcmToken newToken = FcmToken.builder()
+				.userId(userId)
+				.token(token)
+				.build();
+			fcmTokenRepository.save(newToken);
+		}
+	}
+
+	public List<String> getTokensByUserId(Long userId) {
+		return fcmTokenRepository.findAllByUserIdAndIsActiveTrue(userId).stream()
+			.map(FcmToken::getToken)
+			.collect(Collectors.toList());
+	}
+
+}
