@@ -1,4 +1,4 @@
-package ita.tinybite.domain.fcm.service;
+package ita.tinybite.domain.notification.service;
 
 import java.util.List;
 import java.util.Optional;
@@ -7,8 +7,8 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import ita.tinybite.domain.fcm.entity.FcmToken;
-import ita.tinybite.domain.fcm.repository.FcmTokenRepository;
+import ita.tinybite.domain.notification.entity.FcmToken;
+import ita.tinybite.domain.notification.repository.FcmTokenRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service

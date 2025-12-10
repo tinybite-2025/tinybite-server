@@ -1,4 +1,4 @@
-package ita.tinybite.domain.fcm.dto.request;
+package ita.tinybite.domain.notification.dto.request;
 
 import java.util.List;
 import java.util.Map;

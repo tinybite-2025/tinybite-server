@@ -1,5 +1,6 @@
-package ita.tinybite.domain.fcm.entity;
+package ita.tinybite.domain.notification.entity;
 
+import ita.tinybite.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -18,7 +19,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Table(name = "fcm_tokens")
-public class FcmToken {
+public class FcmToken extends BaseEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

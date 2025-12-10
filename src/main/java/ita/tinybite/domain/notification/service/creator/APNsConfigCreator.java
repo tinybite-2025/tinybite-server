@@ -1,4 +1,4 @@
-package ita.tinybite.domain.fcm.service.creator;
+package ita.tinybite.domain.notification.service.creator;
 
 import com.google.firebase.messaging.ApnsConfig;
 import com.google.firebase.messaging.Aps;

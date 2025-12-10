@@ -1,4 +1,4 @@
-package ita.tinybite.domain.fcm.service;
+package ita.tinybite.domain.notification.service;
 
 import org.springframework.stereotype.Service;
 
@@ -8,9 +8,9 @@ import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.MulticastMessage;
 
-import ita.tinybite.domain.fcm.dto.request.NotificationMulticastRequest;
-import ita.tinybite.domain.fcm.dto.request.NotificationSingleRequest;
-import ita.tinybite.domain.fcm.service.creator.APNsConfigCreator;
+import ita.tinybite.domain.notification.dto.request.NotificationMulticastRequest;
+import ita.tinybite.domain.notification.dto.request.NotificationSingleRequest;
+import ita.tinybite.domain.notification.service.creator.APNsConfigCreator;
 import ita.tinybite.global.exception.BusinessException;
 import ita.tinybite.global.exception.errorcode.FcmErrorCode;
 import lombok.RequiredArgsConstructor;
