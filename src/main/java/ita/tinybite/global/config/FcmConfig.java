@@ -4,12 +4,14 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +43,16 @@ public class FcmConfig {
 			}
 		} catch (IOException e) {
 			log.error("Error initializing Firebase app", e);
+		}
+	}
+
+	@Bean
+	public FirebaseMessaging firebaseMessaging() {
+		try {
+			return FirebaseMessaging.getInstance(FirebaseApp.getInstance());
+		} catch (IllegalStateException e) {
+			log.error("FirebaseMessaging Bean 등록 실패", e);
+			throw e;
 		}
 	}
 
