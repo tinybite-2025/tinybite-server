@@ -8,7 +8,6 @@ import com.google.firebase.messaging.Notification;
 
 import lombok.Builder;
 
-//@Builder(access = PRIVATE)
 @Builder
 public record NotificationSingleRequest(
 	@NonNull String token,
@@ -16,15 +15,6 @@ public record NotificationSingleRequest(
 	String body,
 	Map<String, String> data
 ) implements NotificationRequest {
-
-	public static NotificationSingleRequest of(String token, String title, String body, Map<String, String> data) {
-		return NotificationSingleRequest.builder()
-			.token(token)
-			.title(title)
-			.body(body)
-			.data(data)
-			.build();
-	}
 
 	public Message.Builder buildMessage() {
 		Message.Builder builder = Message.builder()

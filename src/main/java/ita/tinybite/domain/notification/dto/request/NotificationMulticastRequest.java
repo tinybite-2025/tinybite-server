@@ -9,7 +9,6 @@ import com.google.firebase.messaging.Notification;
 
 import lombok.Builder;
 
-//@Builder(access = PRIVATE)
 @Builder
 public record NotificationMulticastRequest(
 	@NonNull List<String> tokens,
@@ -17,15 +16,6 @@ public record NotificationMulticastRequest(
 	String body,
 	Map<String, String> data
 ) implements NotificationRequest {
-
-	public static NotificationMulticastRequest of(List<String> tokens, String title, String body, Map<String, String> data) {
-		return NotificationMulticastRequest.builder()
-			.tokens(tokens)
-			.title(title)
-			.body(body)
-			.data(data)
-			.build();
-	}
 
 	public MulticastMessage.Builder buildSendMessage() {
 		MulticastMessage.Builder builder = MulticastMessage.builder()
