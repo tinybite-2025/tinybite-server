@@ -16,15 +16,6 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // 이벤트 에러 처리
-    @ExceptionHandler(EventException.class)
-    public ResponseEntity<APIResponse<Void>> handleEventException(EventException exception) {
-        log.error(exception.getMessage());
-
-        return ResponseEntity.status(exception.getErrorCode().getHttpStatus())
-            .body(APIResponse.businessError(exception.getErrorCode()));
-    }
-
     // 비즈니스 에러 처리
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<APIResponse<Void>> handleBusinessException(BusinessException exception) {
