@@ -1,8 +1,6 @@
 package ita.tinybite.domain.auth.controller;
 
-import ita.tinybite.domain.auth.dto.request.KakaoLoginRequest;
-import ita.tinybite.domain.auth.dto.request.KakaoSignupRequest;
-import ita.tinybite.domain.auth.dto.request.RefreshTokenRequest;
+import ita.tinybite.domain.auth.dto.request.*;
 import ita.tinybite.domain.auth.dto.response.AuthResponse;
 import ita.tinybite.domain.auth.service.AuthService;
 import ita.tinybite.global.response.APIResponse;
@@ -17,6 +15,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import static ita.tinybite.global.response.APIResponse.success;
 
 @Slf4j
 @RestController
@@ -55,7 +55,7 @@ public class AuthController {
     ) {
         AuthResponse response = authService.kakaoSignup(request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(APIResponse.success(response));
+                .body(success(response));
     }
 
     @PostMapping("/kakao/login")
@@ -63,7 +63,39 @@ public class AuthController {
             @Valid @RequestBody KakaoLoginRequest request
     ) {
         AuthResponse response = authService.kakaoLogin(request);
-        return ResponseEntity.ok(APIResponse.success(response));
+        return ResponseEntity.ok(success(response));
+    }
+
+    @PostMapping("/google/signup")
+    public ResponseEntity<APIResponse<AuthResponse>> googleSignup(
+            @Valid @RequestBody GoogleAndAppleSignupRequest req
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(success(authService.googleSignup(req)));
+    }
+
+    @PostMapping("/google/login")
+    public APIResponse<AuthResponse> googleLogin(
+            @Valid @RequestBody GoogleAndAppleLoginReq req
+    ) {
+        return success(authService.googleLogin(req));
+    }
+
+    @PostMapping("/apple/signup")
+    public ResponseEntity<APIResponse<AuthResponse>> appleSignup(
+            @Valid @RequestBody GoogleAndAppleSignupRequest req
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(success(authService.appleSignup(req)));
+    }
+
+    @PostMapping("/apple/login")
+    public APIResponse<AuthResponse> appleLogin(
+            @Valid @RequestBody GoogleAndAppleLoginReq req
+    ) {
+        return success(authService.appleLogin(req));
     }
 
     @PostMapping("/refresh")
@@ -71,7 +103,7 @@ public class AuthController {
             @Valid @RequestBody RefreshTokenRequest request
     ) {
         AuthResponse response = authService.refreshToken(request);
-        return ResponseEntity.ok(APIResponse.success(response));
+        return ResponseEntity.ok(success(response));
     }
 
     @PostMapping("/logout")
@@ -79,7 +111,7 @@ public class AuthController {
             @RequestAttribute("userId") Long userId
     ) {
         authService.logout(userId);
-        return ResponseEntity.ok(APIResponse.success(null));
+        return ResponseEntity.ok(success(null));
     }
 }
 

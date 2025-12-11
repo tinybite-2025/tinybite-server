@@ -1,8 +1,10 @@
 package ita.tinybite.domain.auth.service;
 
-import ita.tinybite.domain.auth.dto.request.KakaoLoginRequest;
-import ita.tinybite.domain.auth.dto.request.KakaoSignupRequest;
-import ita.tinybite.domain.auth.dto.request.RefreshTokenRequest;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
+import ita.tinybite.domain.auth.dto.request.*;
 import ita.tinybite.domain.auth.dto.response.AuthResponse;
 import ita.tinybite.domain.auth.dto.response.UserDto;
 import ita.tinybite.domain.auth.entity.JwtTokenProvider;
@@ -11,17 +13,27 @@ import ita.tinybite.domain.auth.kakao.KakaoApiClient;
 import ita.tinybite.domain.auth.kakao.KakaoApiClient.KakaoUserInfo;
 import ita.tinybite.domain.auth.repository.RefreshTokenRepository;
 import ita.tinybite.domain.user.constant.LoginType;
+import ita.tinybite.domain.user.constant.PlatformType;
 import ita.tinybite.domain.user.constant.UserStatus;
 import ita.tinybite.domain.user.entity.User;
 import ita.tinybite.domain.user.repository.UserRepository;
+import ita.tinybite.global.exception.BusinessException;
+import ita.tinybite.global.exception.errorcode.AuthErrorCode;
+import ita.tinybite.global.exception.errorcode.UserErrorCode;
 import ita.tinybite.global.util.NicknameGenerator;
-import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.io.*;
+import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
+import java.util.Collections;
 
 @Slf4j
 @Service
@@ -32,7 +44,17 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final KakaoApiClient kakaoApiClient;
     private final JwtTokenProvider jwtTokenProvider;
+    private final JwtDecoder appleJwtDecoder;
     private final NicknameGenerator nicknameGenerator;
+
+//    @Value("${apple.client-id}")
+//    private String appleClientId;
+
+    @Value("${google.android-id}")
+    private String googleAndroidId;
+
+    @Value("${google.ios-id}")
+    private String googleIosId;
 
     @Transactional
     public AuthResponse kakaoSignup(KakaoSignupRequest request) {
@@ -107,6 +129,129 @@ public class AuthService {
                 .expiresIn(3600L)
                 .user(UserDto.from(user))
                 .build();
+    }
+
+    @Transactional
+    public AuthResponse googleSignup(@Valid GoogleAndAppleSignupRequest req) {
+        // idToken으로 이메일 추출
+        String email = getEmailFromIdToken(req.idToken(), req.platform(), LoginType.GOOGLE);
+
+        // 해당 이메일의 유저 find
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> BusinessException.of(UserErrorCode.USER_NOT_EXISTS));
+
+        // req필드로 유저 필드 업데이트 -> 실질적 회원가입
+        user.updateSignupInfo(req, email);
+        userRepository.save(user);
+
+        return getAuthResponse(user);
+    }
+
+    @Transactional(readOnly = true)
+    public AuthResponse googleLogin(@Valid GoogleAndAppleLoginReq req) {
+        // idToken으로 이메일 추출
+        String email = getEmailFromIdToken(req.idToken(), req.platformType(), LoginType.GOOGLE);
+        // 해당 이메일로 유저 찾은 후 응답 반환 (accessToken, refreshToken)
+        return getUser(email);
+    }
+
+    @Transactional
+    public AuthResponse appleSignup(@Valid GoogleAndAppleSignupRequest req) {
+        String email = getEmailFromIdToken(req.idToken(), req.platform(), LoginType.APPLE);
+
+        // 해당 이메일의 유저 find
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> BusinessException.of(UserErrorCode.USER_NOT_EXISTS));
+
+        // req필드로 유저 필드 업데이트 -> 실질적 회원가입
+        user.updateSignupInfo(req, email);
+        userRepository.save(user);
+
+        return getAuthResponse(user);
+    }
+
+    @Transactional(readOnly = true)
+    public AuthResponse appleLogin(@Valid GoogleAndAppleLoginReq req) {
+        // idToken으로 이메일 추출
+        String email = getEmailFromIdToken(req.idToken(), req.platformType(), LoginType.APPLE);
+        // 해당 이메일로 유저 찾은 후 응답 반환 (AuthResponse)
+        return getUser(email);
+    }
+
+    private AuthResponse getAuthResponse(User user) {
+        // 4. JWT 토큰 생성
+        String accessToken = jwtTokenProvider.generateAccessToken(user);
+        String refreshToken = jwtTokenProvider.generateRefreshToken(user);
+
+        // 5. 기존 Refresh Token 삭제 후 새로 저장
+        refreshTokenRepository.deleteByUserId(user.getUserId());
+        saveRefreshToken(user.getUserId(), refreshToken);
+
+        log.info("로그인 성공 - User ID: {}, Email: {}", user.getUserId(), user.getEmail());
+
+        // 6. 응답 생성
+        return AuthResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .tokenType("Bearer")
+                .expiresIn(3600L)
+                .user(UserDto.from(user))
+                .build();
+    }
+
+    // 구글과 애플 통합
+    private String getEmailFromIdToken(String idToken, PlatformType platformType, LoginType loginType) {
+        switch(loginType) {
+            case GOOGLE -> {
+
+                String clientId = switch (platformType) {
+                    case ANDROID -> googleAndroidId;
+                    case IOS -> googleIosId;
+                };
+
+                try {
+                    GoogleIdTokenVerifier googleVerifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
+                            .setAudience(Collections.singletonList(clientId))
+                            .build();
+
+                    GoogleIdToken token = googleVerifier.verify(idToken);
+
+                    if(token == null) {
+                        throw BusinessException.of(AuthErrorCode.INVALID_TOKEN);
+                    }
+
+                    return token.getPayload().getEmail();
+
+                } catch (GeneralSecurityException | IOException e) {
+                    throw BusinessException.of(AuthErrorCode.GOOGLE_LOGIN_ERROR);
+                }
+            }
+            case APPLE -> {
+                //TODO Apple 구현 예정
+            }
+        }
+        return null;
+    }
+
+    private AuthResponse getUser(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> {
+                    // 이메일로 가입된 유저가 없을 시, INACTIVE로 임시 생성
+                    // 회원가입 시 해당 임시 유저를 통해 마저 회원가입 진행
+                    userRepository.save(User.builder()
+                            .email(email)
+                            .status(UserStatus.INACTIVE)
+                            .build());
+
+                    return BusinessException.of(UserErrorCode.USER_NOT_EXISTS);
+                });
+
+        // 3. 탈퇴한 사용자 체크
+        if (user.getStatus() == UserStatus.WITHDRAW) {
+            throw new RuntimeException("탈퇴한 사용자입니다.");
+        }
+
+        return getAuthResponse(user);
     }
 
     @Transactional
