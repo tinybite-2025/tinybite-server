@@ -33,6 +33,9 @@ naver:
   client-id: ${NAVER_CLIENT_ID}
   secret: ${NAVER_CLIENT_SECRET}
 
+fcm:
+  file_path: firebase/tinybite_fcm.json
+
 logging:
   level:
     org.hibernate.SQL: debug

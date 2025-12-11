@@ -26,3 +26,6 @@ kakao:
 naver:
   client-id: ${NAVER_CLIENT_ID}
   secret: ${NAVER_CLIENT_SECRET}
+
+fcm:
+  file_path: ${DEV_FCM_PATH}
