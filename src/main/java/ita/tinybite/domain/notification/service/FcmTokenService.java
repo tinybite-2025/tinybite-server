@@ -1,5 +1,9 @@
 package ita.tinybite.domain.notification.service;
 
+import static kotlin.reflect.jvm.internal.impl.builtins.StandardNames.FqNames.*;
+
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -73,5 +77,11 @@ public class FcmTokenService {
 		if (tokens.isEmpty()) return;
 		int updatedCount = fcmTokenRepository.updateIsActiveByTokenIn(tokens, Boolean.FALSE);
 		log.info("FCM 응답 기반 토큰 {}건 비활성화 완료.", updatedCount);
+	}
+
+	@Transactional
+	public int deleteOldInactiveTokens(ChronoUnit unit, long amount) {
+		LocalDateTime cutoffTime = LocalDateTime.now().minus(amount,unit);
+		return fcmTokenRepository.deleteByIsActiveFalseAndUpdatedAtBefore(cutoffTime);
 	}
 }

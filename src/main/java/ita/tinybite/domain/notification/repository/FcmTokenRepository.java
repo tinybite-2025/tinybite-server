@@ -1,5 +1,6 @@
 package ita.tinybite.domain.notification.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,8 +17,12 @@ public interface FcmTokenRepository extends JpaRepository<FcmToken, Long> {
 	List<FcmToken> findAllByUserIdAndIsActiveTrue(Long userId);
 	List<FcmToken> findAllByUserIdInAndIsActiveTrue(List<Long> userIds);
 
-	@Modifying // DML 실행 명시
+	@Modifying
 	@Query("UPDATE FcmToken t SET t.isActive = :isActive WHERE t.token IN :tokens")
 	int updateIsActiveByTokenIn(@Param("tokens") List<String> tokens,
 		@Param("isActive") Boolean isActive);
+
+	@Modifying
+	@Query("DELETE FROM FcmToken t WHERE t.isActive = FALSE AND t.updatedAt < :cutoffTime")
+	int deleteByIsActiveFalseAndUpdatedAtBefore(@Param("cutoffTime") LocalDateTime cutoffTime);
 }
