@@ -34,6 +34,11 @@ jobs:
           JAR=$(ls build/libs/*.jar | head -n 1)
           cp "$JAR" app.jar
 
+      - name: Create Firebase service account file
+        run: |
+          mkdir -p firebase
+          echo "${{ secrets.FCM }}" > firebase/tinybite_fcm.json
+
       - name: Compute image name (change to lowercase)
         id: img
         run: echo "name=${{ env.REGISTRY }}/${GITHUB_REPOSITORY,,}" >> $GITHUB_OUTPUT
@@ -88,7 +93,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           port: 22
-          source: "docker/*,.env,nginx/,deploy.sh"
+          source: "docker/*,.env,nginx/,deploy.sh,firebase/"
           target: "/home/ubuntu/tinybite/"
 
       # EC2에서 도커 컨테이너 재배포
