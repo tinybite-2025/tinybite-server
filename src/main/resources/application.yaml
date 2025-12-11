@@ -26,3 +26,11 @@ fcm:
   url: https://fcm.googleapis.com/v1/projects/${FCM_PROJECT_ID}/messages:send
   google_api: https://www.googleapis.com/auth/cloud-platform
   project_id: ${FCM_PROJECT_ID}
+
+google:
+  android-id: ${GOOGLE_ANDROID_CLIENT_ID}
+  ios-id: ${GOOGLE_IOS_CLIENT_ID}
+
+#apple:
+#  client-id: ${APPLE_CLIENT_ID}
+#
