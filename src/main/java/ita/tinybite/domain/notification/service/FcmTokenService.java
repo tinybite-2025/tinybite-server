@@ -25,9 +25,7 @@ public class FcmTokenService {
 
 		if (existingToken.isPresent()) {
 			FcmToken fcmToken = existingToken.get();
-			if (!Boolean.TRUE.equals(fcmToken.getIsActive())) {
-				fcmToken.updateToken(token);
-			}
+			fcmToken.updateToken(token);
 		} else {
 			FcmToken newToken = FcmToken.builder()
 				.userId(userId)
@@ -68,5 +66,12 @@ public class FcmTokenService {
 			log.warn("알림 대상 사용자 목록(IDs: {})에 유효한 FCM 토큰이 없습니다. (푸시 Skip)", userIds);
 		}
 		return tokens;
+	}
+
+	@Transactional
+	public void deactivateTokens(List<String> tokens) {
+		if (tokens.isEmpty()) return;
+		int updatedCount = fcmTokenRepository.updateIsActiveByTokenIn(tokens, Boolean.FALSE);
+		log.info("FCM 응답 기반 토큰 {}건 비활성화 완료.", updatedCount);
 	}
 }

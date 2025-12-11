@@ -5,8 +5,11 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.google.firebase.messaging.BatchResponse;
+
 import ita.tinybite.domain.notification.dto.request.NotificationMulticastRequest;
 import ita.tinybite.domain.notification.enums.NotificationType;
+import ita.tinybite.domain.notification.service.helper.NotificationTransactionHelper;
 import ita.tinybite.domain.notification.service.manager.ChatMessageManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +23,7 @@ public class ChatNotificationService {
 	private final FcmTokenService fcmTokenService;
 	private final ChatMessageManager chatMessageManager;
 	private final NotificationLogService notificationLogService;
+	private final NotificationTransactionHelper notificationTransactionHelper;
 
 	@Transactional
 	public void sendNewChatMessage(
@@ -37,7 +41,9 @@ public class ChatNotificationService {
 
 		NotificationMulticastRequest request =
 			chatMessageManager.createNewChatMessageRequest(tokens, chatRoomId, title, senderName, messageContent);
-		notificationSender.send(request);
+
+		BatchResponse response = notificationSender.send(request);
+		notificationTransactionHelper.handleBatchResponse(response, tokens);
 	}
 
 	@Transactional
@@ -53,6 +59,8 @@ public class ChatNotificationService {
 
 		NotificationMulticastRequest request =
 			chatMessageManager.createUnreadReminderRequest(tokens, chatRoomId, title, detail);
-		notificationSender.send(request);
+
+		BatchResponse response = notificationSender.send(request);
+		notificationTransactionHelper.handleBatchResponse(response, tokens);
 	}
 }
