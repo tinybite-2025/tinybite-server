@@ -1,4 +1,4 @@
-package ita.tinybite.domain.notification.service.scheduler; // 별도의 scheduler 패키지 권장
+package ita.tinybite.domain.notification.infra.fcm; // 별도의 scheduler 패키지 권장
 
 import ita.tinybite.domain.notification.service.FcmTokenService;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +11,7 @@ import java.time.temporal.ChronoUnit;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class FcmTokenSchedulerService {
+public class FcmTokenScheduler {
 
 	private final FcmTokenService fcmTokenService;
 

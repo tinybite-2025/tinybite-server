@@ -9,7 +9,8 @@ import com.google.firebase.messaging.BatchResponse;
 
 import ita.tinybite.domain.notification.dto.request.NotificationMulticastRequest;
 import ita.tinybite.domain.notification.enums.NotificationType;
-import ita.tinybite.domain.notification.service.helper.NotificationTransactionHelper;
+import ita.tinybite.domain.notification.infra.fcm.FcmNotificationSender;
+import ita.tinybite.domain.notification.infra.helper.NotificationTransactionHelper;
 import ita.tinybite.domain.notification.service.manager.PartyMessageManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PartyNotificationService {
 
-	private final NotificationSender notificationSender;
+	private final FcmNotificationSender fcmNotificationSender;
 	private final FcmTokenService fcmTokenService;
 	private final PartyMessageManager partyMessageManager;
 	private final NotificationLogService notificationLogService;
@@ -38,7 +39,7 @@ public class PartyNotificationService {
 		NotificationMulticastRequest request =
 			partyMessageManager.createApprovalRequest(tokens, partyId, title, detail);
 
-		BatchResponse response = notificationSender.send(request);
+		BatchResponse response = fcmNotificationSender.send(request);
 		notificationTransactionHelper.handleBatchResponse(response, tokens);
 	}
 
@@ -55,7 +56,7 @@ public class PartyNotificationService {
 		NotificationMulticastRequest request =
 			partyMessageManager.createRejectionRequest(tokens, partyId, title, detail);
 
-		BatchResponse response = notificationSender.send(request);
+		BatchResponse response = fcmNotificationSender.send(request);
 		notificationTransactionHelper.handleBatchResponse(response, tokens);
 	}
 
@@ -82,7 +83,7 @@ public class PartyNotificationService {
 		NotificationMulticastRequest request =
 			partyMessageManager.createAutoCloseRequest(tokens, partyId, title, memberDetail);
 
-		BatchResponse response = notificationSender.send(request);
+		BatchResponse response = fcmNotificationSender.send(request);
 		notificationTransactionHelper.handleBatchResponse(response, tokens);
 	}
 
@@ -101,7 +102,7 @@ public class PartyNotificationService {
 		NotificationMulticastRequest request =
 			partyMessageManager.createOrderCompleteRequest(tokens, partyId, title, detail);
 
-		BatchResponse response = notificationSender.send(request);
+		BatchResponse response = fcmNotificationSender.send(request);
 		notificationTransactionHelper.handleBatchResponse(response, tokens);
 	}
 
@@ -125,7 +126,7 @@ public class PartyNotificationService {
 				NotificationMulticastRequest memberRequest =
 					partyMessageManager.createDeliveryReminderRequest(memberTokens, partyId, memberTitle, memberDetail);
 
-				BatchResponse memberResponse = notificationSender.send(memberRequest);
+				BatchResponse memberResponse = fcmNotificationSender.send(memberRequest);
 				notificationTransactionHelper.handleBatchResponse(memberResponse, memberTokens);
 			}
 		}
@@ -141,7 +142,7 @@ public class PartyNotificationService {
 			NotificationMulticastRequest managerRequest =
 				partyMessageManager.createManagerDeliveryReminderRequest(managerTokens, partyId, managerTitle, managerDetail);
 
-			BatchResponse managerResponse = notificationSender.send(managerRequest);
+			BatchResponse managerResponse = fcmNotificationSender.send(managerRequest);
 			notificationTransactionHelper.handleBatchResponse(managerResponse, managerTokens);
 		}
 	}
@@ -162,7 +163,7 @@ public class PartyNotificationService {
 		NotificationMulticastRequest request =
 			partyMessageManager.createPartyCompleteRequest(tokens, partyId, title, detail);
 
-		BatchResponse response = notificationSender.send(request);
+		BatchResponse response = fcmNotificationSender.send(request);
 		notificationTransactionHelper.handleBatchResponse(response, tokens);
 	}
 
@@ -181,7 +182,7 @@ public class PartyNotificationService {
 		NotificationMulticastRequest request =
 			partyMessageManager.createNewPartyRequest(tokens, partyId, title, detail);
 
-		BatchResponse response = notificationSender.send(request);
+		BatchResponse response = fcmNotificationSender.send(request);
 		notificationTransactionHelper.handleBatchResponse(response, tokens);
 	}
 
@@ -201,7 +202,7 @@ public class PartyNotificationService {
 		NotificationMulticastRequest request =
 			partyMessageManager.createMemberLeaveRequest(tokens, partyId, title, detail);
 
-		BatchResponse response = notificationSender.send(request);
+		BatchResponse response = fcmNotificationSender.send(request);
 		notificationTransactionHelper.handleBatchResponse(response, tokens);
 	}
 }

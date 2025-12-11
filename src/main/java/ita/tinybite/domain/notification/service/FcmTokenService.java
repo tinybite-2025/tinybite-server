@@ -1,7 +1,5 @@
 package ita.tinybite.domain.notification.service;
 
-import static kotlin.reflect.jvm.internal.impl.builtins.StandardNames.FqNames.*;
-
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;

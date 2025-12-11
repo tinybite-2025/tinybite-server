@@ -1,4 +1,4 @@
-package ita.tinybite.domain.notification.service;
+package ita.tinybite.domain.notification.infra.fcm;
 
 import org.springframework.stereotype.Service;
 
@@ -10,18 +10,16 @@ import com.google.firebase.messaging.MulticastMessage;
 
 import ita.tinybite.domain.notification.dto.request.NotificationMulticastRequest;
 import ita.tinybite.domain.notification.dto.request.NotificationSingleRequest;
-import ita.tinybite.domain.notification.service.creator.APNsConfigCreator;
+import ita.tinybite.domain.notification.infra.creator.APNsConfigCreator;
 import ita.tinybite.global.exception.BusinessException;
 import ita.tinybite.global.exception.errorcode.FcmErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-//토큰 목록과 Message 객체를 받아 FCM 서버로 전송
-// BatchResponse를 받아 실패 토큰을 비활성화하는 후처리 로직 추가
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class NotificationSender {
+public class FcmNotificationSender {
 
 	private final FirebaseMessaging firebaseMessaging;
 

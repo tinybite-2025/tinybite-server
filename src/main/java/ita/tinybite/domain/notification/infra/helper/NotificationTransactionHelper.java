@@ -1,4 +1,4 @@
-package ita.tinybite.domain.notification.service.helper;
+package ita.tinybite.domain.notification.infra.helper;
 
 import com.google.firebase.messaging.BatchResponse;
 import com.google.firebase.messaging.SendResponse;
