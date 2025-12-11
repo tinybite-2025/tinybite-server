@@ -1,5 +1,6 @@
 package ita.tinybite.domain.user.entity;
 
+import ita.tinybite.domain.auth.dto.request.GoogleAndAppleSignupRequest;
 import ita.tinybite.domain.user.constant.LoginType;
 import ita.tinybite.domain.user.constant.UserStatus;
 import ita.tinybite.domain.user.dto.req.UpdateUserReqDto;
@@ -48,5 +49,14 @@ public class User extends BaseEntity {
 
     public void updateLocation(String location) {
         this.location = location;
+    }
+
+    public void updateSignupInfo(GoogleAndAppleSignupRequest req, String email) {
+        this.email = (email);
+        this.nickname = (req.nickname());
+        this.phone = (req.phone());
+        this.location = (req.location());
+        this.status = UserStatus.ACTIVE;
+        this.type = LoginType.GOOGLE;
     }
 }
