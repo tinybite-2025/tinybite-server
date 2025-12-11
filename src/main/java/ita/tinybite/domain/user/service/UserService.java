@@ -5,6 +5,8 @@ import ita.tinybite.domain.user.dto.req.UpdateUserReqDto;
 import ita.tinybite.domain.user.dto.res.UserResDto;
 import ita.tinybite.domain.user.entity.User;
 import ita.tinybite.domain.user.repository.UserRepository;
+import ita.tinybite.global.exception.BusinessException;
+import ita.tinybite.global.exception.errorcode.AuthErrorCode;
 import ita.tinybite.global.location.LocationService;
 import org.springframework.stereotype.Service;
 
@@ -43,4 +45,8 @@ public class UserService {
         userRepository.delete(securityProvider.getCurrentUser());
     }
 
+    public void validateNickname(String nickname) {
+        if(userRepository.existsByNickname(nickname))
+            throw BusinessException.of(AuthErrorCode.DUPLICATED_NICKNAME);
+    }
 }

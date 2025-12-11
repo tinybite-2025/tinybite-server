@@ -1,10 +1,12 @@
 package ita.tinybite.global.sms;
 
 import ita.tinybite.global.exception.BusinessException;
+import ita.tinybite.global.sms.dto.req.CheckReqDto;
 import ita.tinybite.global.sms.fake.FakeRedisTemplate;
 import ita.tinybite.global.sms.fake.FakeSmsService;
 import ita.tinybite.global.sms.service.SmsAuthService;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.context.ActiveProfiles;
 
 
 import static org.assertj.core.api.Assertions.*;
@@ -34,5 +36,11 @@ class SmsAuthServiceTest {
             assertThatThrownBy(() -> smsAuthService.send(phone))
                     .isInstanceOf(BusinessException.class);
         }
+    }
+
+    @Test
+    void should_fail_when_smsAuth_send_with_expired_auth_code() {
+        assertThatThrownBy(() -> smsAuthService.check(new CheckReqDto(SUCCESS_PHONE_NUMBER, "123456")))
+                .isInstanceOf(BusinessException.class);
     }
 }

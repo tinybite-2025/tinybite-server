@@ -28,7 +28,6 @@ dependencies {
     // spring starter
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
     //security
@@ -63,6 +62,11 @@ dependencies {
 
     // sms
     implementation 'com.solapi:sdk:1.0.3'
+
+    // google login
+    implementation 'com.google.api-client:google-api-client:2.7.2'
+    // firebase
+    implementation 'com.google.firebase:firebase-admin:9.1.1'
 }
 
 tasks.named('test') {
