@@ -3,7 +3,7 @@ services:
     image: ghcr.io/tinybite-2025/tinybite-server:latest
     container_name: tinybite-api-green
     volumes:
-      - /home/ubuntu/tinybite/firebase/tinybite_fcm.json:/config/firebase/tinybite_fcm.json:ro
+      - /home/ubuntu/tinybite/firebase/tinybite_fcm.json:/app/config/firebase/tinybite_fcm.json:ro
     ports:
       - "8081:8080"
     env_file:
