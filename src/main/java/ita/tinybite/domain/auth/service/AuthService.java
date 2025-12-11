@@ -147,7 +147,7 @@ public class AuthService {
         return getAuthResponse(user);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public AuthResponse googleLogin(@Valid GoogleAndAppleLoginReq req) {
         // idToken으로 이메일 추출
         String email = getEmailFromIdToken(req.idToken(), req.platformType(), LoginType.GOOGLE);
@@ -170,7 +170,7 @@ public class AuthService {
         return getAuthResponse(user);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public AuthResponse appleLogin(@Valid GoogleAndAppleLoginReq req) {
         // idToken으로 이메일 추출
         String email = getEmailFromIdToken(req.idToken(), req.platformType(), LoginType.APPLE);

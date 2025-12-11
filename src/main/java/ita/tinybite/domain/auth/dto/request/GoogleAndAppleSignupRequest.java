@@ -1,12 +1,18 @@
 package ita.tinybite.domain.auth.dto.request;
 
 import ita.tinybite.domain.user.constant.PlatformType;
+import jakarta.validation.constraints.NotBlank;
 
 public record GoogleAndAppleSignupRequest(
+        @NotBlank(message = "idToken은 필수입니다")
         String idToken,
+        @NotBlank(message = "전화번호는 필수입니다")
         String phone,
+        @NotBlank(message = "닉네임은 필수입니다")
         String nickname,
+        @NotBlank(message = "위치 정보 필수입니다")
         String location,
+        @NotBlank(message = "플랫폼정보는 필수입니다")
         PlatformType platform
 ) {
 }
