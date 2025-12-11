@@ -27,7 +27,7 @@ public class PartyNotificationService {
 		String detail = "파티 참여가 승인되었습니다! 지금 확인하세요.";
 		notificationLogService.saveLog(targetUserId, NotificationType.PARTY_APPROVAL.name(), title, detail);
 
-		List<String> tokens = getTokens(targetUserId);
+		List<String> tokens = fcmTokenService.getTokensAndLogIfEmpty(targetUserId);
 		if (tokens.isEmpty()) {
 			return;
 		}
@@ -42,7 +42,7 @@ public class PartyNotificationService {
 		String detail = "죄송합니다. 파티 참여가 거절되었습니다.";
 		notificationLogService.saveLog(targetUserId, NotificationType.PARTY_REJECTION.name(), title, detail);
 
-		List<String> tokens = getTokens(targetUserId);
+		List<String> tokens = fcmTokenService.getTokensAndLogIfEmpty(targetUserId);
 		if (tokens.isEmpty()) {
 			return;
 		}
@@ -66,7 +66,7 @@ public class PartyNotificationService {
 			notificationLogService.saveLog(userId, NotificationType.PARTY_AUTO_CLOSE.name(), title, detail);
 		});
 
-		List<String> tokens = getMulticastTokens(memberIds);
+		List<String> tokens = fcmTokenService.getMulticastTokensAndLogIfEmpty(memberIds);
 		if (tokens.isEmpty()) {
 			return;
 		}
@@ -84,7 +84,7 @@ public class PartyNotificationService {
 			notificationLogService.saveLog(userId, NotificationType.PARTY_ORDER_COMPLETE.name(), title, detail)
 		);
 
-		List<String> tokens = getMulticastTokens(memberIds);
+		List<String> tokens = fcmTokenService.getMulticastTokensAndLogIfEmpty(memberIds);
 		if (tokens.isEmpty()) {
 			return;
 		}
@@ -108,7 +108,7 @@ public class PartyNotificationService {
 				notificationLogService.saveLog(userId, NotificationType.PARTY_DELIVERY_REMINDER.name(), memberTitle, memberDetail)
 			);
 
-			List<String> memberTokens = getMulticastTokens(commonMembers);
+			List<String> memberTokens = fcmTokenService.getMulticastTokensAndLogIfEmpty(commonMembers);
 			if (!memberTokens.isEmpty()) {
 				NotificationMulticastRequest memberRequest =
 					partyMessageManager.createDeliveryReminderRequest(memberTokens, partyId, memberTitle, memberDetail);
@@ -122,7 +122,7 @@ public class PartyNotificationService {
 
 		notificationLogService.saveLog(managerId, NotificationType.PARTY_MANAGER_DELIVERY_REMINDER.name(), managerTitle, managerDetail);
 
-		List<String> managerTokens = getTokens(managerId);
+		List<String> managerTokens = fcmTokenService.getTokensAndLogIfEmpty(managerId);
 		if (!managerTokens.isEmpty()) {
 			NotificationMulticastRequest managerRequest =
 				partyMessageManager.createManagerDeliveryReminderRequest(managerTokens, partyId, managerTitle, managerDetail);
@@ -138,7 +138,7 @@ public class PartyNotificationService {
 			notificationLogService.saveLog(userId, NotificationType.PARTY_COMPLETE.name(), title, detail)
 		);
 
-		List<String> tokens = getMulticastTokens(memberIds);
+		List<String> tokens = fcmTokenService.getMulticastTokensAndLogIfEmpty(memberIds);
 		if (tokens.isEmpty()) {
 			return;
 		}
@@ -155,7 +155,7 @@ public class PartyNotificationService {
 
 		notificationLogService.saveLog(managerId, NotificationType.PARTY_NEW_REQUEST.name(), title, detail);
 
-		List<String> tokens = getTokens(managerId);
+		List<String> tokens = fcmTokenService.getTokensAndLogIfEmpty(managerId);
 		if (tokens.isEmpty()) {
 			return;
 		}
@@ -173,7 +173,7 @@ public class PartyNotificationService {
 
 		notificationLogService.saveLog(managerId, NotificationType.PARTY_MEMBER_LEAVE.name(), title, detail);
 
-		List<String> tokens = getTokens(managerId);
+		List<String> tokens = fcmTokenService.getTokensAndLogIfEmpty(managerId);
 		if (tokens.isEmpty()) {
 			return;
 		}
@@ -181,24 +181,5 @@ public class PartyNotificationService {
 		NotificationMulticastRequest request =
 			partyMessageManager.createMemberLeaveRequest(tokens, partyId, title, detail);
 		notificationSender.send(request);
-	}
-
-
-	// 단일 사용자 토큰 조회
-	private List<String> getTokens(Long targetUserId) {
-		List<String> tokens = fcmTokenService.getTokensByUserId(targetUserId);
-		if (tokens.isEmpty()) {
-			log.warn("알림 대상 사용자 ID: {}에 유효한 FCM 토큰이 없습니다.", targetUserId);
-		}
-		return tokens;
-	}
-
-	// 다중 사용자 토큰 조회
-	private List<String> getMulticastTokens(List<Long> userIds) {
-		List<String> tokens = fcmTokenService.getTokensByUserIds(userIds);
-		if (tokens.isEmpty()) {
-			log.warn("알림 대상 사용자 목록(IDs: {})에 유효한 FCM 토큰이 없습니다.", userIds);
-		}
-		return tokens;
 	}
 }

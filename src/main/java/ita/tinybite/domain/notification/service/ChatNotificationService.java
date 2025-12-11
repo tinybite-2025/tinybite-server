@@ -30,7 +30,7 @@ public class ChatNotificationService {
 	) {
 		String title = "💬 " + senderName + "님의 새 메시지";
 		notificationLogService.saveLog(targetUserId, NotificationType.CHAT_NEW_MESSAGE.name(), title, messageContent);
-		List<String> tokens = getTokens(targetUserId);
+		List<String> tokens = fcmTokenService.getTokensAndLogIfEmpty(targetUserId);
 		if (tokens.isEmpty()) {
 			return;
 		}
@@ -46,7 +46,7 @@ public class ChatNotificationService {
 		String detail = "안 읽은 메시지가 있어요! 지금 확인해 보세요.";
 		notificationLogService.saveLog(targetUserId, NotificationType.CHAT_UNREAD_REMINDER.name(), title, detail);
 
-		List<String> tokens = getTokens(targetUserId);
+		List<String> tokens = fcmTokenService.getTokensAndLogIfEmpty(targetUserId);
 		if (tokens.isEmpty()) {
 			return;
 		}
@@ -54,13 +54,5 @@ public class ChatNotificationService {
 		NotificationMulticastRequest request =
 			chatMessageManager.createUnreadReminderRequest(tokens, chatRoomId, title, detail);
 		notificationSender.send(request);
-	}
-
-	private List<String> getTokens(Long targetUserId) {
-		List<String> tokens = fcmTokenService.getTokensByUserId(targetUserId);
-		if (tokens.isEmpty()) {
-			log.warn("알림 대상 사용자 ID: {}에 유효한 FCM 토큰이 없습니다. (푸시 전송 Skip)", targetUserId);
-		}
-		return tokens;
 	}
 }

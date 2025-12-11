@@ -10,10 +10,12 @@ import org.springframework.transaction.annotation.Transactional;
 import ita.tinybite.domain.notification.entity.FcmToken;
 import ita.tinybite.domain.notification.repository.FcmTokenRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class FcmTokenService {
 	private final FcmTokenRepository fcmTokenRepository;
 
@@ -48,5 +50,23 @@ public class FcmTokenService {
 		return fcmTokenRepository.findAllByUserIdInAndIsActiveTrue(userIds).stream()
 			.map(FcmToken::getToken)
 			.collect(Collectors.toList());
+	}
+
+	// 단일 사용자 토큰 조회
+	public List<String> getTokensAndLogIfEmpty(Long targetUserId) { // (이름 변경)
+		List<String> tokens = getTokensByUserId(targetUserId);
+		if (tokens.isEmpty()) {
+			log.warn("알림 대상 사용자 ID: {}에 유효한 FCM 토큰이 없습니다. (푸시 Skip)", targetUserId);
+		}
+		return tokens;
+	}
+
+	// 다중 사용자 토큰 조회
+	public List<String> getMulticastTokensAndLogIfEmpty(List<Long> userIds) { // (이름 변경)
+		List<String> tokens = getTokensByUserIds(userIds);
+		if (tokens.isEmpty()) {
+			log.warn("알림 대상 사용자 목록(IDs: {})에 유효한 FCM 토큰이 없습니다. (푸시 Skip)", userIds);
+		}
+		return tokens;
 	}
 }
