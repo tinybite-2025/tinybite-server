@@ -42,7 +42,8 @@ public class FcmConfig {
 				}
 			}
 		} catch (IOException e) {
-			log.error("Error initializing Firebase app", e);
+			log.error("Error initializing Firebase app: Firebase 설정 파일을 읽을 수 없습니다.", e);
+			throw new IllegalStateException("Firebase 초기화 실패: 설정 파일 오류", e);
 		}
 	}
 

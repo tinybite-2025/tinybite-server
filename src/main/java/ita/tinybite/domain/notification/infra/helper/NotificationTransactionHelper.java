@@ -1,6 +1,7 @@
 package ita.tinybite.domain.notification.infra.helper;
 
 import com.google.firebase.messaging.BatchResponse;
+import com.google.firebase.messaging.MessagingErrorCode;
 import com.google.firebase.messaging.SendResponse;
 import ita.tinybite.domain.notification.service.FcmTokenService;
 import lombok.RequiredArgsConstructor;
@@ -37,11 +38,15 @@ public class NotificationTransactionHelper {
 			SendResponse sendResponse = response.getResponses().get(i);
 
 			if (!sendResponse.isSuccessful()) {
-				String errorCode = sendResponse.getException().getMessagingErrorCode().name();
+				var exception = sendResponse.getException();
 
-				// UNREGISTERED (토큰 만료), INVALID_ARGUMENT (토큰 형식 오류)
-				if (errorCode.equals("UNREGISTERED") || errorCode.equals("INVALID_ARGUMENT")) {
-					unregisteredTokens.add(allTokens.get(i));
+				if (exception != null) {
+					var errorCode = exception.getMessagingErrorCode();
+
+					if ((errorCode == MessagingErrorCode.UNREGISTERED
+						|| errorCode == MessagingErrorCode.INVALID_ARGUMENT)) {
+							unregisteredTokens.add(allTokens.get(i));
+						}
 				}
 			}
 		}

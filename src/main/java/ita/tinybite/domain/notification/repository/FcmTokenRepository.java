@@ -18,9 +18,11 @@ public interface FcmTokenRepository extends JpaRepository<FcmToken, Long> {
 	List<FcmToken> findAllByUserIdInAndIsActiveTrue(List<Long> userIds);
 
 	@Modifying
-	@Query("UPDATE FcmToken t SET t.isActive = :isActive WHERE t.token IN :tokens")
-	int updateIsActiveByTokenIn(@Param("tokens") List<String> tokens,
-		@Param("isActive") Boolean isActive);
+	@Query("UPDATE FcmToken t SET t.isActive = :isActive, t.updatedAt = current_timestamp WHERE t.token IN :tokens")
+	int updateIsActiveByTokenIn(
+		@Param("tokens") List<String> tokens,
+		@Param("isActive") Boolean isActive
+	);
 
 	@Modifying
 	@Query("DELETE FROM FcmToken t WHERE t.isActive = FALSE AND t.updatedAt < :cutoffTime")
