@@ -13,8 +13,8 @@ public class NotificationLogService {
 	private final NotificationRepository notificationRepository;
 	private final NotificationLogConverter notificationLogConverter;
 
-	public void saveLog(Long targetUserId, String type, String detail) {
-		Notification notification = notificationLogConverter.toEntity(targetUserId, type, detail);
+	public void saveLog(Long targetUserId, String type, String title, String detail) {
+		Notification notification = notificationLogConverter.toEntity(targetUserId, type, title, detail);
 		notificationRepository.save(notification);
 	}
 }

@@ -72,4 +72,10 @@ public class NotificationFacade {
 		chatNotificationService.sendNewChatMessage(targetUserId, chatRoomId, senderName, messageContent);
 	}
 
+	// 스케줄러/채팅 서비스가 호출하며, 알림 도메인은 전송만 처리
+	@Transactional
+	public void notifyUnreadReminder(Long targetUserId, Long chatRoomId) {
+		chatNotificationService.sendUnreadReminderNotification(targetUserId, chatRoomId);
+	}
+
 }

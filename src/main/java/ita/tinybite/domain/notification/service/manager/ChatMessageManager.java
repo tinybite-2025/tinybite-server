@@ -16,17 +16,28 @@ import lombok.RequiredArgsConstructor;
 public class ChatMessageManager {
 
 	private final NotificationRequestConverter requestConverter;
+	private static final String KEY_CHAT_ROOM_ID = "chatRoomId";
+	private static final String KEY_EVENT_TYPE = "eventType";
+	private static final String KEY_SENDER_NAME = "senderName";
 
-	// 멀티캐스트-대상 유저의 모든 토큰에 전송(새 채팅 메시지)
 	public NotificationMulticastRequest createNewChatMessageRequest(
-		List<String> tokens, Long chatRoomId, String senderName, String content) {
+		List<String> tokens, Long chatRoomId, String title, String senderName, String content) {
 
 		Map<String, String> data = new HashMap<>();
-		data.put("chatRoomId", String.valueOf(chatRoomId));
-		data.put("eventType", NotificationType.CHAT_NEW_MESSAGE.name());
-		data.put("senderName", senderName);
+		data.put(KEY_CHAT_ROOM_ID, String.valueOf(chatRoomId));
+		data.put(KEY_EVENT_TYPE, NotificationType.CHAT_NEW_MESSAGE.name());
+		data.put(KEY_SENDER_NAME, senderName);
 
-		String title = "💬 " + senderName + "님의 새 메시지";
 		return requestConverter.toMulticastRequest(tokens, title, content, data);
+	}
+
+	public NotificationMulticastRequest createUnreadReminderRequest(
+		List<String> tokens, Long chatRoomId, String title, String detail) {
+
+		Map<String, String> data = new HashMap<>();
+		data.put(KEY_CHAT_ROOM_ID, String.valueOf(chatRoomId));
+		data.put(KEY_EVENT_TYPE, NotificationType.CHAT_UNREAD_REMINDER.name());
+
+		return requestConverter.toMulticastRequest(tokens, title, detail, data);
 	}
 }
