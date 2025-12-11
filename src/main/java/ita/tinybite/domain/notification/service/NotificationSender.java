@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 //토큰 목록과 Message 객체를 받아 FCM 서버로 전송
+// BatchResponse를 받아 실패 토큰을 비활성화하는 후처리 로직 추가
 @Service
 @RequiredArgsConstructor
 @Slf4j

@@ -41,4 +41,12 @@ public class FcmTokenService {
 			.collect(Collectors.toList());
 	}
 
+	public List<String> getTokensByUserIds(List<Long> userIds) {
+		if (userIds == null || userIds.isEmpty()) {
+			return List.of();
+		}
+		return fcmTokenRepository.findAllByUserIdInAndIsActiveTrue(userIds).stream()
+			.map(FcmToken::getToken)
+			.collect(Collectors.toList());
+	}
 }

@@ -1,5 +1,7 @@
 package ita.tinybite.domain.notification.service.facade;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +25,41 @@ public class NotificationFacade {
 	@Transactional
 	public void notifyApproval(Long targetUserId, Long partyId) {
 		partyNotificationService.sendApprovalNotification(targetUserId, partyId);
+	}
+
+	@Transactional
+	public void notifyRejection(Long targetUserId, Long partyId) {
+		partyNotificationService.sendRejectionNotification(targetUserId, partyId);
+	}
+
+	@Transactional
+	public void notifyPartyAutoClose(List<Long> memberIds, Long partyId, Long managerId) {
+		partyNotificationService.sendAutoCloseNotification(memberIds, partyId, managerId);
+	}
+
+	@Transactional
+	public void notifyOrderComplete(List<Long> memberIds, Long partyId) {
+		partyNotificationService.sendOrderCompleteNotification(memberIds, partyId);
+	}
+
+	@Transactional
+	public void notifyDeliveryReminder(List<Long> memberIds, Long partyId, Long managerId) {
+		partyNotificationService.sendDeliveryReminderNotification(memberIds, partyId, managerId);
+	}
+
+	@Transactional
+	public void notifyPartyComplete(List<Long> memberIds, Long partyId) {
+		partyNotificationService.sendPartyCompleteNotification(memberIds, partyId);
+	}
+
+	@Transactional
+	public void notifyNewPartyRequest(Long managerId, Long partyId) {
+		partyNotificationService.sendNewPartyRequestNotification(managerId, partyId);
+	}
+
+	@Transactional
+	public void notifyMemberLeave(Long managerId, Long partyId, String leaverName) {
+		partyNotificationService.sendMemberLeaveNotification(managerId, partyId, leaverName);
 	}
 
 	@Transactional
