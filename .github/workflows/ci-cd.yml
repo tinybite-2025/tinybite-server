@@ -93,7 +93,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           port: 22
-          source: "docker/*,.env,nginx/,deploy.sh,firebase/"
+          source: "docker/*,.env,nginx/,deploy.sh"
           target: "/home/ubuntu/tinybite/"
 
       # EC2에서 도커 컨테이너 재배포

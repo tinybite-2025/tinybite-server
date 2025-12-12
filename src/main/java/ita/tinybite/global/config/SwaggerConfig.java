@@ -9,6 +9,7 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 import java.util.List;
 
@@ -36,5 +37,11 @@ public class SwaggerConfig {
                                         new License()
                                                 .name("tinybite API 명세서")
                                                 .url("http://localhost:8080")));
+    }
+
+    @Bean
+    @Profile("!local")
+    public OpenAPI devOpenAPI(OpenAPI base) {
+        return base.servers(List.of(new Server().url("https://growinserver.shop")));
     }
 }

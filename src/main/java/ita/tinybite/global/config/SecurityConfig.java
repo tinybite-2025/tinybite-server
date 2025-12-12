@@ -4,6 +4,7 @@ import ita.tinybite.domain.auth.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -35,7 +36,6 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 // CSRF 비활성화 (최신 문법)
                 .csrf(AbstractHttpConfigurer::disable)
 
@@ -56,20 +56,5 @@ public class SecurityConfig {
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
-    }
-
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration conf = new CorsConfiguration();
-
-        conf.setAllowedOrigins(List.of("https://growinserver.shop"));
-        conf.setAllowedMethods(List.of("OPTIONS", "HEAD", "GET", "POST", "PUT", "PATCH", "DELETE"));
-        conf.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-        conf.setAllowCredentials(true);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", conf);
-
-        return source;
     }
 }
