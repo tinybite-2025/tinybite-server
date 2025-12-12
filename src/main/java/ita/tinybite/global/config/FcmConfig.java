@@ -31,7 +31,7 @@ public class FcmConfig {
 			return;
 		}
 		try {
-            FileSystemResource resource = new FileSystemResource(fcmConfigPath);
+            ClassPathResource resource = new ClassPathResource(fcmConfigPath);
 			try (InputStream stream = resource.getInputStream()) {
 				FirebaseOptions options = FirebaseOptions.builder()
 					.setCredentials(GoogleCredentials.fromStream(stream))
