@@ -3,8 +3,6 @@ name: CI
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 permissions:
   contents: read
@@ -77,3 +75,37 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # .env 생성
+      - name: Create .env file
+        run: echo "${{ secrets.ENV_FILE }}" > .env
+
+      # EC2로 파일 전송
+      - name: Copy files to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          port: 22
+          source: "docker/*,.env,nginx/,deploy.sh"
+          target: "/home/ubuntu/tinybite/"
+
+      # EC2에서 도커 컨테이너 재배포
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          port: 22
+          script: |
+            cd /home/ubuntu/tinybite
+            mv /home/ubuntu/tinybite/docker/* /home/ubuntu/tinybite/
+            
+            export GHCR_TOKEN=${{ secrets.GHCR_TOKEN }}
+            export GHCR_USERNAME=${{ github.actor }}  
+            echo $GHCR_TOKEN | docker login ghcr.io -u $GHCR_USERNAME --password-stdin
+
+            chmod +x deploy.sh
+            ./deploy.sh
