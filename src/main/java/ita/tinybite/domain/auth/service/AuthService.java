@@ -252,7 +252,7 @@ public class AuthService {
                     return emailObject.toString();
                 } catch (JwtException e) {
                     throw BusinessException.of(AuthErrorCode.INVALID_TOKEN);
-                } catch (BusinessException e) {
+                } catch (Exception e) {
                     throw BusinessException.of(AuthErrorCode.APPLE_LOGIN_ERROR);
                 }
             }
