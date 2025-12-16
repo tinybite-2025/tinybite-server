@@ -26,7 +26,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,8 +49,8 @@ public class AuthService {
     private final JwtDecoder appleJwtDecoder;
     private final NicknameGenerator nicknameGenerator;
 
-//    @Value("${apple.client-id}")
-//    private String appleClientId;
+    @Value("${apple.client-id}")
+    private String appleClientId;
 
     @Value("${google.android-id}")
     private String googleAndroidId;
@@ -224,10 +226,35 @@ public class AuthService {
 
                 } catch (GeneralSecurityException | IOException e) {
                     throw BusinessException.of(AuthErrorCode.GOOGLE_LOGIN_ERROR);
+                } catch (Exception e) {
+                    throw BusinessException.of(AuthErrorCode.INVALID_TOKEN);
                 }
             }
             case APPLE -> {
-                //TODO Apple 구현 예정
+                String clientId = appleClientId;
+
+                try {
+                    Jwt jwt = appleJwtDecoder.decode(idToken);
+
+                    if(!"https://appleid.apple.com".equals(jwt.getIssuer().toString())) {
+                        throw BusinessException.of(AuthErrorCode.INVALID_TOKEN);
+                    }
+
+                    String aud = jwt.getAudience().get(0);
+                    if (!aud.equals(clientId)) {
+                        throw BusinessException.of(AuthErrorCode.INVALID_TOKEN);
+                    }
+
+                    Object emailObject = jwt.getClaims().get("email");
+                    if(emailObject == null) {
+                        throw BusinessException.of(AuthErrorCode.NOT_EXISTS_EMAIL);
+                    }
+                    return emailObject.toString();
+                } catch (JwtException e) {
+                    throw BusinessException.of(AuthErrorCode.INVALID_TOKEN);
+                } catch (Exception e) {
+                    throw BusinessException.of(AuthErrorCode.APPLE_LOGIN_ERROR);
+                }
             }
         }
         return null;

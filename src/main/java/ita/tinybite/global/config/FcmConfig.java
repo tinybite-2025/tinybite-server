@@ -15,7 +15,6 @@ import com.google.firebase.messaging.FirebaseMessaging;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.FileSystemResource;
 
 @Slf4j
 @Configuration
@@ -31,7 +30,7 @@ public class FcmConfig {
 			return;
 		}
 		try {
-            ClassPathResource resource = new ClassPathResource(fcmConfigPath);
+			ClassPathResource resource = new ClassPathResource(fcmConfigPath);
 			try (InputStream stream = resource.getInputStream()) {
 				FirebaseOptions options = FirebaseOptions.builder()
 					.setCredentials(GoogleCredentials.fromStream(stream))
