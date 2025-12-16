@@ -29,6 +29,8 @@ kakao:
   client-id: ${KAKAO_CLIENT_ID}
   redirect-uri: ${KAKAO_REDIRECT_URI}
 
+fcm:
+  file_path: firebase/tinybite_fcm.json
 logging:
   level:
     org.hibernate.SQL: debug
