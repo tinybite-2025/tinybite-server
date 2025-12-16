@@ -2,6 +2,8 @@ services:
   tinybite-api-blue:
     image: ghcr.io/tinybite-2025/tinybite-server:latest
     container_name: tinybite-api-blue
+    volumes:
+      - /home/ubuntu/tinybite/firebase/tinybite_fcm.json:/app/config/firebase/tinybite_fcm.json:ro
     ports:
       - "8080:8080"
     env_file:
