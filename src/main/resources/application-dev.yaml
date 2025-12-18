@@ -22,3 +22,6 @@ spring:
 kakao:
   client-id: ${KAKAO_CLIENT_ID}
   redirect-uri: ${KAKAO_REDIRECT_URI}
+
+fcm:
+  file_path: ${DEV_FCM_PATH}
