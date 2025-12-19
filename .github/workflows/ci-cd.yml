@@ -107,5 +107,8 @@ jobs:
             export GHCR_USERNAME=${{ github.actor }}  
             echo $GHCR_TOKEN | docker login ghcr.io -u $GHCR_USERNAME --password-stdin
 
-            chmod +x deploy.sh
-            ./deploy.sh
+            docker-compose -f docker-compose.blue.yml pull
+            docker-compose -f docker-compose.blue.yml down || true
+            docker-compose -f docker-compose.blue.yml up -d
+  
+            docker image prune -a -f
