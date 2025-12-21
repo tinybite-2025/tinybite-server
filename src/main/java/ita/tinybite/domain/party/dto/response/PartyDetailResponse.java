@@ -1,5 +1,6 @@
 package ita.tinybite.domain.party.dto.response;
 
+import ita.tinybite.domain.party.entity.PickupLocation;
 import ita.tinybite.domain.party.enums.PartyCategory;
 import lombok.*;
 
@@ -20,7 +21,7 @@ public class PartyDetailResponse {
     private HostInfo host;
 
     // 수령 정보
-    private String pickupLocation;
+    private PickupLocation pickupLocation;
     private String distance; // "300m"
 
     // 인원 정보
