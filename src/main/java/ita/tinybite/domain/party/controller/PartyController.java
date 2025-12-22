@@ -1,5 +1,6 @@
 package ita.tinybite.domain.party.controller;
 
+import ita.tinybite.domain.auth.entity.JwtTokenProvider;
 import ita.tinybite.domain.party.dto.request.PartyCreateRequest;
 import ita.tinybite.domain.party.dto.response.PartyDetailResponse;
 import ita.tinybite.domain.party.dto.response.PartyListResponse;
@@ -34,8 +35,7 @@ public class PartyController {
             @RequestParam(defaultValue = "ALL") PartyCategory category,
             @RequestParam String latitude,
             @RequestParam String longitude) {
-
-        Long userId = extractUserIdFromToken(token); // JWT에서 userId 추출
+        Long userId = jwtTokenProvider.getUserId(token);
 
         PartyListResponse response = partyService.getPartyList(
                 userId, category, latitude, longitude);
@@ -52,10 +52,8 @@ public class PartyController {
             @PathVariable Long partyId,
             @RequestHeader("Authorization") String token,
             @RequestParam Double latitude,
-            @RequestParam Double longitude
-    ) {
-
-        Long userId = extractUserIdFromToken(token);
+            @RequestParam Double longitude) {
+        Long userId = jwtTokenProvider.getUserId(token);
 
         PartyDetailResponse response = partyService.getPartyDetail(partyId, userId, latitude, longitude);
         return ResponseEntity.ok(response);
@@ -69,7 +67,7 @@ public class PartyController {
             @RequestHeader("Authorization") String token,
             @Valid @RequestBody PartyCreateRequest request) {
 
-        Long userId = extractUserIdFromToken(token);
+        Long userId = jwtTokenProvider.getUserId(token);
         Long partyId = partyService.createParty(userId, request);
 
         return ResponseEntity.ok(partyId);
