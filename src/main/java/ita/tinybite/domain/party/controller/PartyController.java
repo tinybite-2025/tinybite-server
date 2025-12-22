@@ -89,9 +89,4 @@ public class PartyController {
         return ResponseEntity.ok().build();
     }
 
-    private Long extractUserIdFromToken(String token) {
-        // JWT 토큰에서 userId 추출 로직
-        // 실제 구현은 JWT 유틸 클래스 활용
-        return null; // TODO: 실제 구현 필요
-    }
 }

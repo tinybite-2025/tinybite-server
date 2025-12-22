@@ -70,10 +70,6 @@ public class Party {
     private LocalDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "neighborhood_id", nullable = false)
-    private Neighborhood neighborhood; // 동네
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "host_id", nullable = false)
     private User host; // 파티 개설자
 

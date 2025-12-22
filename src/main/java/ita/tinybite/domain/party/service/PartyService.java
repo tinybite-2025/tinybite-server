@@ -332,59 +332,5 @@ public class PartyService {
         partyRepository.delete(party);
     }
 
-
-    private void updateDescriptionAndImages(Party party, PartyUpdateRequest request) {
-        if (request.getDescription() != null) {
-            party.setDescription(request.getDescription());
-        }
-
-        if (request.getImages() != null) {
-            String imagesStr = String.join(",", request.getImages());
-            party.setImage(imagesStr);
-
-            // 첫 번째 이미지를 썸네일로 업데이트
-            if (!request.getImages().isEmpty()) {
-                party.setThumbnailImage(request.getImages().get(0));
-            }
-        }
-    }
-
-    /**
-     * 모든 필드 수정 (승인된 파티원이 없을 때)
-     */
-    private void updateAllFields(Party party, PartyUpdateRequest request) {
-        // 주요 정보 수정
-        if (request.getTitle() != null) {
-            party.setTitle(request.getTitle());
-        }
-
-        if (request.getTotalPrice() != null) {
-            party.setPrice(request.getTotalPrice());
-        }
-
-        if (request.getMaxParticipants() != null) {
-            party.setMaxParticipants(request.getMaxParticipants());
-        }
-
-        if (request.getPickupLocation() != null) {
-            party.setPickupLocation(request.getPickupLocation());
-        }
-
-        if (request.getLatitude() != null && request.getLongitude() != null) {
-            party.setLatitude(request.getLatitude());
-            party.setLongitude(request.getLongitude());
-        }
-
-        if (request.getProductLink() != null) {
-            // 카테고리별 유효성 검증
-            validateProductLink(party.getCategory(), request.getProductLink());
-            party.setLink(request.getProductLink());
-        }
-
-        // 설명과 이미지도 수정
-        updateDescriptionAndImages(party, request);
-    }
-
-
 }
 
