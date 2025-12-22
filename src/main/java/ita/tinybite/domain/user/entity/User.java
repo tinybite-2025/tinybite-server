@@ -26,21 +26,21 @@ public class User extends BaseEntity {
     @Column(nullable = false, length = 50, unique = true)
     private String email;
 
-    @Column(nullable = false, length = 30, unique = true)
+    @Column(length = 30, unique = true)
     private String nickname;
 
     @Column(length = 50)
     private String phone;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column
     private LoginType type;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserStatus status;
 
-    @Column(nullable = false, length = 100)
+    @Column(length = 100)
     private String location;
 
     public void update(UpdateUserReqDto req) {

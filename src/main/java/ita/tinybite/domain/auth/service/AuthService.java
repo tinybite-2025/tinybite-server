@@ -224,10 +224,8 @@ public class AuthService {
 
                     return token.getPayload().getEmail();
 
-                } catch (GeneralSecurityException | IOException e) {
-                    throw BusinessException.of(AuthErrorCode.GOOGLE_LOGIN_ERROR);
                 } catch (Exception e) {
-                    throw BusinessException.of(AuthErrorCode.INVALID_TOKEN);
+                    throw new RuntimeException(e);
                 }
             }
             case APPLE -> {
@@ -250,10 +248,8 @@ public class AuthService {
                         throw BusinessException.of(AuthErrorCode.NOT_EXISTS_EMAIL);
                     }
                     return emailObject.toString();
-                } catch (JwtException e) {
-                    throw BusinessException.of(AuthErrorCode.INVALID_TOKEN);
                 } catch (Exception e) {
-                    throw BusinessException.of(AuthErrorCode.APPLE_LOGIN_ERROR);
+                    throw new RuntimeException(e);
                 }
             }
         }
