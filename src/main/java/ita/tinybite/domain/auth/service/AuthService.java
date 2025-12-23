@@ -6,6 +6,7 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import ita.tinybite.domain.auth.dto.request.*;
 import ita.tinybite.domain.auth.dto.response.AuthResponse;
+import ita.tinybite.domain.auth.dto.response.LoginAuthResponse;
 import ita.tinybite.domain.auth.dto.response.UserDto;
 import ita.tinybite.domain.auth.entity.JwtTokenProvider;
 import ita.tinybite.domain.auth.entity.RefreshToken;
@@ -152,7 +153,7 @@ public class AuthService {
     }
 
     @Transactional
-    public AuthResponse googleLogin(@Valid GoogleAndAppleLoginReq req) {
+    public LoginAuthResponse googleLogin(@Valid GoogleAndAppleLoginReq req) {
         // idToken으로 이메일 추출
         String email = getEmailFromIdToken(req.idToken(), req.platformType(), LoginType.GOOGLE);
         // 해당 이메일로 유저 찾은 후 응답 반환 (accessToken, refreshToken)
@@ -175,7 +176,7 @@ public class AuthService {
     }
 
     @Transactional
-    public AuthResponse appleLogin(@Valid GoogleAndAppleLoginReq req) {
+    public LoginAuthResponse appleLogin(@Valid GoogleAndAppleLoginReq req) {
         // idToken으로 이메일 추출
         String email = getEmailFromIdToken(req.idToken(), req.platformType(), LoginType.APPLE);
         // 해당 이메일로 유저 찾은 후 응답 반환 (AuthResponse)
@@ -253,7 +254,7 @@ public class AuthService {
         return null;
     }
 
-    private AuthResponse getUser(String email, LoginType type) {
+    private LoginAuthResponse getUser(String email, LoginType type) {
         Optional<User> optionalUser = userRepository.findByEmail(email);
 
         if(optionalUser.isEmpty()) {
@@ -264,7 +265,7 @@ public class AuthService {
                     .status(UserStatus.INACTIVE)
                     .type(type)
                     .build());
-            return AuthResponse.builder().build(); // 빈 값을 보내서 회원가입이 안된 사용자임을 프론트에게 알림
+            return LoginAuthResponse.builder().signup(false).build();
         }
 
         User user = optionalUser.get();
@@ -274,7 +275,10 @@ public class AuthService {
             throw new RuntimeException("탈퇴한 사용자입니다.");
         }
 
-        return getAuthResponse(user);
+        return LoginAuthResponse.builder()
+                .signup(true)
+                .authResponse(getAuthResponse(user))
+                .build();
     }
 
     @Transactional
