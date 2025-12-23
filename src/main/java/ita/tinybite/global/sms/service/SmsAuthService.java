@@ -55,6 +55,6 @@ public class SmsAuthService {
 
     private void validatePhoneNumber(String phone) {
         if(!Pattern.matches("010-\\d{4}-\\d{4}", phone))
-            throw new BusinessException(AuthErrorCode.INVALID_PHONE_NUMBER);
+            throw BusinessException.of(AuthErrorCode.INVALID_PHONE_NUMBER);
     }
 }

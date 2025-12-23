@@ -113,5 +113,12 @@ public class AuthController {
         authService.logout(userId);
         return ResponseEntity.ok(success(null));
     }
+
+
+    @GetMapping("/nickname/check")
+    public APIResponse<?> validateNickname(@RequestParam String nickname) {
+        authService.validateNickname(nickname);
+        return success();
+    }
 }
 
