@@ -33,7 +33,7 @@ public class User extends BaseEntity {
     private String phone;
 
     @Enumerated(EnumType.STRING)
-    @Column
+    @Column(nullable = false)
     private LoginType type;
 
     @Enumerated(EnumType.STRING)
