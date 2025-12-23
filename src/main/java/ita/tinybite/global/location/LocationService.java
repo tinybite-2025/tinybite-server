@@ -1,6 +1,7 @@
 package ita.tinybite.global.location;
 
 import ita.tinybite.global.exception.BusinessException;
+import ita.tinybite.global.exception.errorcode.AuthErrorCode;
 import ita.tinybite.global.exception.errorcode.CommonErrorCode;
 import ita.tinybite.global.location.dto.res.GcResDto;
 import org.springframework.beans.factory.annotation.Value;
@@ -52,6 +53,7 @@ public class LocationService {
         }
 
         if(res == null) throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR);
+        if(res.getResults().isEmpty()) throw BusinessException.of(AuthErrorCode.INVALID_LOCATION);
         return res.getLocation();
     }
 }

@@ -30,12 +30,14 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.*;
 import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -143,7 +145,7 @@ public class AuthService {
                 .orElseThrow(() -> BusinessException.of(UserErrorCode.USER_NOT_EXISTS));
 
         // req필드로 유저 필드 업데이트 -> 실질적 회원가입
-        user.updateSignupInfo(req, email);
+        user.updateSignupInfo(req, email, LoginType.GOOGLE);
         userRepository.save(user);
 
         return getAuthResponse(user);
@@ -154,7 +156,7 @@ public class AuthService {
         // idToken으로 이메일 추출
         String email = getEmailFromIdToken(req.idToken(), req.platformType(), LoginType.GOOGLE);
         // 해당 이메일로 유저 찾은 후 응답 반환 (accessToken, refreshToken)
-        return getUser(email);
+        return getUser(email, LoginType.GOOGLE);
     }
 
     @Transactional
@@ -166,7 +168,7 @@ public class AuthService {
                 .orElseThrow(() -> BusinessException.of(UserErrorCode.USER_NOT_EXISTS));
 
         // req필드로 유저 필드 업데이트 -> 실질적 회원가입
-        user.updateSignupInfo(req, email);
+        user.updateSignupInfo(req, email, LoginType.APPLE);
         userRepository.save(user);
 
         return getAuthResponse(user);
@@ -177,7 +179,7 @@ public class AuthService {
         // idToken으로 이메일 추출
         String email = getEmailFromIdToken(req.idToken(), req.platformType(), LoginType.APPLE);
         // 해당 이메일로 유저 찾은 후 응답 반환 (AuthResponse)
-        return getUser(email);
+        return getUser(email, LoginType.APPLE);
     }
 
     private AuthResponse getAuthResponse(User user) {
@@ -211,63 +213,61 @@ public class AuthService {
                     case IOS -> googleIosId;
                 };
 
+                GoogleIdTokenVerifier googleVerifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
+                        .setAudience(Collections.singletonList(clientId))
+                        .build();
+
+                GoogleIdToken token;
                 try {
-                    GoogleIdTokenVerifier googleVerifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
-                            .setAudience(Collections.singletonList(clientId))
-                            .build();
-
-                    GoogleIdToken token = googleVerifier.verify(idToken);
-
-                    if(token == null) {
-                        throw BusinessException.of(AuthErrorCode.INVALID_TOKEN);
-                    }
-
-                    return token.getPayload().getEmail();
-
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
+                    token = googleVerifier.verify(idToken);
+                } catch (GeneralSecurityException | IOException e) {
+                    throw BusinessException.of(AuthErrorCode.GOOGLE_LOGIN_ERROR);
                 }
+
+                if(token == null) {
+                    throw BusinessException.of(AuthErrorCode.INVALID_TOKEN);
+                }
+
+                return token.getPayload().getEmail();
             }
             case APPLE -> {
                 String clientId = appleClientId;
+                Jwt jwt = appleJwtDecoder.decode(idToken);
 
-                try {
-                    Jwt jwt = appleJwtDecoder.decode(idToken);
-
-                    if(!"https://appleid.apple.com".equals(jwt.getIssuer().toString())) {
-                        throw BusinessException.of(AuthErrorCode.INVALID_TOKEN);
-                    }
-
-                    String aud = jwt.getAudience().get(0);
-                    if (!aud.equals(clientId)) {
-                        throw BusinessException.of(AuthErrorCode.INVALID_TOKEN);
-                    }
-
-                    Object emailObject = jwt.getClaims().get("email");
-                    if(emailObject == null) {
-                        throw BusinessException.of(AuthErrorCode.NOT_EXISTS_EMAIL);
-                    }
-                    return emailObject.toString();
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
+                if(!"https://appleid.apple.com".equals(jwt.getIssuer().toString())) {
+                    throw BusinessException.of(AuthErrorCode.INVALID_TOKEN);
                 }
+
+                String aud = jwt.getAudience().get(0);
+                if (!aud.equals(clientId)) {
+                    throw BusinessException.of(AuthErrorCode.INVALID_TOKEN);
+                }
+
+                Object emailObject = jwt.getClaims().get("email");
+                if(emailObject == null) {
+                    throw BusinessException.of(AuthErrorCode.NOT_EXISTS_EMAIL);
+                }
+                return emailObject.toString();
             }
         }
         return null;
     }
 
-    private AuthResponse getUser(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> {
-                    // 이메일로 가입된 유저가 없을 시, INACTIVE로 임시 생성
-                    // 회원가입 시 해당 임시 유저를 통해 마저 회원가입 진행
-                    userRepository.save(User.builder()
-                            .email(email)
-                            .status(UserStatus.INACTIVE)
-                            .build());
+    private AuthResponse getUser(String email, LoginType type) {
+        Optional<User> optionalUser = userRepository.findByEmail(email);
 
-                    return BusinessException.of(UserErrorCode.USER_NOT_EXISTS);
-                });
+        if(optionalUser.isEmpty()) {
+            // 이메일로 가입된 유저가 없을 시, INACTIVE로 임시 생성
+            // 회원가입 시 해당 임시 유저를 통해 마저 회원가입 진행
+            userRepository.save(User.builder()
+                    .email(email)
+                    .status(UserStatus.INACTIVE)
+                    .type(type)
+                    .build());
+            return AuthResponse.builder().build(); // 빈 값을 보내서 회원가입이 안된 사용자임을 프론트에게 알림
+        }
+
+        User user = optionalUser.get();
 
         // 3. 탈퇴한 사용자 체크
         if (user.getStatus() == UserStatus.WITHDRAW) {
@@ -330,5 +330,10 @@ public class AuthService {
                 .build();
 
         refreshTokenRepository.save(refreshToken);
+    }
+
+    public void validateNickname(String nickname) {
+        if(userRepository.existsByStatusAndNickname(UserStatus.ACTIVE, nickname))
+            throw BusinessException.of(AuthErrorCode.DUPLICATED_NICKNAME);
     }
 }
