@@ -30,6 +30,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.*;
@@ -254,13 +255,7 @@ public class AuthService {
     private AuthResponse getUser(String email, LoginType type) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> {
-                    // 이메일로 가입된 유저가 없을 시, INACTIVE로 임시 생성
-                    // 회원가입 시 해당 임시 유저를 통해 마저 회원가입 진행
-                    userRepository.save(User.builder()
-                            .email(email)
-                            .status(UserStatus.INACTIVE)
-                            .type(type)
-                            .build());
+                    saveInactiveUser(email, type);
 
                     return BusinessException.of(UserErrorCode.USER_NOT_EXISTS);
                 });
@@ -271,6 +266,18 @@ public class AuthService {
         }
 
         return getAuthResponse(user);
+    }
+
+    // 예외가 터져도 저장은 되도록 설정
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void saveInactiveUser(String email, LoginType type) {
+        // 이메일로 가입된 유저가 없을 시, INACTIVE로 임시 생성
+        // 회원가입 시 해당 임시 유저를 통해 마저 회원가입 진행
+        userRepository.save(User.builder()
+                .email(email)
+                .status(UserStatus.INACTIVE)
+                .type(type)
+                .build());
     }
 
     @Transactional
