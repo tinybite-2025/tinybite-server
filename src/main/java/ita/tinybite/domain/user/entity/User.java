@@ -51,12 +51,12 @@ public class User extends BaseEntity {
         this.location = location;
     }
 
-    public void updateSignupInfo(GoogleAndAppleSignupRequest req, String email) {
+    public void updateSignupInfo(GoogleAndAppleSignupRequest req, String email, LoginType loginType) {
         this.email = (email);
         this.nickname = (req.nickname());
         this.phone = (req.phone());
         this.location = (req.location());
         this.status = UserStatus.ACTIVE;
-        this.type = LoginType.GOOGLE;
+        this.type = loginType;
     }
 }

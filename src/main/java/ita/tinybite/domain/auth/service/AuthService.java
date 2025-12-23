@@ -145,7 +145,7 @@ public class AuthService {
                 .orElseThrow(() -> BusinessException.of(UserErrorCode.USER_NOT_EXISTS));
 
         // req필드로 유저 필드 업데이트 -> 실질적 회원가입
-        user.updateSignupInfo(req, email);
+        user.updateSignupInfo(req, email, LoginType.GOOGLE);
         userRepository.save(user);
 
         return getAuthResponse(user);
@@ -168,7 +168,7 @@ public class AuthService {
                 .orElseThrow(() -> BusinessException.of(UserErrorCode.USER_NOT_EXISTS));
 
         // req필드로 유저 필드 업데이트 -> 실질적 회원가입
-        user.updateSignupInfo(req, email);
+        user.updateSignupInfo(req, email, LoginType.APPLE);
         userRepository.save(user);
 
         return getAuthResponse(user);
