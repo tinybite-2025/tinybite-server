@@ -18,7 +18,10 @@ public enum AuthErrorCode implements ErrorCode {
 
     INVALID_PLATFORM(HttpStatus.BAD_REQUEST, "INVALID_PLATFORM", "올바른 플랫폼이 아닙니다. (Android, iOS)"),
     NOT_EXISTS_EMAIL(HttpStatus.BAD_REQUEST, "NOT_EXISTS_EMAIL", "애플 이메일이 존재하지 않습니다."),
-    INVALID_LOCATION(HttpStatus.BAD_REQUEST, "INVALID_LOCATION", "위치 정보가 올바르지 않습니다.");
+    INVALID_LOCATION(HttpStatus.BAD_REQUEST, "INVALID_LOCATION", "위치 정보가 올바르지 않습니다."),
+    INVALID_TERM(HttpStatus.BAD_REQUEST, "INVALID_TERM", "잘못된 약관입니다."),
+
+    PLEASE_AGREE_TERM(HttpStatus.BAD_REQUEST, "PLEASE_AGREE_TERM", "필수 항목에 동의하지 않으셨습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

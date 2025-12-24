@@ -13,10 +13,13 @@ import ita.tinybite.domain.auth.entity.RefreshToken;
 import ita.tinybite.domain.auth.kakao.KakaoApiClient;
 import ita.tinybite.domain.auth.kakao.KakaoApiClient.KakaoUserInfo;
 import ita.tinybite.domain.auth.repository.RefreshTokenRepository;
+import ita.tinybite.domain.auth.repository.TermRepository;
 import ita.tinybite.domain.user.constant.LoginType;
 import ita.tinybite.domain.user.constant.PlatformType;
 import ita.tinybite.domain.user.constant.UserStatus;
+import ita.tinybite.domain.user.entity.Term;
 import ita.tinybite.domain.user.entity.User;
+import ita.tinybite.domain.user.entity.UserTermAgreement;
 import ita.tinybite.domain.user.repository.UserRepository;
 import ita.tinybite.global.exception.BusinessException;
 import ita.tinybite.global.exception.errorcode.AuthErrorCode;
@@ -29,15 +32,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.*;
 import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -46,11 +48,11 @@ import java.util.Optional;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final TermRepository termRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final KakaoApiClient kakaoApiClient;
     private final JwtTokenProvider jwtTokenProvider;
     private final JwtDecoder appleJwtDecoder;
-    private final NicknameGenerator nicknameGenerator;
 
     @Value("${apple.client-id}")
     private String appleClientId;
@@ -147,8 +149,29 @@ public class AuthService {
 
         // req필드로 유저 필드 업데이트 -> 실질적 회원가입
         user.updateSignupInfo(req, email, LoginType.GOOGLE);
-        userRepository.save(user);
 
+        // 요청에서 동의한 termId 조합
+        List<Term> terms = termRepository.findAllByTitle(req.agreedTerms());
+
+        // 약관의 이름이 일치하지 않아 사이즈가 다를 때 -> 잘못된 약관 예외 처리
+        if(!(terms.size() == req.agreedTerms().size())) {
+            throw BusinessException.of(AuthErrorCode.INVALID_TERM);
+        }
+
+        // 필수로 동의해야하는 항목에 모두 동의를 하지 않았을 때 -> 필수 약관에 동의하세요
+        if(!terms.containsAll(termRepository.findRequiredTerm())) {
+            throw BusinessException.of(AuthErrorCode.PLEASE_AGREE_TERM);
+        }
+
+        // 유저 - 약관 간 동의 항목 생성
+        List<UserTermAgreement> agreements = terms
+                        .stream().map(term -> UserTermAgreement.builder()
+                        .user(user)
+                        .term(term)
+                        .build()).toList();
+
+        user.addTerms(agreements);
+        userRepository.save(user);
         return getAuthResponse(user);
     }
 
