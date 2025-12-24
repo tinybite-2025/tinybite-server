@@ -10,6 +10,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Comment;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "users")
 @Getter
@@ -43,6 +46,9 @@ public class User extends BaseEntity {
     @Column(length = 100)
     private String location;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserTermAgreement>  agreements = new ArrayList<>();;
+
     public void update(UpdateUserReqDto req) {
         this.nickname = req.nickname();
     }
@@ -58,5 +64,9 @@ public class User extends BaseEntity {
         this.location = (req.location());
         this.status = UserStatus.ACTIVE;
         this.type = loginType;
+    }
+
+    public void addTerms(List<UserTermAgreement> agreements) {
+        this.agreements.addAll(agreements);
     }
 }
