@@ -7,16 +7,19 @@ import ita.tinybite.global.sms.dto.req.CheckReqDto;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 @Service
 public class SmsAuthService {
 
-    private static final long EXPIRE_TIME = 60000L; // 1분
+    private static final long EXPIRE_TIME = 180000L; // 3분
     private final SmsService smsService;
     private final RedisTemplate<String, String> redisTemplate;
     private final AuthCodeGenerator authCodeGenerator;
+
+    private static final List<String> WHITELIST = List.of("010-7602-9238", "010-2408-7202");
 
     public SmsAuthService(SmsService smsService, RedisTemplate<String, String> redisTemplate) {
         this.smsService = smsService;
@@ -55,6 +58,9 @@ public class SmsAuthService {
 
     private void validatePhoneNumber(String phone) {
         if(!Pattern.matches("010-\\d{4}-\\d{4}", phone))
+            throw BusinessException.of(AuthErrorCode.INVALID_PHONE_NUMBER);
+
+        if(!WHITELIST.contains(phone))
             throw BusinessException.of(AuthErrorCode.INVALID_PHONE_NUMBER);
     }
 }

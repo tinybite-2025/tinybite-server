@@ -269,6 +269,9 @@ public class AuthService {
         }
 
         User user = optionalUser.get();
+        if(user.getStatus().equals(UserStatus.INACTIVE)) {
+            return LoginAuthResponse.builder().signup(false).build();
+        }
 
         // 3. 탈퇴한 사용자 체크
         if (user.getStatus() == UserStatus.WITHDRAW) {
