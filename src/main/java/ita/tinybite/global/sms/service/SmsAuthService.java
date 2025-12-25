@@ -19,7 +19,7 @@ public class SmsAuthService {
     private final RedisTemplate<String, String> redisTemplate;
     private final AuthCodeGenerator authCodeGenerator;
 
-    private static final List<String> WHITELIST = List.of("010-7602-9238", "010-2408-7202");
+    private static final List<String> WHITELIST = List.of("010-7602-9238", "010-2408-7202", "010-6694-3527");
 
     public SmsAuthService(SmsService smsService, RedisTemplate<String, String> redisTemplate) {
         this.smsService = smsService;
