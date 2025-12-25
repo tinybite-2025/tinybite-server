@@ -24,6 +24,19 @@ import org.springframework.web.bind.annotation.RestController;
 public class PartyController {
 
     private final PartyService partyService;
+    private final JwtTokenProvider jwtTokenProvider;
+
+
+    @PostMapping("/{partyId}/join")
+    public ResponseEntity<Void> joinParty(
+            @PathVariable Long partyId,
+            @RequestHeader("Authorization") String token) {
+
+        Long userId = jwtTokenProvider.getUserId(token);
+        partyService.joinParty(partyId, userId);
+
+        return ResponseEntity.ok().build();
+    }
 
     /**
      * 파티 목록 조회 (홈 화면)
@@ -71,20 +84,6 @@ public class PartyController {
         Long partyId = partyService.createParty(userId, request);
 
         return ResponseEntity.ok(partyId);
-    }
-
-    /**
-     * 파티 참여
-     */
-    @PostMapping("/{partyId}/join")
-    public ResponseEntity<Void> joinParty(
-            @PathVariable Long partyId,
-            @RequestHeader("Authorization") String token) {
-
-        Long userId = extractUserIdFromToken(token);
-        partyService.joinParty(partyId, userId);
-
-        return ResponseEntity.ok().build();
     }
 
 }

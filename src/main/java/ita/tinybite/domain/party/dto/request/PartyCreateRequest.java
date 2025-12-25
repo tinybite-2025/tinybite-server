@@ -2,6 +2,7 @@ package ita.tinybite.domain.party.dto.request;
 
 import ita.tinybite.domain.party.entity.PickupLocation;
 import ita.tinybite.domain.party.enums.PartyCategory;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import org.hibernate.validator.constraints.URL;
@@ -29,8 +30,8 @@ public class PartyCreateRequest {
     @Max(value = 10, message = "최대 10명까지 가능합니다")
     private Integer maxParticipants;
 
-    @NotBlank(message = "수령 장소는 필수입니다")
-    @Size(max = 30, message = "수령 장소는 최대 30자까지 입력 가능합니다")
+    @Valid
+    @NotNull(message = "수령 장소 정보는 필수입니다")
     private PickupLocation pickupLocation;
 
     @NotNull(message = "위도는 필수입니다")

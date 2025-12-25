@@ -10,6 +10,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Entity
@@ -34,7 +35,7 @@ public class Party {
     private String thumbnailImage; // 섬네일 이미지 URL
 
     @Column(length = 500)
-    private String image; // 이미지 URL
+    private List<String> image; // 이미지 URL
 
     @Column(nullable = false)
     private Integer price; // 가격
@@ -45,6 +46,7 @@ public class Party {
     @Column(length = 500)
     private String link; // 링크 (예: 배달앱 링크)
 
+    @Embedded
     @Column
     private PickupLocation pickupLocation;
 
@@ -143,7 +145,7 @@ public class Party {
         this.description = description != null ? description : this.description;
 
         if (images != null && !images.isEmpty()) {
-            this.image = String.join(",", images);
+            this.image = Collections.singletonList(String.join(",", images));
             this.thumbnailImage = images.get(0);
         }
     }
@@ -152,7 +154,7 @@ public class Party {
         this.description = description != null ? description : this.description;
 
         if (images != null && !images.isEmpty()) {
-            this.image = String.join(",", images);
+            this.image = Collections.singletonList(String.join(",", images));
             this.thumbnailImage = images.get(0);
         }
     }

@@ -10,7 +10,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PartyRepository extends JpaRepository<Party, Long> {
 
-    List<Party> findByLocation(String location);
+    List<Party> findByPickupLocation_Place(String place);
 
-    List<Party> findByLocationAndCategory(String location, PartyCategory category);
+    List<Party> findByPickupLocation_PlaceAndCategory(String place, PartyCategory category);
 }
+

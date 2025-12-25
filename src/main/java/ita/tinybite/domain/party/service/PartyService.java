@@ -50,9 +50,14 @@ public class PartyService {
                 .category(request.getCategory())
                 .price(request.getTotalPrice())
                 .maxParticipants(request.getMaxParticipants())
-                .pickupLocation(request.getPickupLocation())
+                .pickupLocation(PickupLocation.builder()
+                        .place(request.getPickupLocation().getPlace())
+                        .pickupLatitude(request.getPickupLocation().getPickupLatitude())
+                        .pickupLongitude(request.getPickupLocation().getPickupLongitude())
+                        .build())
                 .latitude(request.getLatitude())
                 .longitude(request.getLongitude())
+                .image(request.getImages())
                 .thumbnailImage(thumbnailImage)
                 .link(request.getProductLink())
                 .description(request.getDescription())
@@ -78,18 +83,18 @@ public class PartyService {
         List<Party> parties;
         if (user != null && user.getLocation() != null) {
             if (category == PartyCategory.ALL) {
-                parties = partyRepository.findByLocation(user.getLocation());
+                parties = partyRepository.findByPickupLocation_Place(user.getLocation());
             } else {
-                parties = partyRepository.findByLocationAndCategory(
+                parties = partyRepository.findByPickupLocation_PlaceAndCategory(
                         user.getLocation(), category);
             }
         } else {
             // 비회원이거나 동네 미설정 시
             String location = locationService.getLocation(userLat,userLon);
             if (category == PartyCategory.ALL) {
-                parties = partyRepository.findByLocation(location);
+                parties = partyRepository.findByPickupLocation_Place(location);
             } else {
-                parties = partyRepository.findByLocationAndCategory(
+                parties = partyRepository.findByPickupLocation_PlaceAndCategory(
                         location, category);
             }
         }
@@ -244,7 +249,7 @@ public class PartyService {
         // 이미지 파싱
         List<String> images = new ArrayList<>();
         if (party.getImage() != null && !party.getImage().isEmpty()) {
-            images = List.of(party.getImage().split(","));
+            images = List.of(party.getImage().toString());
         }
 
         return PartyDetailResponse.builder()
@@ -256,7 +261,6 @@ public class PartyService {
                         .userId(party.getHost().getUserId())
                         .nickname(party.getHost().getNickname())
                         .profileImage(party.getHost().getProfileImage())
-                        .neighborhood(party.getNeighborhood().getName())
                         .build())
                 .pickupLocation(party.getPickupLocation())
                 .distance(DistanceCalculator.formatDistance(distance))
