@@ -75,6 +75,19 @@ public class JwtTokenProvider {
 
     // User ID 추출
     public Long getUserId(String token) {
+
+        token = token.trim();
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7).trim();
+        }
+
+        if (token.contains(" ")) {
+            log.error("⚠️ 정제 후에도 토큰에 공백이 있습니다!");
+            log.error("공백 제거 후 토큰: [{}]", token.replaceAll(" ", ""));
+            token = token.replaceAll("\\s+", ""); // 모든 공백 제거
+        }
+
+
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
