@@ -8,9 +8,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import ita.tinybite.domain.auth.entity.JwtTokenProvider;
+import ita.tinybite.domain.chat.entity.ChatRoom;
 import ita.tinybite.domain.party.dto.request.PartyCreateRequest;
 import ita.tinybite.domain.party.dto.response.PartyDetailResponse;
 import ita.tinybite.domain.party.dto.response.PartyListResponse;
+import ita.tinybite.domain.party.entity.PartyParticipant;
 import ita.tinybite.domain.party.enums.PartyCategory;
 import ita.tinybite.domain.party.service.PartyService;
 import jakarta.validation.Valid;
@@ -24,6 +26,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @Tag(name = "파티 API", description = "파티 생성, 조회, 참여 관련 API")
 @RestController
@@ -61,7 +65,7 @@ public class PartyController {
             )
     })
     @PostMapping("/{partyId}/join")
-    public ResponseEntity<Void> joinParty(
+    public ResponseEntity<Long> joinParty(
             @PathVariable Long partyId,
             @RequestHeader("Authorization") String token) {
 
@@ -70,6 +74,77 @@ public class PartyController {
 
         return ResponseEntity.ok().build();
     }
+
+    @Operation(summary = "참여 승인", description = "파티장이 참여를 승인하면 단체 채팅방에 자동 입장됩니다")
+    @PostMapping("/participants/{participantId}/approve")
+    public ResponseEntity<Void> approveParticipant(
+            @PathVariable Long partyId,
+            @PathVariable Long participantId,
+            @RequestHeader("Authorization") String token) {
+
+        Long hostId = jwtTokenProvider.getUserId(token);
+        partyService.approveParticipant(partyId, participantId, hostId);
+
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "참여 거절", description = "파티장이 참여를 거절합니다")
+    @PostMapping("/participants/{participantId}/reject")
+    public ResponseEntity<Void> rejectParticipant(
+            @PathVariable Long partyId,
+            @PathVariable Long participantId,
+            @RequestHeader("Authorization") String token) {
+
+        Long hostId = jwtTokenProvider.getUserId(token);
+        partyService.rejectParticipant(partyId, participantId, hostId);
+
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "단체 채팅방 조회", description = "승인된 참여자가 단체 채팅방을 조회합니다")
+    @GetMapping("/chat/group")
+    public ResponseEntity<ChatRoom> getGroupChatRoom(
+            @PathVariable Long partyId,
+            @RequestHeader("Authorization") String token) {
+
+        Long userId = jwtTokenProvider.getUserId(token);
+        ChatRoom chatRoom = partyService.getGroupChatRoom(partyId, userId);
+
+        return ResponseEntity.ok(chatRoom);
+    }
+
+    @Operation(summary = "결산 가능 여부", description = "목표 인원 달성 시 true 반환")
+    @GetMapping("/can-settle")
+    public ResponseEntity<Boolean> canSettle(@PathVariable Long partyId) {
+        boolean canSettle = partyService.canSettle(partyId);
+        return ResponseEntity.ok(canSettle);
+    }
+
+    @Operation(summary = "파티 결산", description = "목표 인원 달성 후 파티를 마감합니다")
+    @PostMapping("/settle")
+    public ResponseEntity<Void> settleParty(
+            @PathVariable Long partyId,
+            @RequestHeader("Authorization") String token) {
+
+        Long hostId = jwtTokenProvider.getUserId(token);
+        partyService.settleParty(partyId, hostId);
+
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "승인 대기 목록", description = "파티장이 승인 대기 중인 참여자 목록을 조회합니다")
+    @GetMapping("/participants/pending")
+    public ResponseEntity<List<PartyParticipant>> getPendingParticipants(
+            @PathVariable Long partyId,
+            @RequestHeader("Authorization") String token) {
+
+        Long hostId = jwtTokenProvider.getUserId(token);
+        List<PartyParticipant> participants = partyService.getPendingParticipants(partyId, hostId);
+
+        return ResponseEntity.ok(participants);
+    }
+
+
 
     /**
      * 파티 목록 조회 (홈 화면)
