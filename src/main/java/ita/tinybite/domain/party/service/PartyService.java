@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 
 import ita.tinybite.global.location.LocationService;
 import ita.tinybite.global.util.DistanceCalculator;
+import ita.tinybite.global.util.UrlParser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +37,7 @@ public class PartyService {
     private final LocationService locationService;
     private final PartyParticipantRepository partyParticipantRepository;
     private final ChatRoomRepository chatRoomRepository;
+    private final UrlParser urlParser;
 
     /**
      * 파티 생성
@@ -50,6 +52,8 @@ public class PartyService {
 
         // 첫 번째 이미지를 썸네일로 사용, 없으면 기본 이미지
         String thumbnailImage = getDefaultImageIfEmpty(request.getImages(), request.getCategory());
+
+        ProductInfo productInfo = urlParser.getProductInfo(request.getProductLink());
 
         Party party = Party.builder()
                 .title(request.getTitle())
@@ -67,6 +71,8 @@ public class PartyService {
                 .thumbnailImage(thumbnailImage)
                 .link(request.getProductLink())
                 .description(request.getDescription())
+                .currentParticipants(1)
+                .status(PartyStatus.RECRUITING)
                 .isClosed(false)
                 .host(user)
                 .build();
@@ -408,15 +414,29 @@ public class PartyService {
     /**
      * 단체 채팅방 조회
      */
-    public ChatRoom getGroupChatRoom(Long partyId, Long userId) {
-        Party party = partyRepository.findById(partyId)
+    public ChatRoomResponse getGroupChatRoom(Long partyId, Long userId) {
+        Party party = partyRepository.findByIdWithHost(partyId)
                 .orElseThrow(() -> new IllegalArgumentException("파티를 찾을 수 없습니다"));
 
         // 접근 권한 확인
         validateGroupChatRoomAccess(party, userId);
 
-        return chatRoomRepository.findByPartyAndType(party, ChatRoomType.GROUP)
+        ChatRoom chatRoom= chatRoomRepository.findByPartyAndType(party, ChatRoomType.GROUP)
                 .orElseThrow(() -> new IllegalStateException("단체 채팅방이 아직 생성되지 않았습니다"));
+
+        return ChatRoomResponse.builder()
+                .id(chatRoom.getId())
+                .type(chatRoom.getType())
+                .party(PartyInfo.builder()
+                        .id(partyId)
+                        .title(party.getTitle())
+                        .host(HostInfo.builder()
+                                .userId(party.getHost().getUserId())
+                                .nickname(party.getHost().getNickname())
+                                .profileImage(party.getHost().getProfileImage())
+                                .build()
+                        ).build()
+                ).build();
     }
 
     /**
@@ -492,7 +512,7 @@ public class PartyService {
         ChatRoom chatRoom = ChatRoom.builder()
                 .party(party)
                 .type(ChatRoomType.ONE_TO_ONE)
-                .name(party.getTitle() + " - 1:1 채팅")
+                .name(party.getTitle())
                 .isActive(true)
                 .build();
 
@@ -511,7 +531,7 @@ public class PartyService {
                     ChatRoom chatRoom = ChatRoom.builder()
                             .party(party)
                             .type(ChatRoomType.GROUP)
-                            .name(party.getTitle() + " - 단체 채팅")
+                            .name(party.getTitle())
                             .isActive(true)
                             .build();
 

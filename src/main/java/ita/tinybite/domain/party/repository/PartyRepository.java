@@ -1,14 +1,21 @@
 package ita.tinybite.domain.party.repository;
 
+import io.lettuce.core.dynamic.annotation.Param;
 import ita.tinybite.domain.party.entity.Neighborhood;
 import ita.tinybite.domain.party.entity.Party;
 import ita.tinybite.domain.party.enums.PartyCategory;
 import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PartyRepository extends JpaRepository<Party, Long> {
+
+    @Query("SELECT p FROM Party p JOIN FETCH p.host WHERE p.id = :id")
+    Optional<Party> findByIdWithHost(@Param("id") Long id);
 
     List<Party> findByPickupLocation_Place(String place);
 

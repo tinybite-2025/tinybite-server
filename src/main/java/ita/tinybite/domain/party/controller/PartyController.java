@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import ita.tinybite.domain.auth.entity.JwtTokenProvider;
 import ita.tinybite.domain.chat.entity.ChatRoom;
 import ita.tinybite.domain.party.dto.request.PartyCreateRequest;
+import ita.tinybite.domain.party.dto.response.ChatRoomResponse;
 import ita.tinybite.domain.party.dto.response.PartyDetailResponse;
 import ita.tinybite.domain.party.dto.response.PartyListResponse;
 import ita.tinybite.domain.party.entity.PartyParticipant;
@@ -76,7 +77,7 @@ public class PartyController {
     }
 
     @Operation(summary = "참여 승인", description = "파티장이 참여를 승인하면 단체 채팅방에 자동 입장됩니다")
-    @PostMapping("/participants/{participantId}/approve")
+    @PostMapping("{partyId}/participants/{participantId}/approve")
     public ResponseEntity<Void> approveParticipant(
             @PathVariable Long partyId,
             @PathVariable Long participantId,
@@ -102,13 +103,13 @@ public class PartyController {
     }
 
     @Operation(summary = "단체 채팅방 조회", description = "승인된 참여자가 단체 채팅방을 조회합니다")
-    @GetMapping("/chat/group")
-    public ResponseEntity<ChatRoom> getGroupChatRoom(
+    @GetMapping("{partyId}/chat/group")
+    public ResponseEntity<ChatRoomResponse> getGroupChatRoom(
             @PathVariable Long partyId,
             @RequestHeader("Authorization") String token) {
 
         Long userId = jwtTokenProvider.getUserId(token);
-        ChatRoom chatRoom = partyService.getGroupChatRoom(partyId, userId);
+        ChatRoomResponse chatRoom = partyService.getGroupChatRoom(partyId, userId);
 
         return ResponseEntity.ok(chatRoom);
     }
@@ -148,7 +149,6 @@ public class PartyController {
 
     /**
      * 파티 목록 조회 (홈 화면)
-     * 비회원도 접근 가능
      */
     @GetMapping
     public ResponseEntity<PartyListResponse> getPartyList(

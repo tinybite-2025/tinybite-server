@@ -1,5 +1,6 @@
 package ita.tinybite.domain.chat.entity;
 
+import ita.tinybite.domain.party.entity.Party;
 import ita.tinybite.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -26,6 +27,10 @@ public class ChatRoomMember {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "party_id")
+    private Party party;
 
     @Column(nullable = false)
     @Builder.Default
