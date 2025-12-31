@@ -77,6 +77,28 @@ public class PartyController {
     }
 
     @Operation(summary = "참여 승인", description = "파티장이 참여를 승인하면 단체 채팅방에 자동 입장됩니다")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "승인 성공",
+                content = @Content
+        ),
+        @ApiResponse(
+                responseCode = "401",
+                description = "인증 실패",
+                content = @Content
+        ),
+        @ApiResponse(
+                responseCode = "403",
+                description = "파티장 권한 없음",
+                content = @Content
+        ),
+        @ApiResponse(
+                responseCode = "404",
+                description = "파티 또는 참여자를 찾을 수 없음",
+                content = @Content
+        )
+    })
     @PostMapping("{partyId}/participants/{participantId}/approve")
     public ResponseEntity<Void> approveParticipant(
             @PathVariable Long partyId,
@@ -90,6 +112,28 @@ public class PartyController {
     }
 
     @Operation(summary = "참여 거절", description = "파티장이 참여를 거절합니다")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "거절 성공",
+                content = @Content
+        ),
+        @ApiResponse(
+                responseCode = "401",
+                description = "인증 실패",
+                content = @Content
+        ),
+        @ApiResponse(
+                responseCode = "403",
+                description = "파티장 권한 없음",
+                content = @Content
+        ),
+        @ApiResponse(
+                responseCode = "404",
+                description = "파티 또는 참여자를 찾을 수 없음",
+                content = @Content
+        )        
+    })
     @PostMapping("/participants/{participantId}/reject")
     public ResponseEntity<Void> rejectParticipant(
             @PathVariable Long partyId,
@@ -103,6 +147,28 @@ public class PartyController {
     }
 
     @Operation(summary = "단체 채팅방 조회", description = "승인된 참여자가 단체 채팅방을 조회합니다")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "조회 성공",
+                content = @Content(schema = @Schema(implementation = ChatRoomResponse.class))
+        ),
+        @ApiResponse(
+                responseCode = "401",
+                description = "인증 실패",
+                content = @Content
+        ),
+        @ApiResponse(
+                responseCode = "403",
+                description = "승인된 참여자가 아님",
+                content = @Content
+        ),
+        @ApiResponse(
+                responseCode = "404",
+                description = "파티 또는 채팅방을 찾을 수 없음",
+                content = @Content
+        )
+    })
     @GetMapping("{partyId}/chat/group")
     public ResponseEntity<ChatRoomResponse> getGroupChatRoom(
             @PathVariable Long partyId,
@@ -115,14 +181,53 @@ public class PartyController {
     }
 
     @Operation(summary = "결산 가능 여부", description = "목표 인원 달성 시 true 반환")
-    @GetMapping("/can-settle")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "조회 성공",
+                content = @Content(schema = @Schema(implementation = Boolean.class))
+        ),
+        @ApiResponse(
+                responseCode = "404",
+                description = "파티를 찾을 수 없음",
+                content = @Content
+        )
+    })
+    @GetMapping("{partyId}/can-settle")
     public ResponseEntity<Boolean> canSettle(@PathVariable Long partyId) {
         boolean canSettle = partyService.canSettle(partyId);
         return ResponseEntity.ok(canSettle);
     }
 
     @Operation(summary = "파티 결산", description = "목표 인원 달성 후 파티를 마감합니다")
-    @PostMapping("/settle")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "결산 성공",
+                content = @Content
+        ),
+        @ApiResponse(
+                responseCode = "400",
+                description = "결산 조건 미충족",
+                content = @Content
+        ),
+        @ApiResponse(
+                responseCode = "401",
+                description = "인증 실패",
+                content = @Content
+        ),
+        @ApiResponse(
+                responseCode = "403",
+                description = "파티장 권한 없음",
+                content = @Content
+        ),
+        @ApiResponse(
+                responseCode = "404",
+                description = "파티를 찾을 수 없음",
+                content = @Content
+        )
+   })
+    @PostMapping("{partyId}/settle")
     public ResponseEntity<Void> settleParty(
             @PathVariable Long partyId,
             @RequestHeader("Authorization") String token) {
@@ -134,7 +239,29 @@ public class PartyController {
     }
 
     @Operation(summary = "승인 대기 목록", description = "파티장이 승인 대기 중인 참여자 목록을 조회합니다")
-    @GetMapping("/participants/pending")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "조회 성공",
+                content = @Content(schema = @Schema(implementation = PartyParticipant.class))
+        ),
+        @ApiResponse(
+                responseCode = "401",
+                description = "인증 실패",
+                content = @Content
+        ),
+        @ApiResponse(
+                responseCode = "403",
+                description = "파티장 권한 없음",
+                content = @Content
+        ),
+        @ApiResponse(
+                responseCode = "404",
+                description = "파티를 찾을 수 없음",
+                content = @Content
+        )
+    })
+    @GetMapping("{partyId}/participants/pending")
     public ResponseEntity<List<PartyParticipant>> getPendingParticipants(
             @PathVariable Long partyId,
             @RequestHeader("Authorization") String token) {
