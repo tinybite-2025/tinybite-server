@@ -28,6 +28,12 @@ public class PartyParticipant {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "one_to_one_chat_room_id")
+    private ChatRoom oneToOneChatRoom;
+
+    private ParticipantStatus status;
+
     @Column(nullable = false)
     @Builder.Default
     private Boolean isApproved = false; // 승인 여부
@@ -37,6 +43,8 @@ public class PartyParticipant {
     private LocalDateTime joinedAt; // 참여 신청 시간
 
     private LocalDateTime approvedAt; // 승인 시간
+
+    private LocalDateTime rejectedAt;
 
     /**
      * 참여 승인
