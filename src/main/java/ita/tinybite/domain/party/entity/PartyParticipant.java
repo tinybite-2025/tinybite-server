@@ -28,23 +28,15 @@ public class PartyParticipant {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false)
     @Builder.Default
-    private ParticipantStatus status = ParticipantStatus.PENDING;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "one_to_one_chat_room_id")
-    private ChatRoom oneToOneChatRoom;
+    private Boolean isApproved = false; // 승인 여부
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
-    private LocalDateTime requestedAt;
+    private LocalDateTime joinedAt; // 참여 신청 시간
 
-    private LocalDateTime approvedAt;
-
-    private LocalDateTime rejectedAt;
+    private LocalDateTime approvedAt; // 승인 시간
 
     /**
      * 참여 승인
