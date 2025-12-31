@@ -63,15 +63,6 @@ public class AuthService {
     @Value("${google.ios-id}")
     private String googleIosId;
 
-//    @Value("${apple.client-id}")
-//    private String appleClientId;
-
-    @Value("${google.android-id}")
-    private String googleAndroidId;
-
-    @Value("${google.ios-id}")
-    private String googleIosId;
-
     @Transactional
     public AuthResponse kakaoSignup(KakaoSignupRequest request) {
         // 카카오 API로 유저 정보 조회

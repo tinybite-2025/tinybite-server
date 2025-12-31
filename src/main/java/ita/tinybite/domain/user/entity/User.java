@@ -29,7 +29,7 @@ public class User extends BaseEntity {
     @Column(nullable = false, length = 50, unique = true)
     private String email;
 
-    @Column(nullable = false, length = 30, unique = true)
+    @Column(length = 30, unique = true)
     private String nickname;
 
     @Column
@@ -46,7 +46,7 @@ public class User extends BaseEntity {
     @Column(nullable = false)
     private UserStatus status;
 
-    @Column(nullable = false, length = 100)
+    @Column(length = 100)
     private String location;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -60,7 +60,7 @@ public class User extends BaseEntity {
         this.location = location;
     }
 
-    public void updateSignupInfo(GoogleAndAppleSignupRequest req, String email) {
+    public void updateSignupInfo(GoogleAndAppleSignupRequest req, String email, LoginType loginType) {
         this.email = (email);
         this.nickname = (req.nickname());
         this.phone = (req.phone());
