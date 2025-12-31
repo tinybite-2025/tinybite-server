@@ -85,17 +85,9 @@ public class Party {
     @JoinColumn(name = "host_id", nullable = false)
     private User host; // 파티 개설자
 
-
-
     @OneToMany(mappedBy = "party", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<PartyParticipant> participants = new ArrayList<>(); // 파티 참여 유저
-
-//    public int getApprovedParticipantCount() {
-//        return (int) participants.stream()
-//                .filter(PartyParticipant::getIsApproved)
-//                .count() + 1; // 호스트 포함
-//    }
 
     public String getTimeAgo() {
         LocalDateTime now = LocalDateTime.now();

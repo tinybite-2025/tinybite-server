@@ -2,6 +2,7 @@ package ita.tinybite.domain.auth.controller;
 
 import ita.tinybite.domain.auth.dto.request.*;
 import ita.tinybite.domain.auth.dto.response.AuthResponse;
+import ita.tinybite.domain.auth.dto.response.LoginAuthResponse;
 import ita.tinybite.domain.auth.service.AuthService;
 import ita.tinybite.global.response.APIResponse;
 import jakarta.validation.Valid;
@@ -76,7 +77,7 @@ public class AuthController {
     }
 
     @PostMapping("/google/login")
-    public APIResponse<AuthResponse> googleLogin(
+    public APIResponse<LoginAuthResponse> googleLogin(
             @Valid @RequestBody GoogleAndAppleLoginReq req
     ) {
         return success(authService.googleLogin(req));
@@ -92,7 +93,7 @@ public class AuthController {
     }
 
     @PostMapping("/apple/login")
-    public APIResponse<AuthResponse> appleLogin(
+    public APIResponse<LoginAuthResponse> appleLogin(
             @Valid @RequestBody GoogleAndAppleLoginReq req
     ) {
         return success(authService.appleLogin(req));
@@ -112,6 +113,13 @@ public class AuthController {
     ) {
         authService.logout(userId);
         return ResponseEntity.ok(success(null));
+    }
+
+
+    @GetMapping("/nickname/check")
+    public APIResponse<?> validateNickname(@RequestParam String nickname) {
+        authService.validateNickname(nickname);
+        return success();
     }
 }
 

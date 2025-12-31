@@ -6,16 +6,20 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import ita.tinybite.domain.auth.dto.request.*;
 import ita.tinybite.domain.auth.dto.response.AuthResponse;
+import ita.tinybite.domain.auth.dto.response.LoginAuthResponse;
 import ita.tinybite.domain.auth.dto.response.UserDto;
 import ita.tinybite.domain.auth.entity.JwtTokenProvider;
 import ita.tinybite.domain.auth.entity.RefreshToken;
 import ita.tinybite.domain.auth.kakao.KakaoApiClient;
 import ita.tinybite.domain.auth.kakao.KakaoApiClient.KakaoUserInfo;
 import ita.tinybite.domain.auth.repository.RefreshTokenRepository;
+import ita.tinybite.domain.auth.repository.TermRepository;
 import ita.tinybite.domain.user.constant.LoginType;
 import ita.tinybite.domain.user.constant.PlatformType;
 import ita.tinybite.domain.user.constant.UserStatus;
+import ita.tinybite.domain.user.entity.Term;
 import ita.tinybite.domain.user.entity.User;
+import ita.tinybite.domain.user.entity.UserTermAgreement;
 import ita.tinybite.domain.user.repository.UserRepository;
 import ita.tinybite.global.exception.BusinessException;
 import ita.tinybite.global.exception.errorcode.AuthErrorCode;
@@ -26,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +39,8 @@ import java.io.*;
 import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -41,11 +48,20 @@ import java.util.Collections;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final TermRepository termRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final KakaoApiClient kakaoApiClient;
     private final JwtTokenProvider jwtTokenProvider;
     private final JwtDecoder appleJwtDecoder;
-    private final NicknameGenerator nicknameGenerator;
+
+    @Value("${apple.client-id}")
+    private String appleClientId;
+
+    @Value("${google.android-id}")
+    private String googleAndroidId;
+
+    @Value("${google.ios-id}")
+    private String googleIosId;
 
 //    @Value("${apple.client-id}")
 //    private String appleClientId;
@@ -141,18 +157,39 @@ public class AuthService {
                 .orElseThrow(() -> BusinessException.of(UserErrorCode.USER_NOT_EXISTS));
 
         // req필드로 유저 필드 업데이트 -> 실질적 회원가입
-        user.updateSignupInfo(req, email);
-        userRepository.save(user);
+        user.updateSignupInfo(req, email, LoginType.GOOGLE);
 
+        // 요청에서 동의한 termId 조합
+        List<Term> terms = termRepository.findAllByTitle(req.agreedTerms());
+
+        // 약관의 이름이 일치하지 않아 사이즈가 다를 때 -> 잘못된 약관 예외 처리
+        if(!(terms.size() == req.agreedTerms().size())) {
+            throw BusinessException.of(AuthErrorCode.INVALID_TERM);
+        }
+
+        // 필수로 동의해야하는 항목에 모두 동의를 하지 않았을 때 -> 필수 약관에 동의하세요
+        if(!terms.containsAll(termRepository.findRequiredTerm())) {
+            throw BusinessException.of(AuthErrorCode.PLEASE_AGREE_TERM);
+        }
+
+        // 유저 - 약관 간 동의 항목 생성
+        List<UserTermAgreement> agreements = terms
+                        .stream().map(term -> UserTermAgreement.builder()
+                        .user(user)
+                        .term(term)
+                        .build()).toList();
+
+        user.addTerms(agreements);
+        userRepository.save(user);
         return getAuthResponse(user);
     }
 
     @Transactional
-    public AuthResponse googleLogin(@Valid GoogleAndAppleLoginReq req) {
+    public LoginAuthResponse googleLogin(@Valid GoogleAndAppleLoginReq req) {
         // idToken으로 이메일 추출
         String email = getEmailFromIdToken(req.idToken(), req.platformType(), LoginType.GOOGLE);
         // 해당 이메일로 유저 찾은 후 응답 반환 (accessToken, refreshToken)
-        return getUser(email);
+        return getUser(email, LoginType.GOOGLE);
     }
 
     @Transactional
@@ -164,18 +201,18 @@ public class AuthService {
                 .orElseThrow(() -> BusinessException.of(UserErrorCode.USER_NOT_EXISTS));
 
         // req필드로 유저 필드 업데이트 -> 실질적 회원가입
-        user.updateSignupInfo(req, email);
+        user.updateSignupInfo(req, email, LoginType.APPLE);
         userRepository.save(user);
 
         return getAuthResponse(user);
     }
 
     @Transactional
-    public AuthResponse appleLogin(@Valid GoogleAndAppleLoginReq req) {
+    public LoginAuthResponse appleLogin(@Valid GoogleAndAppleLoginReq req) {
         // idToken으로 이메일 추출
         String email = getEmailFromIdToken(req.idToken(), req.platformType(), LoginType.APPLE);
         // 해당 이메일로 유저 찾은 후 응답 반환 (AuthResponse)
-        return getUser(email);
+        return getUser(email, LoginType.APPLE);
     }
 
     private AuthResponse getAuthResponse(User user) {
@@ -209,49 +246,74 @@ public class AuthService {
                     case IOS -> googleIosId;
                 };
 
+                GoogleIdTokenVerifier googleVerifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
+                        .setAudience(Collections.singletonList(clientId))
+                        .build();
+
+                GoogleIdToken token;
                 try {
-                    GoogleIdTokenVerifier googleVerifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
-                            .setAudience(Collections.singletonList(clientId))
-                            .build();
-
-                    GoogleIdToken token = googleVerifier.verify(idToken);
-
-                    if(token == null) {
-                        throw BusinessException.of(AuthErrorCode.INVALID_TOKEN);
-                    }
-
-                    return token.getPayload().getEmail();
-
+                    token = googleVerifier.verify(idToken);
                 } catch (GeneralSecurityException | IOException e) {
                     throw BusinessException.of(AuthErrorCode.GOOGLE_LOGIN_ERROR);
                 }
+
+                if(token == null) {
+                    throw BusinessException.of(AuthErrorCode.INVALID_TOKEN);
+                }
+
+                return token.getPayload().getEmail();
             }
             case APPLE -> {
-                //TODO Apple 구현 예정
+                String clientId = appleClientId;
+                Jwt jwt = appleJwtDecoder.decode(idToken);
+
+                if(!"https://appleid.apple.com".equals(jwt.getIssuer().toString())) {
+                    throw BusinessException.of(AuthErrorCode.INVALID_TOKEN);
+                }
+
+                String aud = jwt.getAudience().get(0);
+                if (!aud.equals(clientId)) {
+                    throw BusinessException.of(AuthErrorCode.INVALID_TOKEN);
+                }
+
+                Object emailObject = jwt.getClaims().get("email");
+                if(emailObject == null) {
+                    throw BusinessException.of(AuthErrorCode.NOT_EXISTS_EMAIL);
+                }
+                return emailObject.toString();
             }
         }
         return null;
     }
 
-    private AuthResponse getUser(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> {
-                    // 이메일로 가입된 유저가 없을 시, INACTIVE로 임시 생성
-                    // 회원가입 시 해당 임시 유저를 통해 마저 회원가입 진행
-                    userRepository.save(User.builder()
-                            .email(email)
-                            .status(UserStatus.INACTIVE)
-                            .build());
+    private LoginAuthResponse getUser(String email, LoginType type) {
+        Optional<User> optionalUser = userRepository.findByEmail(email);
 
-                    return BusinessException.of(UserErrorCode.USER_NOT_EXISTS);
-                });
+        if(optionalUser.isEmpty()) {
+            // 이메일로 가입된 유저가 없을 시, INACTIVE로 임시 생성
+            // 회원가입 시 해당 임시 유저를 통해 마저 회원가입 진행
+            userRepository.save(User.builder()
+                    .email(email)
+                    .status(UserStatus.INACTIVE)
+                    .type(type)
+                    .build());
+            return LoginAuthResponse.builder().signup(false).build();
+        }
+
+        User user = optionalUser.get();
+        if(user.getStatus().equals(UserStatus.INACTIVE)) {
+            return LoginAuthResponse.builder().signup(false).build();
+        }
 
         // 3. 탈퇴한 사용자 체크
         if (user.getStatus() == UserStatus.WITHDRAW) {
             throw new RuntimeException("탈퇴한 사용자입니다.");
         }
 
-        return getAuthResponse(user);
+        return LoginAuthResponse.builder()
+                .signup(true)
+                .authResponse(getAuthResponse(user))
+                .build();
     }
 
     @Transactional
@@ -307,5 +369,10 @@ public class AuthService {
                 .build();
 
         refreshTokenRepository.save(refreshToken);
+    }
+
+    public void validateNickname(String nickname) {
+        if(userRepository.existsByStatusAndNickname(UserStatus.ACTIVE, nickname))
+            throw BusinessException.of(AuthErrorCode.DUPLICATED_NICKNAME);
     }
 }

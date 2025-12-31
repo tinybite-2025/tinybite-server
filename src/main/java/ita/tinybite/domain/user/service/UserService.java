@@ -1,6 +1,7 @@
 package ita.tinybite.domain.user.service;
 
 import ita.tinybite.domain.auth.service.SecurityProvider;
+import ita.tinybite.domain.user.constant.UserStatus;
 import ita.tinybite.domain.user.dto.req.UpdateUserReqDto;
 import ita.tinybite.domain.user.dto.res.UserResDto;
 import ita.tinybite.domain.user.entity.User;
@@ -43,10 +44,5 @@ public class UserService {
 
     public void deleteUser() {
         userRepository.delete(securityProvider.getCurrentUser());
-    }
-
-    public void validateNickname(String nickname) {
-        if(userRepository.existsByNickname(nickname))
-            throw BusinessException.of(AuthErrorCode.DUPLICATED_NICKNAME);
     }
 }

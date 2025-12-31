@@ -68,11 +68,4 @@ public class PartyParticipant {
     public boolean isApproved() {
         return this.status == ParticipantStatus.APPROVED;
     }
-
-//    /**
-//     * 1:1 채팅방 설정
-//     */
-//    public void setOneToOneChatRoom(ChatRoom chatRoom) {
-//        this.oneToOneChatRoom = chatRoom;
-//    }
 }

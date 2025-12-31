@@ -1,7 +1,7 @@
 spring:
   config:
     activate:
-      on-profile: "dev"
+      on-profile: 'dev'
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -12,17 +12,17 @@ spring:
   jpa:
     show-sql: true
     hibernate:
-      ddl-auto: create-drop  # 개발: update, 운영: validate 또는 none
+      ddl-auto: update # 개발: update, 운영: validate 또는 none
 
   data:
     redis:
-      host: redis
-      port: 6379
+      host: ${DEV_REDIS_HOST}
+      port: ${DEV_REDIS_PORT}
+      password: ${DEV_REDIS_PASSWORD}
 
 kakao:
   client-id: ${KAKAO_CLIENT_ID}
   redirect-uri: ${KAKAO_REDIRECT_URI}
 
-naver:
-  client-id: ${NAVER_CLIENT_ID}
-  secret: ${NAVER_CLIENT_SECRET}
+fcm:
+  file_path: ${DEV_FCM_PATH}

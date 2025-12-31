@@ -1,5 +1,6 @@
 package ita.tinybite.domain.user.service;
 
+import ita.tinybite.domain.auth.service.AuthService;
 import ita.tinybite.domain.user.constant.LoginType;
 import ita.tinybite.domain.user.constant.UserStatus;
 import ita.tinybite.domain.user.dto.req.UpdateUserReqDto;
@@ -21,6 +22,9 @@ class UserServiceTest {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private AuthService authService;
 
     // Fake 객체
     private FakeSecurityProvider securityProvider;
@@ -89,9 +93,9 @@ class UserServiceTest {
 
     @Test
     void validateNickname() {
-        assertThatThrownBy(() -> userService.validateNickname("임원재"))
+        assertThatThrownBy(() -> authService.validateNickname("임원재"))
                 .isInstanceOf(BusinessException.class);
 
-        assertThatNoException().isThrownBy(() -> userService.validateNickname("임원재1"));
+        assertThatNoException().isThrownBy(() -> authService.validateNickname("임원재1"));
     }
 }

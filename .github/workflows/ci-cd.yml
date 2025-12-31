@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ['main']
 
 permissions:
   contents: read
@@ -22,8 +22,8 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
-          distribution: "temurin"
-          java-version: "17"
+          distribution: 'temurin'
+          java-version: '17'
           cache: gradle
 
       - name: Build + Test(Gradle)
@@ -64,7 +64,6 @@ jobs:
           ls -la
           find . -maxdepth 3 -iname 'Dockerfile' -print
 
-
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
@@ -88,8 +87,8 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           port: 22
-          source: "docker/*,.env,nginx/,deploy.sh"
-          target: "/home/ubuntu/tinybite/"
+          source: 'docker/*,.env,nginx/,deploy.sh'
+          target: '/home/ubuntu/tinybite/'
 
       # EC2에서 도커 컨테이너 재배포
       - name: Deploy to EC2
@@ -102,10 +101,13 @@ jobs:
           script: |
             cd /home/ubuntu/tinybite
             mv /home/ubuntu/tinybite/docker/* /home/ubuntu/tinybite/
-            
+
             export GHCR_TOKEN=${{ secrets.GHCR_TOKEN }}
             export GHCR_USERNAME=${{ github.actor }}  
             echo $GHCR_TOKEN | docker login ghcr.io -u $GHCR_USERNAME --password-stdin
 
-            chmod +x deploy.sh
-            ./deploy.sh
+            docker compose -f docker-compose.blue.yml pull
+            docker compose -f docker-compose.blue.yml down || true
+            docker compose -f docker-compose.blue.yml up -d
+
+            docker image prune -a -f

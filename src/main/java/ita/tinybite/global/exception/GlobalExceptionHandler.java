@@ -18,8 +18,8 @@ public class GlobalExceptionHandler {
 
     // 비즈니스 에러 처리
     @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<APIResponse<Void>> handleBusinessException(BusinessException exception) {
-        log.error(exception.getMessage());
+    public ResponseEntity<APIResponse<Void>> handleBusinessException(BusinessException exception, HttpServletRequest request) {
+        log.error("URI : {}, {}", request.getRequestURI(), exception.getMessage());
 
         return ResponseEntity.status(exception.getErrorCode().getHttpStatus())
                 .body(APIResponse.businessError(exception.getErrorCode()));
@@ -32,8 +32,7 @@ public class GlobalExceptionHandler {
         if (request.getRequestURI().endsWith(".ico")) return null; // 불필요한 리소스 요청은 무시
 
         ErrorCode errorCode = CommonErrorCode.NOT_FOUND;
-
-        log.warn(errorCode.getMessage(), exception);
+        log.warn("URI : {}, {}", request.getRequestURI(), exception.getMessage());
         return ResponseEntity.status(errorCode.getHttpStatus())
                 .body(APIResponse.commonError(errorCode));
     }
@@ -44,19 +43,19 @@ public class GlobalExceptionHandler {
         IllegalStateException.class,
         MethodArgumentTypeMismatchException.class
     })
-    public ResponseEntity<APIResponse<Void>> handle400Exception(RuntimeException exception) {
-        log.warn(exception.getMessage(), exception);
+    public ResponseEntity<APIResponse<Void>> handle400Exception(RuntimeException exception, HttpServletRequest request) {
 
         ErrorCode errorCode = CommonErrorCode.BAD_REQUEST;
+        log.warn("URI : {}, {}", request.getRequestURI(), exception.getMessage());
         return ResponseEntity.status(errorCode.getHttpStatus())
                 .body(APIResponse.commonError(errorCode));
     }
 
     // 공통 에러 처리
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<APIResponse<Void>> handle500Exception(Exception exception) {
-        log.warn(exception.getMessage(), exception);
+    public ResponseEntity<APIResponse<Void>> handle500Exception(Exception exception, HttpServletRequest request) {
 
+        log.warn("URI : {}, {}", request.getRequestURI(), exception.getMessage(), exception);
         ErrorCode errorCode = CommonErrorCode.INTERNAL_SERVER_ERROR;
         return ResponseEntity.status(errorCode.getHttpStatus())
                 .body(APIResponse.commonError(errorCode));
