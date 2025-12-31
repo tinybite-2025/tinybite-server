@@ -1,4 +1,6 @@
 package ita.tinybite.domain.party.entity;
+import ita.tinybite.domain.chat.entity.ChatRoom;
+import ita.tinybite.domain.party.enums.ParticipantStatus;
 import ita.tinybite.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -40,15 +42,22 @@ public class PartyParticipant {
      * 참여 승인
      */
     public void approve() {
-        this.isApproved = true;
+        this.status = ParticipantStatus.APPROVED;
         this.approvedAt = LocalDateTime.now();
     }
 
     /**
-     * 승인 취소
+     * 참여 거절
      */
     public void reject() {
-        this.isApproved = false;
-        this.approvedAt = null;
+        this.status = ParticipantStatus.REJECTED;
+        this.rejectedAt = LocalDateTime.now();
+    }
+
+    /**
+     * 승인 여부
+     */
+    public boolean isApproved() {
+        return this.status == ParticipantStatus.APPROVED;
     }
 }

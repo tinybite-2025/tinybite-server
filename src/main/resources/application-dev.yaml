@@ -1,7 +1,7 @@
 spring:
   config:
     activate:
-      on-profile: "dev"
+      on-profile: 'dev'
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -16,8 +16,9 @@ spring:
 
   data:
     redis:
-      host: redis
-      port: 6379
+      host: ${DEV_REDIS_HOST}
+      port: ${DEV_REDIS_PORT}
+      password: ${DEV_REDIS_PASSWORD}
 
 kakao:
   client-id: ${KAKAO_CLIENT_ID}
