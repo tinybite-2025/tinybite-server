@@ -1,12 +1,17 @@
 package ita.tinybite.domain.party.service;
 
+import ita.tinybite.domain.chat.entity.ChatRoom;
+import ita.tinybite.domain.chat.enums.ChatRoomType;
+import ita.tinybite.domain.chat.repository.ChatRoomRepository;
 import ita.tinybite.domain.party.dto.request.PartyCreateRequest;
 import ita.tinybite.domain.party.dto.request.PartyUpdateRequest;
 import ita.tinybite.domain.party.dto.response.*;
 import ita.tinybite.domain.party.entity.Party;
 import ita.tinybite.domain.party.entity.PartyParticipant;
 import ita.tinybite.domain.party.entity.PickupLocation;
+import ita.tinybite.domain.party.enums.ParticipantStatus;
 import ita.tinybite.domain.party.enums.PartyCategory;
+import ita.tinybite.domain.party.enums.PartyStatus;
 import ita.tinybite.domain.party.repository.PartyParticipantRepository;
 import ita.tinybite.domain.party.repository.PartyRepository;
 import ita.tinybite.domain.user.entity.User;
@@ -17,6 +22,7 @@ import java.util.stream.Collectors;
 
 import ita.tinybite.global.location.LocationService;
 import ita.tinybite.global.util.DistanceCalculator;
+import ita.tinybite.global.util.UrlParser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +36,7 @@ public class PartyService {
     private final UserRepository userRepository;
     private final LocationService locationService;
     private final PartyParticipantRepository partyParticipantRepository;
-
+    private final ChatRoomRepository chatRoomRepository;
     /**
      * 파티 생성
      */
@@ -44,6 +50,8 @@ public class PartyService {
 
         // 첫 번째 이미지를 썸네일로 사용, 없으면 기본 이미지
         String thumbnailImage = getDefaultImageIfEmpty(request.getImages(), request.getCategory());
+
+        ProductInfo productInfo = urlParser.getProductInfo(request.getProductLink());
 
         Party party = Party.builder()
                 .title(request.getTitle())
@@ -61,6 +69,8 @@ public class PartyService {
                 .thumbnailImage(thumbnailImage)
                 .link(request.getProductLink())
                 .description(request.getDescription())
+                .currentParticipants(1)
+                .status(PartyStatus.RECRUITING)
                 .isClosed(false)
                 .host(user)
                 .build();
@@ -90,7 +100,7 @@ public class PartyService {
             }
         } else {
             // 비회원이거나 동네 미설정 시
-            String location = locationService.getLocation(userLat,userLon);
+            String location = locationService.getLocation(userLat, userLon);
             if (category == PartyCategory.ALL) {
                 parties = partyRepository.findByPickupLocation_Place(location);
             } else {
@@ -145,7 +155,7 @@ public class PartyService {
         boolean isParticipating = false;
         if (user != null) {
             isParticipating = partyParticipantRepository
-                    .existsByPartyAndUserAndIsApprovedTrue(party, user);
+                    .existsByPartyAndUserAndStatus(party, user, ParticipantStatus.APPROVED);
         }
 
         // 거리 계산 (사용자 위치 필요)
@@ -166,36 +176,30 @@ public class PartyService {
      * 파티 참여
      */
     @Transactional
-    public void joinParty(Long partyId, Long userId) {
+    public Long joinParty(Long partyId, Long userId) {
         Party party = partyRepository.findById(partyId)
                 .orElseThrow(() -> new IllegalArgumentException("파티를 찾을 수 없습니다"));
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다"));
 
-        // 마감 체크
-        if (party.getIsClosed()) {
-            throw new IllegalStateException("마감된 파티입니다");
-        }
+        // 유효성 검증
+        validateJoinRequest(party, user);
 
-        // 인원 체크
-        if (party.getApprovedParticipantCount() >= party.getMaxParticipants()) {
-            throw new IllegalStateException("인원이 가득 찼습니다");
-        }
+        // 1:1 채팅방 생성 (파티장 + 신청자)
+        ChatRoom oneToOneChatRoom = createOneToOneChatRoom(party, user);
 
-        // 중복 참여 체크
-        if (partyParticipantRepository.existsByPartyAndUser(party, user)) {
-            throw new IllegalStateException("이미 참여 신청한 파티입니다");
-        }
-
-        // 참여 신청 (승인 대기)
+        // 참여 신청 생성
         PartyParticipant participant = PartyParticipant.builder()
                 .party(party)
                 .user(user)
-                .isApproved(false) // 초기에는 승인 대기
+                .status(ParticipantStatus.PENDING)
+                .oneToOneChatRoom(oneToOneChatRoom)
                 .build();
 
-        partyParticipantRepository.save(participant);
+        PartyParticipant saved = partyParticipantRepository.save(participant);
+
+        return saved.getId();
     }
 
     private void validateProductLink(PartyCategory category, String productLink) {
@@ -222,7 +226,7 @@ public class PartyService {
     private PartyCardResponse convertToCardResponse(Party party, double distanceKm, Long userId,
                                                     java.time.LocalDateTime createdAt) {
         int pricePerPerson = party.getPrice() / party.getMaxParticipants();
-        String participantStatus = party.getApprovedParticipantCount() + "/"
+        String participantStatus = party.getCurrentParticipants() + "/"
                 + party.getMaxParticipants() + "명";
 
         return PartyCardResponse.builder()
@@ -243,7 +247,7 @@ public class PartyService {
 
     private PartyDetailResponse convertToDetailResponse(Party party, double distance,
                                                         boolean isParticipating) {
-        int currentCount = party.getApprovedParticipantCount();
+        int currentCount = party.getCurrentParticipants();
         int pricePerPerson = party.getPrice() / party.getMaxParticipants();
 
         // 이미지 파싱
@@ -291,7 +295,7 @@ public class PartyService {
         }
 
         // 승인된 파티원 확인
-        boolean hasApprovedParticipants = party.getApprovedParticipantCount() > 1;
+        boolean hasApprovedParticipants = party.getCurrentParticipants() > 1;
 
         if (hasApprovedParticipants) {
             // 승인된 파티원이 있는 경우: 설명과 이미지만 수정 가능
@@ -305,7 +309,7 @@ public class PartyService {
                     request.getTitle(),
                     request.getTotalPrice(),
                     request.getMaxParticipants(),
-                    new PickupLocation(request.getPickupLocation(),request.getLatitude(),request.getLongitude()),
+                    new PickupLocation(request.getPickupLocation(), request.getLatitude(), request.getLongitude()),
                     request.getLatitude(),
                     request.getLongitude(),
                     request.getProductLink(),
@@ -326,7 +330,7 @@ public class PartyService {
         }
 
         // 승인된 파티원 확인
-        boolean hasApprovedParticipants = party.getApprovedParticipantCount() > 1;
+        boolean hasApprovedParticipants = party.getCurrentParticipants() > 1;
 
         if (hasApprovedParticipants) {
             throw new IllegalStateException("승인된 파티원이 있어 삭제할 수 없습니다");
@@ -336,5 +340,222 @@ public class PartyService {
         partyRepository.delete(party);
     }
 
+
+    /**
+     * 참여 승인 → 단체 채팅방 자동 입장
+     */
+    @Transactional
+    public void approveParticipant(Long partyId, Long participantId, Long hostId) {
+        Party party = partyRepository.findById(partyId)
+                .orElseThrow(() -> new IllegalArgumentException("파티를 찾을 수 없습니다"));
+
+        // 파티장 권한 확인
+        if (!party.getHost().getUserId().equals(hostId)) {
+            throw new IllegalStateException("파티장만 승인할 수 있습니다");
+        }
+
+        PartyParticipant participant = partyParticipantRepository.findById(participantId)
+                .orElseThrow(() -> new IllegalArgumentException("참여 신청을 찾을 수 없습니다"));
+
+        // 승인 처리
+        participant.approve();
+
+        // 단체 채팅방 조회 또는 생성
+        ChatRoom groupChatRoom = getOrCreateGroupChatRoom(party);
+
+        // 단체 채팅방에 참여자 추가
+        groupChatRoom.addMember(participant.getUser());
+
+        // 목표 인원 달성 확인
+        checkAndCloseIfFull(party);
+    }
+
+    /**
+     * 참여 거절
+     */
+    @Transactional
+    public void rejectParticipant(Long partyId, Long participantId, Long hostId) {
+        Party party = partyRepository.findById(partyId)
+                .orElseThrow(() -> new IllegalArgumentException("파티를 찾을 수 없습니다"));
+
+        if (!party.getHost().getUserId().equals(hostId)) {
+            throw new IllegalStateException("파티장만 거절할 수 있습니다");
+        }
+
+        PartyParticipant participant = partyParticipantRepository.findById(participantId)
+                .orElseThrow(() -> new IllegalArgumentException("참여 신청을 찾을 수 없습니다"));
+
+        // 거절 처리
+        participant.reject();
+
+        // 1:1 채팅방 비활성화
+        if (participant.getOneToOneChatRoom() != null) {
+            participant.getOneToOneChatRoom().deactivate();
+        }
+
+    }
+
+    /**
+     * 승인 대기 목록 조회
+     */
+    public List<PartyParticipant> getPendingParticipants(Long partyId, Long hostId) {
+        Party party = partyRepository.findById(partyId)
+                .orElseThrow(() -> new IllegalArgumentException("파티를 찾을 수 없습니다"));
+
+        if (!party.getHost().getUserId().equals(hostId)) {
+            throw new IllegalStateException("파티장만 조회할 수 있습니다");
+        }
+
+        return partyParticipantRepository.findByPartyAndStatus(party, ParticipantStatus.PENDING);
+    }
+
+    /**
+     * 단체 채팅방 조회
+     */
+    public ChatRoomResponse getGroupChatRoom(Long partyId, Long userId) {
+        Party party = partyRepository.findByIdWithHost(partyId)
+                .orElseThrow(() -> new IllegalArgumentException("파티를 찾을 수 없습니다"));
+
+        // 접근 권한 확인
+        validateGroupChatRoomAccess(party, userId);
+
+        ChatRoom chatRoom= chatRoomRepository.findByPartyAndType(party, ChatRoomType.GROUP)
+                .orElseThrow(() -> new IllegalStateException("단체 채팅방이 아직 생성되지 않았습니다"));
+
+        return ChatRoomResponse.builder()
+                .id(chatRoom.getId())
+                .type(chatRoom.getType())
+                .party(PartyInfo.builder()
+                        .id(partyId)
+                        .title(party.getTitle())
+                        .host(HostInfo.builder()
+                                .userId(party.getHost().getUserId())
+                                .nickname(party.getHost().getNickname())
+                                .profileImage(party.getHost().getProfileImage())
+                                .build()
+                        ).build()
+                ).build();
+    }
+
+    /**
+     * 1:1 채팅방 조회
+     */
+    public ChatRoom getOneToOneChatRoom(Long participantId, Long userId) {
+        PartyParticipant participant = partyParticipantRepository.findById(participantId)
+                .orElseThrow(() -> new IllegalArgumentException("참여 신청을 찾을 수 없습니다"));
+
+        // 파티장 또는 신청자만 접근 가능
+        boolean isHost = participant.getParty().getHost().getUserId().equals(userId);
+        boolean isApplicant = participant.getUser().getUserId().equals(userId);
+
+        if (!isHost && !isApplicant) {
+            throw new IllegalStateException("1:1 채팅방에 접근할 수 없습니다");
+        }
+
+        return participant.getOneToOneChatRoom();
+    }
+
+    /**
+     * 파티 결산 가능 여부 확인
+     */
+    public boolean canSettle(Long partyId) {
+        Party party = partyRepository.findById(partyId)
+                .orElseThrow(() -> new IllegalArgumentException("파티를 찾을 수 없습니다"));
+
+        // 목표 인원 달성 여부
+        return party.getCurrentParticipants() >= party.getMaxParticipants();
+    }
+
+    /**
+     * 파티 결산 (마감)
+     */
+    @Transactional
+    public void settleParty(Long partyId, Long hostId) {
+        Party party = partyRepository.findById(partyId)
+                .orElseThrow(() -> new IllegalArgumentException("파티를 찾을 수 없습니다"));
+
+        if (!party.getHost().getUserId().equals(hostId)) {
+            throw new IllegalStateException("파티장만 결산할 수 있습니다");
+        }
+
+        if (!canSettle(partyId)) {
+            throw new IllegalStateException("목표 인원이 달성되지 않았습니다");
+        }
+
+        // 파티 마감
+        party.close();
+    }
+
+    // ========== Private Methods ==========
+
+    private void validateJoinRequest(Party party, User user) {
+        if (party.getIsClosed()) {
+            throw new IllegalStateException("마감된 파티입니다");
+        }
+
+        if (party.getCurrentParticipants() >= party.getMaxParticipants()) {
+            throw new IllegalStateException("인원이 가득 찼습니다");
+        }
+
+        if (partyParticipantRepository.existsByPartyAndUser(party, user)) {
+            throw new IllegalStateException("이미 참여 신청한 파티입니다");
+        }
+
+        if (party.getHost().getUserId().equals(user.getUserId())) {
+            throw new IllegalStateException("파티장은 참여 신청할 수 없습니다");
+        }
+    }
+
+    private ChatRoom createOneToOneChatRoom(Party party, User applicant) {
+        ChatRoom chatRoom = ChatRoom.builder()
+                .party(party)
+                .type(ChatRoomType.ONE_TO_ONE)
+                .name(party.getTitle())
+                .isActive(true)
+                .build();
+
+        ChatRoom saved = chatRoomRepository.save(chatRoom);
+
+        // 파티장과 신청자 추가
+        saved.addMember(party.getHost());
+        saved.addMember(applicant);
+
+        return saved;
+    }
+
+    private ChatRoom getOrCreateGroupChatRoom(Party party) {
+        return chatRoomRepository.findByPartyAndType(party, ChatRoomType.GROUP)
+                .orElseGet(() -> {
+                    ChatRoom chatRoom = ChatRoom.builder()
+                            .party(party)
+                            .type(ChatRoomType.GROUP)
+                            .name(party.getTitle())
+                            .isActive(true)
+                            .build();
+
+                    ChatRoom saved = chatRoomRepository.save(chatRoom);
+
+                    // 파티장 자동 추가
+                    saved.addMember(party.getHost());
+
+                    return saved;
+                });
+    }
+
+    private void validateGroupChatRoomAccess(Party party, Long userId) {
+        boolean isHost = party.getHost().getUserId().equals(userId);
+        boolean isApproved = partyParticipantRepository
+                .existsByPartyAndUserUserIdAndStatus(party, userId, ParticipantStatus.APPROVED);
+
+        if (!isHost && !isApproved) {
+            throw new IllegalStateException("단체 채팅방에 접근할 수 없습니다");
+        }
+    }
+
+    private void checkAndCloseIfFull(Party party) {
+        if (party.getCurrentParticipants() >= party.getMaxParticipants()) {
+            party.close();
+        }
+    }
 }
 

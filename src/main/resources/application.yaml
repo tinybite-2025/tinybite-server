@@ -6,11 +6,9 @@ spring:
 
   profiles:
     group:
-      local: "local"
-      dev: "dev"
-      test: "test"
-
-
+      local: 'local'
+      dev: 'dev'
+      test: 'test'
 
 jwt:
   secret: ${JWT_SECRET}

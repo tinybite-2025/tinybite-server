@@ -41,4 +41,10 @@ public class UserController {
         userService.deleteUser();
         return success();
     }
+
+    @GetMapping("/nickname/check")
+    public APIResponse<?> validateNickname(@RequestParam String nickname) {
+        userService.validateNickname(nickname);
+        return success();
+    }
 }
