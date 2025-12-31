@@ -12,7 +12,7 @@ spring:
   jpa:
     show-sql: true
     hibernate:
-      ddl-auto: update # 개발: update, 운영: validate 또는 none
+      ddl-auto: update  # 개발: update, 운영: validate 또는 none
 
   data:
     redis:
