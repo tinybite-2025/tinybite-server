@@ -37,8 +37,6 @@ public class PartyService {
     private final LocationService locationService;
     private final PartyParticipantRepository partyParticipantRepository;
     private final ChatRoomRepository chatRoomRepository;
-    private final UrlParser urlParser;
-
     /**
      * 파티 생성
      */
