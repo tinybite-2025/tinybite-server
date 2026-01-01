@@ -63,7 +63,7 @@ public class PartyService {
                         .build())
 //                .latitude(request.getLatitude())
 //                .longitude(request.getLongitude())
-                .image(request.getImages())
+                .image(request.getImages().get(0))
                 .thumbnailImage(thumbnailImage)
                 .link(request.getProductLink())
                 .description(request.getDescription())
