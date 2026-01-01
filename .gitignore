@@ -39,3 +39,4 @@ out/
 .env
 .terraform
 *.pem
+/src/main/resources/firebase
