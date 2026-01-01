@@ -45,4 +45,9 @@ public class UserService {
     public void deleteUser() {
         userRepository.delete(securityProvider.getCurrentUser());
     }
+
+    public void validateNickname(String nickname) {
+        if(userRepository.existsByNickname(nickname))
+            throw BusinessException.of(AuthErrorCode.DUPLICATED_NICKNAME);
+    }
 }

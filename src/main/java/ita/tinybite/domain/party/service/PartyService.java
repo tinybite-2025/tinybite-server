@@ -50,7 +50,6 @@ public class PartyService {
         // 첫 번째 이미지를 썸네일로 사용, 없으면 기본 이미지
         String thumbnailImage = getDefaultImageIfEmpty(request.getImages(), request.getCategory());
 
-        ProductInfo productInfo = urlParser.getProductInfo(request.getProductLink());
 
         Party party = Party.builder()
                 .title(request.getTitle())
