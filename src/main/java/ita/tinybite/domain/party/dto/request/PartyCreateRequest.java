@@ -43,7 +43,7 @@ public class PartyCreateRequest {
     @Size(max = 5, message = "이미지는 최대 5장까지 업로드 가능합니다")
     private List<String> images;
 
-    @URL(message = "올바른 URL 형식으로 입력해주세요")
+//    @URL(message = "올바른 URL 형식으로 입력해주세요")
     private String productLink;
 
     @Size(max = 60, message = "상세 설명은 최대 60자까지 입력 가능합니다")
