@@ -2,6 +2,7 @@ package ita.tinybite.domain.party.entity;
 
 
 import ita.tinybite.domain.party.enums.PartyCategory;
+import ita.tinybite.domain.party.enums.PartyStatus;
 import ita.tinybite.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -43,6 +44,9 @@ public class Party {
     @Column(nullable = false)
     private Integer maxParticipants; // 최대 인원
 
+    @Column(nullable = false)
+    private Integer currentParticipants;
+
     @Column(length = 500)
     private String link; // 링크 (예: 배달앱 링크)
 
@@ -53,6 +57,10 @@ public class Party {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private PartyCategory category; // 카테고리
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PartyStatus status;
 
     @Column(nullable = false)
     private Double latitude; // 위도 (거리 계산용)
@@ -70,6 +78,8 @@ public class Party {
     @UpdateTimestamp
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    private LocalDateTime closedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "host_id", nullable = false)
@@ -156,6 +166,24 @@ public class Party {
         if (images != null && !images.isEmpty()) {
             this.image = Collections.singletonList(String.join(",", images));
             this.thumbnailImage = images.get(0);
+        }
+    }
+
+    public void close() {
+        validateCanClose();
+        this.status = PartyStatus.CLOSED;
+        this.closedAt = LocalDateTime.now();
+    }
+
+    /**
+     * 파티 종료 가능 여부 검증
+     */
+    private void validateCanClose() {
+        if (this.status == PartyStatus.CLOSED) {
+            throw new IllegalStateException("이미 종료된 파티입니다.");
+        }
+        if (this.status == PartyStatus.CANCELLED) {
+            throw new IllegalStateException("취소된 파티는 종료할 수 없습니다.");
         }
     }
 }
