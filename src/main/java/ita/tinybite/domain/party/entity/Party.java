@@ -36,7 +36,7 @@ public class Party {
     private String thumbnailImage; // 섬네일 이미지 URL
 
     @Column(length = 500)
-    private List<String> image; // 이미지 URL
+    private String image; // 이미지 URL
 
     @Column(nullable = false)
     private Integer price; // 가격
@@ -62,11 +62,11 @@ public class Party {
     @Column(nullable = false)
     private PartyStatus status;
 
-    @Column(nullable = false)
-    private Double latitude; // 위도 (거리 계산용)
-
-    @Column(nullable = false)
-    private Double longitude; // 경도 (거리 계산용)
+//    @Column(nullable = false)
+//    private Double latitude; // 위도 (거리 계산용)
+//
+//    @Column(nullable = false)
+//    private Double longitude; // 경도 (거리 계산용)
 
     @Column(nullable = false)
     private Boolean isClosed; // 마감 여부
@@ -76,7 +76,6 @@ public class Party {
     private LocalDateTime createdAt; // 등록시간
 
     @UpdateTimestamp
-    @Column(nullable = false)
     private LocalDateTime updatedAt;
 
     private LocalDateTime closedAt;
@@ -88,6 +87,16 @@ public class Party {
     @OneToMany(mappedBy = "party", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<PartyParticipant> participants = new ArrayList<>(); // 파티 참여 유저
+
+    /**
+     * 참여자 수 증가
+     */
+    public void incrementParticipants() {
+        if (this.currentParticipants >= this.maxParticipants) {
+            throw new IllegalStateException("파티 인원이 가득 찼습니다");
+        }
+        this.currentParticipants++;
+    }
 
     public String getTimeAgo() {
         LocalDateTime now = LocalDateTime.now();
@@ -135,8 +144,8 @@ public class Party {
         this.price = price != null ? price : this.price;
         this.maxParticipants = maxParticipants != null ? maxParticipants : this.maxParticipants;
         this.pickupLocation = pickupLocation != null ? pickupLocation : this.pickupLocation;
-        this.latitude = latitude != null ? latitude : this.latitude;
-        this.longitude = longitude != null ? longitude : this.longitude;
+//        this.latitude = latitude != null ? latitude : this.latitude;
+//        this.longitude = longitude != null ? longitude : this.longitude;
 
         // 상품 링크 검증
         if (productLink != null) {
@@ -149,7 +158,7 @@ public class Party {
         this.description = description != null ? description : this.description;
 
         if (images != null && !images.isEmpty()) {
-            this.image = Collections.singletonList(String.join(",", images));
+            this.image = images.get(0);
             this.thumbnailImage = images.get(0);
         }
     }
@@ -158,7 +167,7 @@ public class Party {
         this.description = description != null ? description : this.description;
 
         if (images != null && !images.isEmpty()) {
-            this.image = Collections.singletonList(String.join(",", images));
+            this.image = images.get(0);
             this.thumbnailImage = images.get(0);
         }
     }
