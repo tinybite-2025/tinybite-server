@@ -6,7 +6,6 @@ import ita.tinybite.domain.party.entity.PartyParticipant;
 import ita.tinybite.domain.party.enums.ParticipantStatus;
 import ita.tinybite.domain.party.enums.PartyStatus;
 import ita.tinybite.domain.party.repository.PartyParticipantRepository;
-import ita.tinybite.domain.user.constant.UserStatus;
 import ita.tinybite.domain.user.dto.req.UpdateUserReqDto;
 import ita.tinybite.domain.user.dto.res.PartyResponse;
 import ita.tinybite.domain.user.dto.res.UserResDto;
@@ -16,11 +15,13 @@ import ita.tinybite.global.exception.BusinessException;
 import ita.tinybite.global.exception.errorcode.AuthErrorCode;
 import ita.tinybite.global.location.LocationService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class UserService {
 
     private final SecurityProvider securityProvider;
@@ -43,17 +44,20 @@ public class UserService {
         return UserResDto.of(user);
     }
 
+    @Transactional
     public void updateUser(UpdateUserReqDto req) {
         User user = securityProvider.getCurrentUser();
         user.update(req);
     }
 
+    @Transactional
     public void updateLocation(String latitude, String longitude) {
         User user = securityProvider.getCurrentUser();
         String location = locationService.getLocation(latitude, longitude);
         user.updateLocation(location);
     }
 
+    @Transactional
     public void deleteUser() {
         userRepository.delete(securityProvider.getCurrentUser());
     }
