@@ -17,8 +17,8 @@ public class PickupLocation {
     private String place;
 
 //    @NotNull(message = "위도는 필수입니다")
-//    private Double pickupLatitude;
+    private Double pickupLatitude;
 //
 //    @NotNull(message = "경도는 필수입니다")
-//    private Double pickupLongitude;
+    private Double pickupLongitude;
 }

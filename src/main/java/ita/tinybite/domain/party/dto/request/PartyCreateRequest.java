@@ -34,12 +34,6 @@ public class PartyCreateRequest {
     @NotNull(message = "수령 장소 정보는 필수입니다")
     private PickupLocation pickupLocation;
 
-//    @NotNull(message = "위도는 필수입니다")
-//    private Double latitude;
-//
-//    @NotNull(message = "경도는 필수입니다")
-//    private Double longitude;
-
     @Size(max = 5, message = "이미지는 최대 5장까지 업로드 가능합니다")
     private List<String> images;
 

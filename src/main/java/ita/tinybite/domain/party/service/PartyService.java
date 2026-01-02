@@ -5,6 +5,7 @@ import ita.tinybite.domain.chat.enums.ChatRoomType;
 import ita.tinybite.domain.chat.repository.ChatRoomRepository;
 import ita.tinybite.domain.party.dto.request.PartyCreateRequest;
 import ita.tinybite.domain.party.dto.request.PartyUpdateRequest;
+import ita.tinybite.domain.party.dto.request.UserLocation;
 import ita.tinybite.domain.party.dto.response.*;
 import ita.tinybite.domain.party.entity.Party;
 import ita.tinybite.domain.party.entity.PartyParticipant;
@@ -51,9 +52,6 @@ public class PartyService {
         // 카테고리별 유효성 검증
         validateProductLink(request.getCategory(), request.getProductLink());
 
-        // 첫 번째 이미지를 썸네일로 사용, 없으면 기본 이미지
-        String thumbnailImage = getDefaultImageIfEmpty(request.getImages(), request.getCategory());
-
         Party party = Party.builder()
                 .title(request.getTitle())
                 .category(request.getCategory())
@@ -61,6 +59,8 @@ public class PartyService {
                 .maxParticipants(request.getMaxParticipants())
                 .pickupLocation(PickupLocation.builder()
                         .place(request.getPickupLocation().getPlace())
+                        .pickupLatitude(request.getPickupLocation().getPickupLatitude())
+                        .pickupLongitude(request.getPickupLocation().getPickupLongitude())
                         .build())
                 .image(getImageIfPresent(request.getImages()))
                 .thumbnailImage(getThumbnailIfPresent(request.getImages(), request.getCategory()))
@@ -182,7 +182,7 @@ public class PartyService {
     /**
      * 파티 상세 조회
      */
-    public PartyDetailResponse getPartyDetail(Long partyId, Long userId) {
+    public PartyDetailResponse getPartyDetail(Long partyId, Long userId, UserLocation userLocation) {
         Party party = partyRepository.findById(partyId)
                 .orElseThrow(() -> new IllegalArgumentException("파티를 찾을 수 없습니다"));
 
@@ -200,16 +200,24 @@ public class PartyService {
 
         // 거리 계산 (사용자 위치 필요)
         double distance = 0.0;
-//        if (user != null) {
-//            distance = DistanceCalculator.calculateDistance(
-//                    userLat,
-//                    userLon,
-//                    party.getLatitude(),
-//                    party.getLongitude()
-//            );
-//        }
+        if (validateLocation(user,userLocation,party)) {
+            distance = DistanceCalculator.calculateDistance(
+                    userLocation.getLatitude(),
+                    userLocation.getLongitude(),
+                    party.getPickupLocation().getPickupLatitude(),
+                    party.getPickupLocation().getPickupLongitude()
+            );
+        }
 
         return convertToDetailResponse(party, distance, isParticipating);
+    }
+
+    private boolean validateLocation(User user, UserLocation userLocation, Party party) {
+        return (user != null
+                && userLocation.getLatitude() != null
+                && userLocation.getLongitude()!= null
+                && party.getPickupLocation().getPickupLatitude()!= null
+                && party.getPickupLocation().getPickupLongitude()!=null);
     }
 
     /**
@@ -293,7 +301,7 @@ public class PartyService {
         // 이미지 파싱
         List<String> images = new ArrayList<>();
         if (party.getImage() != null && !party.getImage().isEmpty()) {
-            images = List.of(party.getImage().toString());
+            images = List.of(party.getImage());
         }
 
         return PartyDetailResponse.builder()
@@ -307,7 +315,7 @@ public class PartyService {
                         .profileImage(party.getHost().getProfileImage())
                         .build())
                 .pickupLocation(party.getPickupLocation())
-//                .distance(DistanceCalculator.formatDistance(distance))
+                .distance(formatDistanceIfExists(distance))
                 .currentParticipants(currentCount)
                 .maxParticipants(party.getMaxParticipants())
                 .remainingSlots(party.getMaxParticipants() - currentCount)
@@ -349,8 +357,8 @@ public class PartyService {
                     request.getTitle(),
                     request.getTotalPrice(),
                     request.getMaxParticipants(),
-//                    new PickupLocation(request.getPickupLocation(), request.getLatitude(), request.getLongitude()),
-                    new PickupLocation(request.getPickupLocation()),
+                    new PickupLocation(request.getPickupLocation(), request.getLatitude(), request.getLongitude()),
+//                    new PickupLocation(request.getPickupLocation()),
                     request.getLatitude(),
                     request.getLongitude(),
                     request.getProductLink(),
@@ -630,6 +638,10 @@ public class PartyService {
 
     private String getDescriptionIfPresent(String description) {
         return (description != null && !description.isBlank()) ? description : null;
+    }
+
+    private String formatDistanceIfExists(Double distance) {
+        return distance!= null? DistanceCalculator.formatDistance(distance):null;
     }
 }
 
