@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import ita.tinybite.domain.auth.entity.JwtTokenProvider;
 import ita.tinybite.domain.chat.entity.ChatRoom;
 import ita.tinybite.domain.party.dto.request.PartyCreateRequest;
+import ita.tinybite.domain.party.dto.request.PartyUpdateRequest;
 import ita.tinybite.domain.party.dto.response.ChatRoomResponse;
 import ita.tinybite.domain.party.dto.response.PartyDetailResponse;
 import ita.tinybite.domain.party.dto.response.PartyListResponse;
@@ -19,14 +20,9 @@ import ita.tinybite.domain.party.service.PartyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.ErrorResponse;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -272,8 +268,6 @@ public class PartyController {
         return ResponseEntity.ok(participants);
     }
 
-
-
     /**
      * 파티 목록 조회 (홈 화면)
      */
@@ -374,4 +368,90 @@ public class PartyController {
         return ResponseEntity.ok(partyId);
     }
 
+    /**
+     * 파티 수정
+     */
+    @Operation(
+            summary = "파티 수정",
+            description = """
+            파티 정보를 수정합니다.
+            
+            **수정 권한**
+            - 파티 호스트만 수정 가능
+            
+            **수정 가능 범위**
+            - 승인된 파티원이 없을 때: 모든 항목 수정 가능
+            - 승인된 파티원이 있을 때: 설명, 이미지만 수정 가능 (가격, 인원, 수령 정보 수정 불가)
+            """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "파티 수정 성공"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 (수정 권한 없음, 유효하지 않은 데이터)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "파티를 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @PatchMapping("/{partyId}")
+    public ResponseEntity<Void> updateParty(
+            @PathVariable Long partyId,
+            @AuthenticationPrincipal Long userId,
+            @RequestBody PartyUpdateRequest request) {
+
+        partyService.updateParty(partyId, userId, request);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 파티 삭제
+     */
+     @Operation(
+            summary = "파티 삭제",
+            description = """
+            파티를 삭제합니다.
+            
+            **삭제 권한**
+            - 파티 호스트만 삭제 가능
+            
+            **삭제 제한**
+            - 승인된 파티원이 있는 경우 삭제 불가능
+            - 승인된 파티원이 없을 때만 삭제 가능
+            
+            **삭제 시 처리**
+            - 관련 채팅방 비활성화
+            - 대기 중인 참가 신청 모두 삭제
+            """
+     )
+     @ApiResponses({
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "파티 삭제 성공"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 (삭제 권한 없음, 승인된 파티원 존재)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "파티를 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @DeleteMapping("/{partyId}")
+    public ResponseEntity<Void> deleteParty(
+            @PathVariable Long partyId,
+            @AuthenticationPrincipal Long userId) {
+
+        partyService.deleteParty(partyId, userId);
+        return ResponseEntity.noContent().build();
+    }
 }
