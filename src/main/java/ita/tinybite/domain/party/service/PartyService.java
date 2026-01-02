@@ -182,7 +182,7 @@ public class PartyService {
     /**
      * 파티 상세 조회
      */
-    public PartyDetailResponse getPartyDetail(Long partyId, Long userId, UserLocation userLocation) {
+    public PartyDetailResponse getPartyDetail(Long partyId, Long userId, Double userLat, Double userLon) {
         Party party = partyRepository.findById(partyId)
                 .orElseThrow(() -> new IllegalArgumentException("파티를 찾을 수 없습니다"));
 
@@ -200,10 +200,10 @@ public class PartyService {
 
         // 거리 계산 (사용자 위치 필요)
         double distance = 0.0;
-        if (validateLocation(user,userLocation,party)) {
+        if (validateLocation(user,userLat, userLon,party)) {
             distance = DistanceCalculator.calculateDistance(
-                    userLocation.getLatitude(),
-                    userLocation.getLongitude(),
+                    userLat,
+                    userLon,
                     party.getPickupLocation().getPickupLatitude(),
                     party.getPickupLocation().getPickupLongitude()
             );
@@ -212,10 +212,10 @@ public class PartyService {
         return convertToDetailResponse(party, distance, isParticipating);
     }
 
-    private boolean validateLocation(User user, UserLocation userLocation, Party party) {
+    private boolean validateLocation(User user, Double userLat, Double userLon, Party party) {
         return (user != null
-                && userLocation.getLatitude() != null
-                && userLocation.getLongitude()!= null
+                && userLat != null
+                && userLon!= null
                 && party.getPickupLocation().getPickupLatitude()!= null
                 && party.getPickupLocation().getPickupLongitude()!=null);
     }
