@@ -61,13 +61,11 @@ public class PartyService {
                 .maxParticipants(request.getMaxParticipants())
                 .pickupLocation(PickupLocation.builder()
                         .place(request.getPickupLocation().getPlace())
-//                        .pickupLatitude(request.getPickupLocation().getPickupLatitude())
-//                        .pickupLongitude(request.getPickupLocation().getPickupLongitude())
                         .build())
-                .image(request.getImages().get(0))
-                .thumbnailImage(thumbnailImage)
-                .link(request.getProductLink())
-                .description(request.getDescription())
+                .image(getImageIfPresent(request.getImages()))
+                .thumbnailImage(getThumbnailIfPresent(request.getImages(), request.getCategory()))
+                .link(getLinkIfValid(request.getProductLink(), request.getCategory()))
+                .description(getDescriptionIfPresent(request.getDescription()))
                 .currentParticipants(1)
                 .status(PartyStatus.RECRUITING)
                 .isClosed(false)
@@ -600,6 +598,30 @@ public class PartyService {
         if (party.getCurrentParticipants() >= party.getMaxParticipants()) {
             party.close();
         }
+    }
+
+    // 헬퍼 메서드들
+    private String getImageIfPresent(List<String> images) {
+        return (images != null && !images.isEmpty()) ? images.get(0) : null;
+    }
+
+    private String getThumbnailIfPresent(List<String> images, PartyCategory category) {
+        if (images != null && !images.isEmpty()) {
+            return images.get(0);
+        }
+        return null;
+    }
+
+    private String getLinkIfValid(String link, PartyCategory category) {
+        if (link != null && !link.isBlank()) {
+            validateProductLink(category, link);
+            return link;
+        }
+        return null;
+    }
+
+    private String getDescriptionIfPresent(String description) {
+        return (description != null && !description.isBlank()) ? description : null;
     }
 }
 

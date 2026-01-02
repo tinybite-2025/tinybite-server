@@ -76,7 +76,6 @@ public class Party {
     private LocalDateTime createdAt; // 등록시간
 
     @UpdateTimestamp
-    @Column(nullable = false)
     private LocalDateTime updatedAt;
 
     private LocalDateTime closedAt;
