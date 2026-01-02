@@ -1,6 +1,7 @@
 package ita.tinybite.domain.user.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -8,7 +9,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import ita.tinybite.domain.party.dto.response.PartyCardResponse;
 import ita.tinybite.domain.user.dto.req.UpdateUserReqDto;
+import ita.tinybite.domain.user.dto.res.RejoinValidationResponse;
 import ita.tinybite.domain.user.dto.res.UserResDto;
+import ita.tinybite.domain.user.dto.res.WithDrawValidationResponse;
 import ita.tinybite.domain.user.service.UserService;
 import ita.tinybite.global.response.APIResponse;
 import jakarta.validation.Valid;
@@ -67,15 +70,45 @@ public class UserController {
         return success();
     }
 
+    @Operation(
+            summary = "회원 탈퇴 가능 여부 확인",
+            description = "진행 중인 파티가 있는지 확인하여 탈퇴 가능 여부를 반환합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "확인 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패")
+    })
+    @GetMapping("/me/withdrawal/validate")
+    public APIResponse<WithDrawValidationResponse> validateWithdrawal(
+            @Parameter(hidden = true) @AuthenticationPrincipal Long userId) {
+        WithDrawValidationResponse response = userService.validateWithdrawal(userId);
+        return success(response);
+    }
+
     @Operation(summary = "회원 탈퇴", description = "현재 로그인한 사용자를 삭제합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "탈퇴 성공"),
             @ApiResponse(responseCode = "401", description = "인증 실패")
     })
     @DeleteMapping("/me")
-    public APIResponse<?> deleteUser() {
-        userService.deleteUser();
+    public APIResponse<?> deleteUser(@AuthenticationPrincipal Long userId) {
+        userService.deleteUser(userId);
         return success();
+    }
+
+    @Operation(
+            summary = "재가입 가능 여부 확인",
+            description = "탈퇴 후 30일 이내인지 확인합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "확인 성공")
+    })
+    @GetMapping("/rejoin/validate")
+    public APIResponse<RejoinValidationResponse> validateRejoin(
+            @Parameter(description = "이메일", required = true)
+            @RequestParam String email) {
+        RejoinValidationResponse response = userService.validateRejoin(email);
+        return success(response);
     }
 
     @Operation(summary = "활성 파티 목록 조회", description = "사용자가 참여 중인 활성 파티 목록을 조회합니다.")

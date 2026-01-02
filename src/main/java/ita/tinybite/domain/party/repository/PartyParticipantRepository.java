@@ -44,4 +44,28 @@ public interface PartyParticipantRepository extends JpaRepository<PartyParticipa
             @Param("status") ParticipantStatus status
     );
 
+    /**
+     * 사용자가 참여중인 파티 개수 조회 (호스트 + 참가자)
+     */
+    @Query("SELECT COUNT(DISTINCT pp.party.id) " +
+            "FROM PartyParticipant pp " +
+            "WHERE pp.user.userId = :userId " +
+            "AND pp.party.status IN :activeStatuses " +
+            "AND pp.status = :participantStatus")
+    long countActivePartiesByUserId(
+            @Param("userId") Long userId,
+            @Param("activeStatuses") List<PartyStatus> activeStatuses,
+            @Param("participantStatus") ParticipantStatus participantStatus
+    );
+
+    /**
+     * 사용자가 호스트인 활성 파티 개수
+     */
+    @Query("SELECT COUNT(p) FROM Party p " +
+            "WHERE p.host.userId = :userId " +
+            "AND p.status IN :activeStatuses")
+    long countActivePartiesByHostId(
+            @Param("userId") Long userId,
+            @Param("activeStatuses") List<PartyStatus> activeStatuses
+    );
 }
