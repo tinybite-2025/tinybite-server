@@ -16,12 +16,15 @@ import ita.tinybite.domain.party.repository.PartyParticipantRepository;
 import ita.tinybite.domain.party.repository.PartyRepository;
 import ita.tinybite.domain.user.entity.User;
 import ita.tinybite.domain.user.repository.UserRepository;
+
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import ita.tinybite.global.location.LocationService;
 import ita.tinybite.global.util.DistanceCalculator;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +39,7 @@ public class PartyService {
     private final LocationService locationService;
     private final PartyParticipantRepository partyParticipantRepository;
     private final ChatRoomRepository chatRoomRepository;
+    private final PartyParticipantRepository participantRepository;
     /**
      * 파티 생성
      */
@@ -50,7 +54,6 @@ public class PartyService {
         // 첫 번째 이미지를 썸네일로 사용, 없으면 기본 이미지
         String thumbnailImage = getDefaultImageIfEmpty(request.getImages(), request.getCategory());
 
-
         Party party = Party.builder()
                 .title(request.getTitle())
                 .category(request.getCategory())
@@ -61,8 +64,6 @@ public class PartyService {
 //                        .pickupLatitude(request.getPickupLocation().getPickupLatitude())
 //                        .pickupLongitude(request.getPickupLocation().getPickupLongitude())
                         .build())
-//                .latitude(request.getLatitude())
-//                .longitude(request.getLongitude())
                 .image(request.getImages().get(0))
                 .thumbnailImage(thumbnailImage)
                 .link(request.getProductLink())
@@ -74,6 +75,31 @@ public class PartyService {
                 .build();
 
         Party savedParty = partyRepository.save(party);
+
+        // 단체 채팅방 생성
+        ChatRoom chatRoom = ChatRoom.builder()
+                .party(savedParty)
+                .type(ChatRoomType.GROUP)
+                .name(savedParty.getTitle())
+                .isActive(true)
+                .build();
+
+        // 파티 생성자(호스트)를 채팅방 멤버로 추가
+        chatRoom.addMember(user);
+
+        chatRoomRepository.save(chatRoom);
+
+        // Participant 생성
+        PartyParticipant participant = PartyParticipant.builder()
+                .party(savedParty)
+                .user(user)
+                .status(ParticipantStatus.APPROVED)
+                .isApproved(true)
+                .joinedAt(LocalDateTime.now())
+                .approvedAt(LocalDateTime.now())
+                .build();
+
+        participantRepository.save(participant);
         return savedParty.getId();
     }
 
@@ -88,7 +114,7 @@ public class PartyService {
         }
 
         // 동네 기준으로 파티 조회
-        List<Party> parties;
+        List<Party> parties = List.of();
         if (user != null && user.getLocation() != null) {
             if (category == PartyCategory.ALL) {
                 parties = partyRepository.findByPickupLocation_Place(user.getLocation());
@@ -96,38 +122,57 @@ public class PartyService {
                 parties = partyRepository.findByPickupLocation_PlaceAndCategory(
                         user.getLocation(), category);
             }
-        } else {
-            // 비회원이거나 동네 미설정 시
-            String location = locationService.getLocation(userLat, userLon);
-            if (category == PartyCategory.ALL) {
-                parties = partyRepository.findByPickupLocation_Place(location);
-            } else {
-                parties = partyRepository.findByPickupLocation_PlaceAndCategory(
-                        location, category);
-            }
         }
+//          else {
+//            // 비회원이거나 동네 미설정 시
+//            String location = locationService.getLocation(userLat, userLon);
+//            if (category == PartyCategory.ALL) {
+//                parties = partyRepository.findByPickupLocation_Place(location);
+//            } else {
+//                parties = partyRepository.findByPickupLocation_PlaceAndCategory(
+//                        location, category);
+//            }
+//        }
+
+//        List<PartyCardResponse> cardResponses = parties.stream()
+//                .map(party -> {
+//                    // DistanceCalculator 활용
+//                    double distance = DistanceCalculator.calculateDistance(
+//                            Double.parseDouble(userLat), Double.parseDouble(userLon),
+//                            party.getLatitude(), party.getLongitude()
+//                    );
+//                    return convertToCardResponse(party, distance, userId, party.getCreatedAt());
+//                })
+//                .collect(Collectors.toList());
+//
+//        // 진행 중 파티: 거리 가까운 순 정렬
+//        List<PartyCardResponse> activeParties = cardResponses.stream()
+//                .filter(p -> !p.getIsClosed())
+//                .sorted((a, b) -> Double.compare(a.getDistanceKm(), b.getDistanceKm()))
+//                .collect(Collectors.toList());
+//
+//        // 마감된 파티: 거리 가까운 순 정렬
+//        List<PartyCardResponse> closedParties = cardResponses.stream()
+//                .filter(PartyCardResponse::getIsClosed)
+//                .sorted((a, b) -> Double.compare(a.getDistanceKm(), b.getDistanceKm()))
+//                .collect(Collectors.toList());
+
+
         List<PartyCardResponse> cardResponses = parties.stream()
-                .map(party -> {
-                    // DistanceCalculator 활용
-                    double distance = DistanceCalculator.calculateDistance(
-                            Double.parseDouble(userLat), Double.parseDouble(userLon),
-                            party.getLatitude(), party.getLongitude()
-                    );
-                    return convertToCardResponse(party, distance, userId, party.getCreatedAt());
-                })
+                .map(party -> convertToCardResponse(party, userId, party.getCreatedAt()))
                 .collect(Collectors.toList());
 
-        // 진행 중 파티: 거리 가까운 순 정렬
-        List<PartyCardResponse> activeParties = cardResponses.stream()
-                .filter(p -> !p.getIsClosed())
-                .sorted((a, b) -> Double.compare(a.getDistanceKm(), b.getDistanceKm()))
-                .collect(Collectors.toList());
+        // 진행 중 파티: 최신순 정렬 (createdAt 기준 내림차순)
+                List<PartyCardResponse> activeParties = cardResponses.stream()
+                        .filter(p -> !p.getIsClosed())
+                        .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+                        .collect(Collectors.toList());
 
-        // 마감된 파티: 거리 가까운 순 정렬
-        List<PartyCardResponse> closedParties = cardResponses.stream()
-                .filter(PartyCardResponse::getIsClosed)
-                .sorted((a, b) -> Double.compare(a.getDistanceKm(), b.getDistanceKm()))
-                .collect(Collectors.toList());
+        // 마감된 파티: 최신순 정렬 (createdAt 기준 내림차순)
+                List<PartyCardResponse> closedParties = cardResponses.stream()
+                        .filter(PartyCardResponse::getIsClosed)
+                        .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+                        .collect(Collectors.toList());
 
         return PartyListResponse.builder()
                 .activeParties(activeParties)
@@ -158,14 +203,14 @@ public class PartyService {
 
         // 거리 계산 (사용자 위치 필요)
         double distance = 0.0;
-        if (user != null) {
-            distance = DistanceCalculator.calculateDistance(
-                    userLat,
-                    userLon,
-                    party.getLatitude(),
-                    party.getLongitude()
-            );
-        }
+//        if (user != null) {
+//            distance = DistanceCalculator.calculateDistance(
+//                    userLat,
+//                    userLon,
+//                    party.getLatitude(),
+//                    party.getLongitude()
+//            );
+//        }
 
         return convertToDetailResponse(party, distance, isParticipating);
     }
@@ -221,8 +266,8 @@ public class PartyService {
         };
     }
 
-    private PartyCardResponse convertToCardResponse(Party party, double distanceKm, Long userId,
-                                                    java.time.LocalDateTime createdAt) {
+    private PartyCardResponse convertToCardResponse(Party party, Long userId,
+                                                    LocalDateTime createdAt) {
         int pricePerPerson = party.getPrice() / party.getMaxParticipants();
         String participantStatus = party.getCurrentParticipants() + "/"
                 + party.getMaxParticipants() + "명";
@@ -233,8 +278,8 @@ public class PartyService {
                 .title(party.getTitle())
                 .pricePerPerson(pricePerPerson)
                 .participantStatus(participantStatus)
-                .distance(DistanceCalculator.formatDistance(distanceKm))
-                .distanceKm(distanceKm)
+//                .distance(DistanceCalculator.formatDistance(distanceKm))
+//                .distanceKm(distanceKm)
                 .timeAgo(party.getTimeAgo())
                 .isClosed(party.getIsClosed())
                 .category(party.getCategory())
@@ -265,7 +310,7 @@ public class PartyService {
                         .profileImage(party.getHost().getProfileImage())
                         .build())
                 .pickupLocation(party.getPickupLocation())
-                .distance(DistanceCalculator.formatDistance(distance))
+//                .distance(DistanceCalculator.formatDistance(distance))
                 .currentParticipants(currentCount)
                 .maxParticipants(party.getMaxParticipants())
                 .remainingSlots(party.getMaxParticipants() - currentCount)
