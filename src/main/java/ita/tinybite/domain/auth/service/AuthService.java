@@ -346,7 +346,6 @@ public class AuthService {
     @Transactional
     public void logout(Long userId) {
         refreshTokenRepository.deleteByUserId(userId);
-        userRepository.deleteById(userId);
         log.info("로그아웃 - User ID: {}", userId);
     }
 
