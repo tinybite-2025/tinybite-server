@@ -281,17 +281,12 @@ public class PartyController {
                     example = "ALL",
                     schema = @Schema(allowableValues = {"ALL", "DELIVERY", "GROCERY", "HOUSEHOLD"})
             )
-            @RequestParam(defaultValue = "ALL") PartyCategory category,
-
-            @Parameter(description = "사용자 위도", required = true, example = "37.4979")
-            @RequestParam String latitude,
-
-            @Parameter(description = "사용자 경도", required = true, example = "127.0276")
-            @RequestParam String longitude) {
+            @RequestParam(defaultValue = "ALL") PartyCategory category
+    ) {
         Long userId = jwtTokenProvider.getUserId(token);
 
         PartyListResponse response = partyService.getPartyList(
-                userId, category, latitude, longitude);
+                userId, category);
 
         return ResponseEntity.ok(response);
     }
@@ -324,12 +319,11 @@ public class PartyController {
     @GetMapping("/{partyId}")
     public ResponseEntity<PartyDetailResponse> getPartyDetail(
             @PathVariable Long partyId,
-            @RequestHeader("Authorization") String token,
-            @RequestParam Double latitude,
-            @RequestParam Double longitude) {
+            @RequestHeader("Authorization") String token
+    ) {
         Long userId = jwtTokenProvider.getUserId(token);
 
-        PartyDetailResponse response = partyService.getPartyDetail(partyId, userId, latitude, longitude);
+        PartyDetailResponse response = partyService.getPartyDetail(partyId, userId);
         return ResponseEntity.ok(response);
     }
 

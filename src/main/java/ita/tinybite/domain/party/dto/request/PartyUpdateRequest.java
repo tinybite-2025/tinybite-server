@@ -28,7 +28,7 @@ public class PartyUpdateRequest {
     private Double latitude;
     private Double longitude;
 
-    @Pattern(regexp = "^(https?://)?.*", message = "올바른 URL 형식으로 입력해주세요")
+//    @Pattern(regexp = "^(https?://)?.*", message = "올바른 URL 형식으로 입력해주세요")
     private String productLink;
 
     // 항상 수정 가능한 필드

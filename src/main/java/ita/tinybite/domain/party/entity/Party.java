@@ -88,6 +88,16 @@ public class Party {
     @Builder.Default
     private List<PartyParticipant> participants = new ArrayList<>(); // 파티 참여 유저
 
+    /**
+     * 참여자 수 증가
+     */
+    public void incrementParticipants() {
+        if (this.currentParticipants >= this.maxParticipants) {
+            throw new IllegalStateException("파티 인원이 가득 찼습니다");
+        }
+        this.currentParticipants++;
+    }
+
     public String getTimeAgo() {
         LocalDateTime now = LocalDateTime.now();
 
