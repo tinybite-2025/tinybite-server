@@ -1,6 +1,8 @@
 package ita.tinybite.domain.user.service;
 
 import ita.tinybite.domain.auth.service.AuthService;
+import ita.tinybite.domain.party.entity.Party;
+import ita.tinybite.domain.party.repository.PartyParticipantRepository;
 import ita.tinybite.domain.user.constant.LoginType;
 import ita.tinybite.domain.user.constant.UserStatus;
 import ita.tinybite.domain.user.dto.req.UpdateUserReqDto;
@@ -23,6 +25,8 @@ class UserServiceTest {
     @Autowired
     private UserRepository userRepository;
 
+    private PartyParticipantRepository participantRepository;
+
     @Autowired
     private AuthService authService;
 
@@ -37,7 +41,7 @@ class UserServiceTest {
     void setUp() {
         securityProvider = new FakeSecurityProvider(userRepository);
         locationService = new FakeLocationService();
-        userService = new UserService(securityProvider, userRepository, locationService);
+        userService = new UserService(securityProvider, userRepository, locationService,participantRepository);
 
         User user = User.builder()
                 .email("yyytir777@gmail.com")
