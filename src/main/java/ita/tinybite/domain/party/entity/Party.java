@@ -62,11 +62,11 @@ public class Party {
     @Column(nullable = false)
     private PartyStatus status;
 
-    @Column(nullable = false)
-    private Double latitude; // 위도 (거리 계산용)
-
-    @Column(nullable = false)
-    private Double longitude; // 경도 (거리 계산용)
+//    @Column(nullable = false)
+//    private Double latitude; // 위도 (거리 계산용)
+//
+//    @Column(nullable = false)
+//    private Double longitude; // 경도 (거리 계산용)
 
     @Column(nullable = false)
     private Boolean isClosed; // 마감 여부
@@ -135,8 +135,8 @@ public class Party {
         this.price = price != null ? price : this.price;
         this.maxParticipants = maxParticipants != null ? maxParticipants : this.maxParticipants;
         this.pickupLocation = pickupLocation != null ? pickupLocation : this.pickupLocation;
-        this.latitude = latitude != null ? latitude : this.latitude;
-        this.longitude = longitude != null ? longitude : this.longitude;
+//        this.latitude = latitude != null ? latitude : this.latitude;
+//        this.longitude = longitude != null ? longitude : this.longitude;
 
         // 상품 링크 검증
         if (productLink != null) {
