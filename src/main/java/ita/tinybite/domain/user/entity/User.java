@@ -10,6 +10,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Comment;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,6 +50,8 @@ public class User extends BaseEntity {
     @Column(length = 100)
     private String location;
 
+    private LocalDateTime withdrawAt;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserTermAgreement>  agreements = new ArrayList<>();;
 
@@ -71,5 +74,17 @@ public class User extends BaseEntity {
 
     public void addTerms(List<UserTermAgreement> agreements) {
         this.agreements.addAll(agreements);
+    }
+
+    public void withdraw() {
+        this.nickname = "탈퇴한 사용자";
+        this.profileImage = "/images/default-profile.jpg";
+        this.status = UserStatus.WITHDRAW;
+        this.withdrawAt = LocalDateTime.now();
+    }
+
+    // 탈퇴 여부 확인
+    public boolean isWithdrawn() {
+        return this.status == UserStatus.WITHDRAW;
     }
 }
