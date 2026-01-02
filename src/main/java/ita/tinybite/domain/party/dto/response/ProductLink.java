@@ -6,7 +6,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class ProductLink {
-    private String thumbnailImage;
-    private String productName;
+//    private String thumbnailImage;
+//    private String productName;
     private String url;
 }

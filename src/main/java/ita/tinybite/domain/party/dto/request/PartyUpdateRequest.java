@@ -1,5 +1,7 @@
 package ita.tinybite.domain.party.dto.request;
 
+import ita.tinybite.domain.party.entity.PickupLocation;
+import ita.tinybite.domain.party.enums.PartyCategory;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
@@ -23,10 +25,9 @@ public class PartyUpdateRequest {
     private Integer maxParticipants;
 
     @Size(max = 30, message = "수령 장소는 최대 30자까지 입력 가능합니다")
-    private String pickupLocation;
+    private PickupLocation pickupLocation;
 
-    private Double latitude;
-    private Double longitude;
+    private PartyCategory category;
 
 //    @Pattern(regexp = "^(https?://)?.*", message = "올바른 URL 형식으로 입력해주세요")
     private String productLink;

@@ -36,7 +36,7 @@ public class Party {
     private String thumbnailImage; // 섬네일 이미지 URL
 
     @Column(length = 500)
-    private String image; // 이미지 URL
+    private List<String> images; // 이미지 URL
 
     @Column(nullable = false)
     private Integer price; // 가격
@@ -132,8 +132,7 @@ public class Party {
     }
 
     public void updateAllFields(String title, Integer price, Integer maxParticipants,
-                                PickupLocation pickupLocation, Double latitude, Double longitude,
-                                String productLink, String description, List<String> images) {
+                                PickupLocation pickupLocation, String productLink, String description, List<String> images) {
         this.title = title != null ? title : this.title;
         this.price = price != null ? price : this.price;
         this.maxParticipants = maxParticipants != null ? maxParticipants : this.maxParticipants;
@@ -150,7 +149,7 @@ public class Party {
         this.description = description != null ? description : this.description;
 
         if (images != null && !images.isEmpty()) {
-            this.image = images.get(0);
+            this.images = images;
             this.thumbnailImage = images.get(0);
         }
     }
@@ -159,7 +158,7 @@ public class Party {
         this.description = description != null ? description : this.description;
 
         if (images != null && !images.isEmpty()) {
-            this.image = images.get(0);
+            this.images = images;
             this.thumbnailImage = images.get(0);
         }
     }
