@@ -25,6 +25,6 @@ public class FileController {
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public APIResponse<?> upload(@RequestPart MultipartFile file) throws IOException {
-        return success(s3Service.upload(file, "uploads/" + UUID.randomUUID()));
+        return success(s3Service.upload(file));
     }
 }
