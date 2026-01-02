@@ -65,9 +65,8 @@ public class PartyController {
     @PostMapping("/{partyId}/join")
     public ResponseEntity<Long> joinParty(
             @PathVariable Long partyId,
-            @RequestHeader("Authorization") String token) {
+            @Parameter(hidden = true) @AuthenticationPrincipal Long userId) {
 
-        Long userId = jwtTokenProvider.getUserId(token);
         partyService.joinParty(partyId, userId);
 
         return ResponseEntity.ok().build();
@@ -100,10 +99,9 @@ public class PartyController {
     public ResponseEntity<Void> approveParticipant(
             @PathVariable Long partyId,
             @PathVariable Long participantId,
-            @RequestHeader("Authorization") String token) {
+            @Parameter(hidden = true) @AuthenticationPrincipal Long userId) {
 
-        Long hostId = jwtTokenProvider.getUserId(token);
-        partyService.approveParticipant(partyId, participantId, hostId);
+        partyService.approveParticipant(partyId, participantId, userId);
 
         return ResponseEntity.ok().build();
     }
@@ -135,10 +133,9 @@ public class PartyController {
     public ResponseEntity<Void> rejectParticipant(
             @PathVariable Long partyId,
             @PathVariable Long participantId,
-            @RequestHeader("Authorization") String token) {
+            @Parameter(hidden = true) @AuthenticationPrincipal Long userId) {
 
-        Long hostId = jwtTokenProvider.getUserId(token);
-        partyService.rejectParticipant(partyId, participantId, hostId);
+        partyService.rejectParticipant(partyId, participantId, userId);
 
         return ResponseEntity.ok().build();
     }
@@ -169,9 +166,8 @@ public class PartyController {
     @GetMapping("{partyId}/chat/group")
     public ResponseEntity<ChatRoomResponse> getGroupChatRoom(
             @PathVariable Long partyId,
-            @RequestHeader("Authorization") String token) {
+            @Parameter(hidden = true) @AuthenticationPrincipal Long userId) {
 
-        Long userId = jwtTokenProvider.getUserId(token);
         ChatRoomResponse chatRoom = partyService.getGroupChatRoom(partyId, userId);
 
         return ResponseEntity.ok(chatRoom);
@@ -227,10 +223,9 @@ public class PartyController {
     @PostMapping("{partyId}/settle")
     public ResponseEntity<Void> settleParty(
             @PathVariable Long partyId,
-            @RequestHeader("Authorization") String token) {
+            @Parameter(hidden = true) @AuthenticationPrincipal Long userId) {
 
-        Long hostId = jwtTokenProvider.getUserId(token);
-        partyService.settleParty(partyId, hostId);
+        partyService.settleParty(partyId, userId);
 
         return ResponseEntity.ok().build();
     }
@@ -261,10 +256,9 @@ public class PartyController {
     @GetMapping("{partyId}/participants/pending")
     public ResponseEntity<List<PartyParticipant>> getPendingParticipants(
             @PathVariable Long partyId,
-            @RequestHeader("Authorization") String token) {
+            @Parameter(hidden = true) @AuthenticationPrincipal Long userId) {
 
-        Long hostId = jwtTokenProvider.getUserId(token);
-        List<PartyParticipant> participants = partyService.getPendingParticipants(partyId, hostId);
+        List<PartyParticipant> participants = partyService.getPendingParticipants(partyId, userId);
 
         return ResponseEntity.ok(participants);
     }
@@ -274,9 +268,7 @@ public class PartyController {
      */
     @GetMapping
     public ResponseEntity<PartyListResponse> getPartyList(
-            @Parameter(description = "JWT 토큰", required = false)
-            @RequestHeader(value = "Authorization", required = false) String token,
-
+            @Parameter(hidden = true) @AuthenticationPrincipal Long userId,
             @Parameter(
                     description = "파티 카테고리",
                     example = "ALL",
@@ -284,8 +276,6 @@ public class PartyController {
             )
             @RequestParam(defaultValue = "ALL") PartyCategory category
     ) {
-        Long userId = jwtTokenProvider.getUserId(token);
-
         PartyListResponse response = partyService.getPartyList(
                 userId, category);
 
@@ -356,10 +346,9 @@ public class PartyController {
     })
     @PostMapping
     public ResponseEntity<Long> createParty(
-            @RequestHeader("Authorization") String token,
+            @Parameter(hidden = true) @AuthenticationPrincipal Long userId,
             @Valid @RequestBody PartyCreateRequest request) {
 
-        Long userId = jwtTokenProvider.getUserId(token);
         Long partyId = partyService.createParty(userId, request);
 
         return ResponseEntity.ok(partyId);
