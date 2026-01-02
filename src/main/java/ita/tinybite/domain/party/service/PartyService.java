@@ -62,7 +62,7 @@ public class PartyService {
                         .pickupLatitude(request.getPickupLocation().getPickupLatitude())
                         .pickupLongitude(request.getPickupLocation().getPickupLongitude())
                         .build())
-                .image(getImageIfPresent(request.getImages()))
+                .images(getImagesIfPresent(request.getImages()))
                 .thumbnailImage(getThumbnailIfPresent(request.getImages(), request.getCategory()))
                 .link(getLinkIfValid(request.getProductLink(), request.getCategory()))
                 .description(getDescriptionIfPresent(request.getDescription()))
@@ -299,10 +299,10 @@ public class PartyService {
         int pricePerPerson = party.getPrice() / party.getMaxParticipants();
 
         // 이미지 파싱
-        List<String> images = new ArrayList<>();
-        if (party.getImage() != null && !party.getImage().isEmpty()) {
-            images = List.of(party.getImage());
-        }
+//        List<String> images = new ArrayList<>();
+//        if (party.getImages() != null && !party.getImages().isEmpty()) {
+//            images = List.of(party.getImages());
+//        }
 
         return PartyDetailResponse.builder()
                 .partyId(party.getId())
@@ -315,6 +315,7 @@ public class PartyService {
                         .profileImage(party.getHost().getProfileImage())
                         .build())
                 .pickupLocation(party.getPickupLocation())
+                .thumbnailImage(party.getThumbnailImage())
                 .distance(formatDistanceIfExists(distance))
                 .currentParticipants(currentCount)
                 .maxParticipants(party.getMaxParticipants())
@@ -326,7 +327,7 @@ public class PartyService {
                                 .url(party.getLink())
                                 .build() : null)
                 .description(party.getDescription())
-                .images(images)
+                .images(party.getImages())
                 .isClosed(party.getIsClosed())
                 .isParticipating(isParticipating)
                 .build();
@@ -357,15 +358,37 @@ public class PartyService {
                     request.getTitle(),
                     request.getTotalPrice(),
                     request.getMaxParticipants(),
-                    new PickupLocation(request.getPickupLocation(), request.getLatitude(), request.getLongitude()),
+                    getPickUpLocationIfExists(request,party),
 //                    new PickupLocation(request.getPickupLocation()),
-                    request.getLatitude(),
-                    request.getLongitude(),
                     request.getProductLink(),
                     request.getDescription(),
                     request.getImages()
             );
         }
+    }
+
+    private PickupLocation getPickUpLocationIfExists(PartyUpdateRequest request, Party currentParty) {
+        if (request.getPickupLocation() == null) {
+            return currentParty.getPickupLocation();
+        }
+        PickupLocation requestPickup = request.getPickupLocation();
+        PickupLocation currentPickup = currentParty.getPickupLocation();
+
+        // 각 필드별로 새 값이 있으면 사용, 없으면 기존 값 유지
+        String place = requestPickup.getPlace() != null
+                ? requestPickup.getPlace()
+                : (currentPickup != null ? currentPickup.getPlace() : "");
+
+        Double latitude = requestPickup.getPickupLatitude() != null
+                ? requestPickup.getPickupLatitude()
+                : (currentPickup != null ? currentPickup.getPickupLatitude() : null);
+
+        Double longitude = requestPickup.getPickupLongitude() != null
+                ? requestPickup.getPickupLongitude()
+                : (currentPickup != null ? currentPickup.getPickupLongitude() : null);
+
+        return new PickupLocation(place, latitude, longitude);
+
     }
 
     @Transactional
@@ -617,8 +640,8 @@ public class PartyService {
     }
 
     // 헬퍼 메서드들
-    private String getImageIfPresent(List<String> images) {
-        return (images != null && !images.isEmpty()) ? images.get(0) : null;
+    private List<String> getImagesIfPresent(List<String> images) {
+        return (images != null && !images.isEmpty()) ? images : null;
     }
 
     private String getThumbnailIfPresent(List<String> images, PartyCategory category) {

@@ -66,16 +66,17 @@ public class AuthService {
     @Transactional
     public AuthResponse kakaoSignup(KakaoSignupRequest request) {
         // 카카오 API로 유저 정보 조회
-        KakaoUserInfo kakaoUser = kakaoApiClient.getUserInfo(request.getCode());
+//        KakaoUserInfo kakaoUser = kakaoApiClient.getUserInfo(request.getCode());
 
         // 이메일 중복 체크
-        if (userRepository.findByEmail(kakaoUser.getKakaoAccount().getEmail()).isPresent()) {
-            throw new RuntimeException("이미 가입된 이메일입니다.");
-        }
+//        if (userRepository.findByEmail(kakaoUser.getKakaoAccount().getEmail()).isPresent()) {
+//            throw new RuntimeException("이미 가입된 이메일입니다.");
+//        }
 
         // User 엔티티 생성 및 저장
         User user = User.builder()
-                .email(kakaoUser.getKakaoAccount().getEmail())
+//                .email(kakaoUser.getKakaoAccount().getEmail())
+                .email("ace312@gmail.com")
                 .nickname(request.getNickname())
                 .location(request.getLocation())
                 .type(LoginType.KAKAO)
