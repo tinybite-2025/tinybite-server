@@ -42,8 +42,8 @@ public class PartyCardResponse {
                 .build();
     }
     private static String getThumbnailImage(Party party) {
-        if (party.getImage() != null && !party.getImage().isEmpty()) {
-            return party.getImage();
+        if (party.getImages() != null && !party.getImages().isEmpty()) {
+            return party.getImages().get(0);
         }
         return "/images/default-party-thumbnail.jpg"; // 기본 이미지
     }
