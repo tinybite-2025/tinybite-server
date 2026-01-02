@@ -104,8 +104,7 @@ public class PartyService {
     /**
      * 파티 목록 조회 (홈 화면)
      */
-    public PartyListResponse getPartyList(Long userId, PartyCategory category,
-                                          String userLat, String userLon) {
+    public PartyListResponse getPartyList(Long userId, PartyCategory category) {
         User user = null;
         if (userId != null) {
             user = userRepository.findById(userId).orElse(null);
@@ -183,7 +182,7 @@ public class PartyService {
     /**
      * 파티 상세 조회
      */
-    public PartyDetailResponse getPartyDetail(Long partyId, Long userId, Double userLat, Double userLon) {
+    public PartyDetailResponse getPartyDetail(Long partyId, Long userId) {
         Party party = partyRepository.findById(partyId)
                 .orElseThrow(() -> new IllegalArgumentException("파티를 찾을 수 없습니다"));
 
@@ -388,7 +387,7 @@ public class PartyService {
      */
     @Transactional
     public void approveParticipant(Long partyId, Long participantId, Long hostId) {
-        Party party = partyRepository.findById(partyId)
+        Party party = partyRepository.findByIdWithHost(partyId)
                 .orElseThrow(() -> new IllegalArgumentException("파티를 찾을 수 없습니다"));
 
         // 파티장 권한 확인
@@ -399,8 +398,17 @@ public class PartyService {
         PartyParticipant participant = partyParticipantRepository.findById(participantId)
                 .orElseThrow(() -> new IllegalArgumentException("참여 신청을 찾을 수 없습니다"));
 
+
+        // 현재 인원이 최대 인원을 초과하는지 검증
+        if (party.getCurrentParticipants() >= party.getMaxParticipants()) {
+            throw new IllegalStateException("파티 인원이 가득 찼습니다");
+        }
+
         // 승인 처리
         participant.approve();
+
+        // 파티 현재 참여자 수 증가
+        party.incrementParticipants();
 
         // 단체 채팅방 조회 또는 생성
         ChatRoom groupChatRoom = getOrCreateGroupChatRoom(party);
