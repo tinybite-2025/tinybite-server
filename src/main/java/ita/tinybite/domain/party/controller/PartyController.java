@@ -11,6 +11,7 @@ import ita.tinybite.domain.auth.entity.JwtTokenProvider;
 import ita.tinybite.domain.chat.entity.ChatRoom;
 import ita.tinybite.domain.party.dto.request.PartyCreateRequest;
 import ita.tinybite.domain.party.dto.request.PartyUpdateRequest;
+import ita.tinybite.domain.party.dto.request.UserLocation;
 import ita.tinybite.domain.party.dto.response.ChatRoomResponse;
 import ita.tinybite.domain.party.dto.response.PartyDetailResponse;
 import ita.tinybite.domain.party.dto.response.PartyListResponse;
@@ -319,11 +320,12 @@ public class PartyController {
     @GetMapping("/{partyId}")
     public ResponseEntity<PartyDetailResponse> getPartyDetail(
             @PathVariable Long partyId,
-            @RequestHeader("Authorization") String token
+            @RequestHeader("Authorization") String token,
+            @RequestBody UserLocation userLocation
     ) {
         Long userId = jwtTokenProvider.getUserId(token);
 
-        PartyDetailResponse response = partyService.getPartyDetail(partyId, userId);
+        PartyDetailResponse response = partyService.getPartyDetail(partyId, userId,userLocation);
         return ResponseEntity.ok(response);
     }
 
