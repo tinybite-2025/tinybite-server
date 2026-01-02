@@ -58,12 +58,12 @@ public class PartyService {
                 .maxParticipants(request.getMaxParticipants())
                 .pickupLocation(PickupLocation.builder()
                         .place(request.getPickupLocation().getPlace())
-                        .pickupLatitude(request.getPickupLocation().getPickupLatitude())
-                        .pickupLongitude(request.getPickupLocation().getPickupLongitude())
+//                        .pickupLatitude(request.getPickupLocation().getPickupLatitude())
+//                        .pickupLongitude(request.getPickupLocation().getPickupLongitude())
                         .build())
-                .latitude(request.getLatitude())
-                .longitude(request.getLongitude())
-                .image(request.getImages())
+//                .latitude(request.getLatitude())
+//                .longitude(request.getLongitude())
+                .image(request.getImages().get(0))
                 .thumbnailImage(thumbnailImage)
                 .link(request.getProductLink())
                 .description(request.getDescription())
@@ -307,7 +307,8 @@ public class PartyService {
                     request.getTitle(),
                     request.getTotalPrice(),
                     request.getMaxParticipants(),
-                    new PickupLocation(request.getPickupLocation(), request.getLatitude(), request.getLongitude()),
+//                    new PickupLocation(request.getPickupLocation(), request.getLatitude(), request.getLongitude()),
+                    new PickupLocation(request.getPickupLocation()),
                     request.getLatitude(),
                     request.getLongitude(),
                     request.getProductLink(),

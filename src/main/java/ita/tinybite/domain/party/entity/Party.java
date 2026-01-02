@@ -36,7 +36,7 @@ public class Party {
     private String thumbnailImage; // 섬네일 이미지 URL
 
     @Column(length = 500)
-    private List<String> image; // 이미지 URL
+    private String image; // 이미지 URL
 
     @Column(nullable = false)
     private Integer price; // 가격
@@ -149,7 +149,7 @@ public class Party {
         this.description = description != null ? description : this.description;
 
         if (images != null && !images.isEmpty()) {
-            this.image = Collections.singletonList(String.join(",", images));
+            this.image = images.get(0);
             this.thumbnailImage = images.get(0);
         }
     }
@@ -158,7 +158,7 @@ public class Party {
         this.description = description != null ? description : this.description;
 
         if (images != null && !images.isEmpty()) {
-            this.image = Collections.singletonList(String.join(",", images));
+            this.image = images.get(0);
             this.thumbnailImage = images.get(0);
         }
     }
