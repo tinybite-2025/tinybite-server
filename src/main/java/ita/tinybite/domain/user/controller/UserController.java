@@ -6,9 +6,8 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import ita.tinybite.domain.auth.dto.response.UserDto;
+import ita.tinybite.domain.party.dto.response.PartyCardResponse;
 import ita.tinybite.domain.user.dto.req.UpdateUserReqDto;
-import ita.tinybite.domain.user.dto.res.PartyResponse;
 import ita.tinybite.domain.user.dto.res.UserResDto;
 import ita.tinybite.domain.user.service.UserService;
 import ita.tinybite.global.response.APIResponse;
@@ -82,13 +81,13 @@ public class UserController {
     @Operation(summary = "활성 파티 목록 조회", description = "사용자가 참여 중인 활성 파티 목록을 조회합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공",
-                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = PartyResponse.class)))),
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = PartyCardResponse.class)))),
             @ApiResponse(responseCode = "401", description = "인증 실패")
     })
     @GetMapping("/parties/active")
-    public ResponseEntity<List<PartyResponse>> getActiveParties(
+    public ResponseEntity<List<PartyCardResponse>> getActiveParties(
             @AuthenticationPrincipal Long userId) {
-        List<PartyResponse> response = userService.getActiveParties(userId);
+        List<PartyCardResponse> response = userService.getActiveParties(userId);
         return ResponseEntity.ok(response);
     }
 
