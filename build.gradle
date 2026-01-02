@@ -67,6 +67,10 @@ dependencies {
     implementation 'com.google.api-client:google-api-client:2.7.2'
     // firebase
     implementation 'com.google.firebase:firebase-admin:9.1.1'
+
+    // s3
+    implementation(platform("software.amazon.awssdk:bom:2.25.8"))
+    implementation 'software.amazon.awssdk:s3'
 }
 
 tasks.named('test') {
