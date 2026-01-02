@@ -310,9 +310,11 @@ public class PartyController {
     @GetMapping("/{partyId}")
     public ResponseEntity<PartyDetailResponse> getPartyDetail(
             @PathVariable Long partyId,
-            @Parameter(hidden = true) @AuthenticationPrincipal Long userId,
+            @RequestHeader("Authorization") String token,
             @RequestParam(required = false) Double userLat,
-            @RequestParam(required = false) Double userLon) {
+            @RequestParam(required = false) Double userLon
+    ) {
+        Long userId = jwtTokenProvider.getUserId(token);
 
         PartyDetailResponse response = partyService.getPartyDetail(partyId, userId,userLat,userLon);
         return ResponseEntity.ok(response);
