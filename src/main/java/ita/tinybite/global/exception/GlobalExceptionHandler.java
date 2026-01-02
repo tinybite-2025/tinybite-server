@@ -4,6 +4,8 @@ import ita.tinybite.global.exception.errorcode.CommonErrorCode;
 import ita.tinybite.global.exception.errorcode.ErrorCode;
 import ita.tinybite.global.response.APIResponse;
 import jakarta.servlet.http.HttpServletRequest;
+
+import java.time.LocalDateTime;
 import java.util.NoSuchElementException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -53,11 +55,11 @@ public class GlobalExceptionHandler {
 
     // 공통 에러 처리
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<APIResponse<Void>> handle500Exception(Exception exception, HttpServletRequest request) {
+    public ResponseEntity<APIResponse<?>> handle500Exception(Exception exception, HttpServletRequest request) {
 
         log.warn("URI : {}, {}", request.getRequestURI(), exception.getMessage(), exception);
         ErrorCode errorCode = CommonErrorCode.INTERNAL_SERVER_ERROR;
         return ResponseEntity.status(errorCode.getHttpStatus())
-                .body(APIResponse.commonError(errorCode));
+                .body(new APIResponse<>(errorCode.getHttpStatus().value(), errorCode.getHttpStatus().name(), exception.getMessage(), LocalDateTime.now(), null));
     }
 }

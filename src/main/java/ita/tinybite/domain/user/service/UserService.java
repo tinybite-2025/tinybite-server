@@ -47,7 +47,7 @@ public class UserService {
     @Transactional
     public void updateUser(UpdateUserReqDto req) {
         User user = securityProvider.getCurrentUser();
-        user.update(req);
+        if(req.nickname() != null) user.update(req);
     }
 
     @Transactional
