@@ -13,6 +13,8 @@ import org.hibernate.annotations.Comment;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users")
@@ -77,8 +79,13 @@ public class User extends BaseEntity {
     }
 
     public void withdraw() {
-        this.nickname = "탈퇴한 사용자";
+        String uniqueId = UUID.randomUUID().toString().substring(0, 8);
+        this.nickname = "탈퇴한 사용자"+ uniqueId;
         this.profileImage = "/images/default-profile.jpg";
+        this.email = "withdrawn_" + uniqueId + "@deleted.com";
+        this.phone = String.format("010-%04d-%04d",
+                new Random().nextInt(10000),
+                new Random().nextInt(10000));
         this.status = UserStatus.WITHDRAW;
         this.withdrawAt = LocalDateTime.now();
     }
