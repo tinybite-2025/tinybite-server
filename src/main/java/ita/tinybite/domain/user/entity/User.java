@@ -80,7 +80,6 @@ public class User extends BaseEntity {
 
     public void withdraw() {
         String uniqueId = UUID.randomUUID().toString().substring(0, 8);
-
         this.nickname = "탈퇴한 사용자"+ uniqueId;
         this.profileImage = "/images/default-profile.jpg";
         this.email = "withdrawn_" + uniqueId + "@deleted.com";
