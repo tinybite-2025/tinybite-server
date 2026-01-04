@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import ita.tinybite.domain.auth.entity.JwtTokenProvider;
 import ita.tinybite.domain.party.dto.request.PartyCreateRequest;
+import ita.tinybite.domain.party.dto.request.PartyListRequest;
 import ita.tinybite.domain.party.dto.request.PartyQueryListResponse;
 import ita.tinybite.domain.party.dto.request.PartyUpdateRequest;
 import ita.tinybite.domain.party.dto.response.ChatRoomResponse;
@@ -16,6 +17,7 @@ import ita.tinybite.domain.party.dto.response.PartyDetailResponse;
 import ita.tinybite.domain.party.dto.response.PartyListResponse;
 import ita.tinybite.domain.party.entity.PartyParticipant;
 import ita.tinybite.domain.party.enums.PartyCategory;
+import ita.tinybite.domain.party.enums.PartySortType;
 import ita.tinybite.domain.party.service.PartySearchService;
 import ita.tinybite.domain.party.service.PartyService;
 import ita.tinybite.global.response.APIResponse;
@@ -275,10 +277,42 @@ public class PartyController {
                     example = "ALL",
                     schema = @Schema(allowableValues = {"ALL", "DELIVERY", "GROCERY", "HOUSEHOLD"})
             )
-            @RequestParam(defaultValue = "ALL") PartyCategory category
-    ) {
-        PartyListResponse response = partyService.getPartyList(
-                userId, category);
+            @RequestParam(defaultValue = "ALL") PartyCategory category,
+            @RequestParam(required = false, defaultValue = "LATEST") PartySortType sortType,
+            @RequestParam(required = false) String userLat,
+            @RequestParam(required = false) String userLon
+            ) {
+        Double lat = null;
+        Double lon = null;
+        // 거리순 정렬 시 위치 정보 검증
+        if (sortType == PartySortType.DISTANCE) {
+            if (userLat == null || userLon == null) {
+                throw new IllegalArgumentException("거리순 정렬을 위해서는 현재 위치 정보가 필요합니다.");
+            }
+
+            try {
+                lat = Double.parseDouble(userLat);
+                lon = Double.parseDouble(userLon);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException(
+                        String.format("위치 정보 형식이 올바르지 않습니다. userLat: %s, userLon: %s", userLat, userLon)
+                );
+            }
+
+            // 위도/경도 범위 검증
+            if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+                throw new IllegalArgumentException("위도/경도 값이 유효한 범위를 벗어났습니다.");
+            }
+        }
+
+        PartyListRequest request = PartyListRequest.builder()
+                .category(category)
+                .sortType(sortType)
+                .userLat(lat)
+                .userLon(lon)
+                .build();
+
+        PartyListResponse response = partyService.getPartyList(userId, request);
 
         return ResponseEntity.ok(response);
     }
