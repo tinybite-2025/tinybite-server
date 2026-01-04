@@ -67,6 +67,8 @@ dependencies {
     implementation 'com.google.api-client:google-api-client:2.7.2'
     // firebase
     implementation 'com.google.firebase:firebase-admin:9.1.1'
+
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
 }
 
 tasks.named('test') {
