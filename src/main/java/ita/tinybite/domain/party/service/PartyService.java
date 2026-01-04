@@ -668,28 +668,6 @@ public class PartyService {
         return distance!= null? DistanceCalculator.formatDistance(distance):null;
     }
 
-    // 파티 검색 조회
-    public PartyQueryListResponse searchParty(String q, PartyCategory category, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
 
-        // category가 없을 시에는 ALL로 처리
-        Page<Party> result = (category == null || category == PartyCategory.ALL)
-                ? partyRepository.findByTitleContaining(q, pageable)
-                : partyRepository.findByTitleContainingAndCategory(q, category, pageable);
-
-
-        List<PartyCardResponse> partyCardResponseList = result.stream()
-                .map(party -> {
-                    int currentParticipants = participantRepository
-                            .countByPartyIdAndStatus(party.getId(), ParticipantStatus.APPROVED);
-                    return PartyCardResponse.from(party, currentParticipants);
-                })
-                .toList();
-
-        return PartyQueryListResponse.builder()
-                .parties(partyCardResponseList)
-                .hasNext(result.hasNext())
-                .build();
-    }
 }
 
