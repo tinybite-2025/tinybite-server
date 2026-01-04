@@ -345,7 +345,7 @@ public class PartyService {
 
         // 호스트 제외한 승인된 파티원 수 확인
         int approvedParticipantsExcludingHost = participantRepository
-                .countByPartyIdAndStatusAndUserIdNot(
+                .countByPartyIdAndStatusAndUser_UserIdNot(
                         partyId,
                         ParticipantStatus.APPROVED,
                         userId
@@ -404,10 +404,15 @@ public class PartyService {
             throw new IllegalStateException("파티장만 삭제할 수 있습니다");
         }
 
-        // 승인된 파티원 확인
-        boolean hasApprovedParticipants = party.getCurrentParticipants() > 1;
+        // 호스트 제외한 승인된 파티원 수 확인
+        int approvedParticipantsExcludingHost = participantRepository
+                .countByPartyIdAndStatusAndUser_UserIdNot(
+                        partyId,
+                        ParticipantStatus.APPROVED,
+                        userId
+                );
 
-        if (hasApprovedParticipants) {
+        if (approvedParticipantsExcludingHost > 0) {
             throw new IllegalStateException("승인된 파티원이 있어 삭제할 수 없습니다");
         }
 
