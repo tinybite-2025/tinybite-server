@@ -80,4 +80,7 @@ public interface PartyParticipantRepository extends JpaRepository<PartyParticipa
             @Param("userId") Long userId,
             @Param("partyStatus") PartyStatus partyStatus,
             @Param("participantStatus") ParticipantStatus participantStatus
-    );}
+    );
+
+    int countByPartyIdAndStatusAndUserIdNot(Long partyId, ParticipantStatus participantStatus, Long userId);
+}
