@@ -2,6 +2,7 @@ package ita.tinybite.domain.chat.entity;
 
 import ita.tinybite.domain.chat.enums.ChatRoomType;
 import ita.tinybite.domain.party.entity.Party;
+import ita.tinybite.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -43,20 +44,24 @@ public class ChatRoom {
 
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<ChatRoomMember> members = new ArrayList<>();
+    private List<ChatRoomMember> participants = new ArrayList<>();
 
     // ========== 비즈니스 메서드 ==========
+
+    public void addParticipants(ChatRoomMember... participants) {
+        this.participants.addAll(List.of(participants));
+    }
 
     /**
      * 멤버 추가
      */
-    public void addMember(ita.tinybite.domain.user.entity.User user) {
+    public void addMember(User user) {
         ChatRoomMember member = ChatRoomMember.builder()
                 .chatRoom(this)
                 .user(user)
                 .isActive(true)
                 .build();
-        members.add(member);
+        participants.add(member);
     }
 
     /**
