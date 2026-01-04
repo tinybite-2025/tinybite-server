@@ -28,5 +28,6 @@ public interface PartyRepository extends JpaRepository<Party, Long> {
     Page<Party> findByTitleContaining(String title, Pageable pageable);
 
     Page<Party> findByTitleContainingAndCategory(String title, PartyCategory category, Pageable pageable);
+
 }
 
