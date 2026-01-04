@@ -16,6 +16,7 @@ import ita.tinybite.domain.party.dto.response.PartyDetailResponse;
 import ita.tinybite.domain.party.dto.response.PartyListResponse;
 import ita.tinybite.domain.party.entity.PartyParticipant;
 import ita.tinybite.domain.party.enums.PartyCategory;
+import ita.tinybite.domain.party.service.PartySearchService;
 import ita.tinybite.domain.party.service.PartyService;
 import ita.tinybite.global.response.APIResponse;
 import jakarta.validation.Valid;
@@ -34,7 +35,7 @@ import java.util.List;
 public class PartyController {
 
     private final PartyService partyService;
-    private final JwtTokenProvider jwtTokenProvider;
+    private final PartySearchService partySearchService;
 
 
     @Operation(
@@ -459,6 +460,43 @@ public class PartyController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
-        return APIResponse.success(partyService.searchParty(q, category, page, size));
+        return APIResponse.success(partySearchService.searchParty(q, category, page, size));
+    }
+
+    @Operation(
+            summary = "최근 검색어 조회",
+            description = """
+                    검색 돋보기 클릭 시 보이는 최근 검색어를 조회합니다. <br>
+                    한 번에 20개가 조회됩니다.
+                    """
+    )
+    @GetMapping("/search/log")
+    public APIResponse<List<String>> getRecentLog() {
+         return APIResponse.success(partySearchService.getLog());
+    }
+
+    @Operation(
+            summary = "특정 최근 검색어 삭제",
+            description = """
+                    최근 검색어에서 특정 검색어를 삭제합니다. <br> 
+                    이때 검색어에 대한 Id값은 없고, 최근 검색어 자체를 keyword에 넣어주시면 됩니다.
+                    """
+    )
+    @DeleteMapping("/search/log/{keyword}")
+    public APIResponse<?>  deleteRecentLog(@PathVariable String keyword) {
+        partySearchService.deleteLog(keyword);
+         return APIResponse.success();
+    }
+
+    @Operation(
+            summary = "모든 최근 검색어 삭제",
+            description = """
+                    특정 유저에 대한 모든 최근 검색어를 삭제합니다.
+                    """
+    )
+    @DeleteMapping("/search/log")
+    public APIResponse<?> deleteRecentLogAll() {
+         partySearchService.deleteAllLog();
+         return APIResponse.success();
     }
 }
