@@ -334,7 +334,6 @@ public class PartyService {
                 .build();
     }
 
-    @Transactional
     public void updateParty(Long partyId, Long userId, PartyUpdateRequest request) {
         Party party = partyRepository.findById(partyId)
                 .orElseThrow(() -> new IllegalArgumentException("파티를 찾을 수 없습니다"));
@@ -344,30 +343,33 @@ public class PartyService {
             throw new IllegalStateException("파티장만 수정할 수 있습니다");
         }
 
-        // 승인된 파티원 확인
-        boolean hasApprovedParticipants = party.getCurrentParticipants() > 1;
+        // 호스트 제외한 승인된 파티원 수 확인
+        int approvedParticipantsExcludingHost = participantRepository
+                .countByPartyIdAndStatusAndUserIdNot(
+                        partyId,
+                        ParticipantStatus.APPROVED,
+                        userId
+                );
 
-        if (hasApprovedParticipants) {
-            // 승인된 파티원이 있는 경우: 설명과 이미지만 수정 가능
+        if (approvedParticipantsExcludingHost > 0) {
+            // 다른 승인된 파티원이 있는 경우: 설명과 이미지만 수정 가능
             party.updateLimitedFields(
                     request.getDescription(),
                     request.getImages()
             );
         } else {
-            // 승인된 파티원이 없는 경우: 모든 항목 수정 가능
+            // 승인된 파티원이 없는 경우, 호스트 혼자인 경우: 모든 항목 수정 가능
             party.updateAllFields(
                     request.getTitle(),
                     request.getTotalPrice(),
                     request.getMaxParticipants(),
-                    getPickUpLocationIfExists(request,party),
-//                    new PickupLocation(request.getPickupLocation()),
+                    getPickUpLocationIfExists(request, party),
                     request.getProductLink(),
                     request.getDescription(),
                     request.getImages()
             );
         }
     }
-
     private PickupLocation getPickUpLocationIfExists(PartyUpdateRequest request, Party currentParty) {
         if (request.getPickupLocation() == null) {
             return currentParty.getPickupLocation();
