@@ -3,6 +3,7 @@ import ita.tinybite.domain.party.entity.Party;
 import ita.tinybite.domain.party.enums.ParticipantStatus;
 import ita.tinybite.domain.party.enums.PartyCategory;
 import ita.tinybite.domain.party.enums.PartyStatus;
+import ita.tinybite.global.util.DistanceCalculator;
 import lombok.*;
 
 import java.time.Duration;
@@ -20,7 +21,7 @@ public class PartyCardResponse {
     private Integer pricePerPerson; // 1/N 가격
     private String participantStatus; // "1/4명"
     private String distance; // "300m" or "1.2km" (화면 표시용)
-    private Double distanceKm; // km 단위 거리 (정렬용)
+    private String distanceKm; // km 단위 거리 (정렬용)
     private String timeAgo; // "10분 전", "3시간 전"
     private Boolean isClosed; // 마감 여부
     private PartyCategory category;
@@ -108,5 +109,10 @@ public class PartyCardResponse {
         }
 
         return false;
+    }
+
+    public void addDistanceKm(Double distance) {
+        this.distanceKm = DistanceCalculator.formatDistance(distance);
+        this.distance = Double.toString(distance);
     }
 }

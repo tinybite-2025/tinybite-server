@@ -43,7 +43,7 @@ public class DistanceCalculator {
     public static String formatDistance(double distanceKm) {
         if (distanceKm < 1.0) {
             // 1km 미만: 미터 단위로 표시 (반올림)
-            return Math.round(distanceKm * 1000) + "m";
+            return String.format("%.1fkm", distanceKm);
         } else {
             // 1km 이상: km 단위로 표시 (소수점 1자리)
             return String.format("%.1fkm", distanceKm);
