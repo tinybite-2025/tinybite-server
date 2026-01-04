@@ -27,6 +27,10 @@ public class SmsAuthService {
         this.authCodeGenerator = AuthCodeGenerator.getInstance();
     }
 
+    private static final String KEY_PREFIX = "sms:";
+    private String key(String phone) {
+        return KEY_PREFIX + phone;
+    }
     /**
      * 1. 인증코드 생성 <br>
      * 2. 주어진 폰번호로 인증코드 전송 <br>
@@ -37,7 +41,7 @@ public class SmsAuthService {
 
         String smsAuthCode = authCodeGenerator.getAuthCode();
         smsService.send(phone.replaceAll("-", ""), smsAuthCode);
-        redisTemplate.opsForValue().set(phone, smsAuthCode, EXPIRE_TIME, TimeUnit.MILLISECONDS);
+        redisTemplate.opsForValue().set(key(phone), smsAuthCode, EXPIRE_TIME, TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -48,7 +52,7 @@ public class SmsAuthService {
     public void check(CheckReqDto req) {
         validatePhoneNumber(req.phone());
 
-        String authCode = redisTemplate.opsForValue().get(req.phone());
+        String authCode = redisTemplate.opsForValue().get(key(req.phone()));
         if(authCode == null)
             throw BusinessException.of(AuthErrorCode.EXPIRED_AUTH_CODE);
 
@@ -60,7 +64,7 @@ public class SmsAuthService {
         if(!Pattern.matches("010-\\d{4}-\\d{4}", phone))
             throw BusinessException.of(AuthErrorCode.INVALID_PHONE_NUMBER);
 
-        if(!WHITELIST.contains(phone))
-            throw BusinessException.of(AuthErrorCode.INVALID_PHONE_NUMBER);
+//        if(!WHITELIST.contains(phone))
+//            throw BusinessException.of(AuthErrorCode.INVALID_PHONE_NUMBER);
     }
 }

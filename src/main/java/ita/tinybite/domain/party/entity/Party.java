@@ -11,7 +11,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @Entity
@@ -36,7 +35,7 @@ public class Party {
     private String thumbnailImage; // 섬네일 이미지 URL
 
     @Column(length = 500)
-    private List<String> image; // 이미지 URL
+    private List<String> images; // 이미지 URL
 
     @Column(nullable = false)
     private Integer price; // 가격
@@ -63,12 +62,6 @@ public class Party {
     private PartyStatus status;
 
     @Column(nullable = false)
-    private Double latitude; // 위도 (거리 계산용)
-
-    @Column(nullable = false)
-    private Double longitude; // 경도 (거리 계산용)
-
-    @Column(nullable = false)
     private Boolean isClosed; // 마감 여부
 
     @CreationTimestamp
@@ -76,7 +69,6 @@ public class Party {
     private LocalDateTime createdAt; // 등록시간
 
     @UpdateTimestamp
-    @Column(nullable = false)
     private LocalDateTime updatedAt;
 
     private LocalDateTime closedAt;
@@ -89,10 +81,14 @@ public class Party {
     @Builder.Default
     private List<PartyParticipant> participants = new ArrayList<>(); // 파티 참여 유저
 
-    public int getApprovedParticipantCount() {
-        return (int) participants.stream()
-                .filter(PartyParticipant::getIsApproved)
-                .count() + 1; // 호스트 포함
+    /**
+     * 참여자 수 증가
+     */
+    public void incrementParticipants() {
+        if (this.currentParticipants >= this.maxParticipants) {
+            throw new IllegalStateException("파티 인원이 가득 찼습니다");
+        }
+        this.currentParticipants++;
     }
 
     public String getTimeAgo() {
@@ -135,14 +131,11 @@ public class Party {
     }
 
     public void updateAllFields(String title, Integer price, Integer maxParticipants,
-                                PickupLocation pickupLocation, Double latitude, Double longitude,
-                                String productLink, String description, List<String> images) {
+                                PickupLocation pickupLocation, String productLink, String description, List<String> images) {
         this.title = title != null ? title : this.title;
         this.price = price != null ? price : this.price;
         this.maxParticipants = maxParticipants != null ? maxParticipants : this.maxParticipants;
         this.pickupLocation = pickupLocation != null ? pickupLocation : this.pickupLocation;
-        this.latitude = latitude != null ? latitude : this.latitude;
-        this.longitude = longitude != null ? longitude : this.longitude;
 
         // 상품 링크 검증
         if (productLink != null) {
@@ -155,7 +148,7 @@ public class Party {
         this.description = description != null ? description : this.description;
 
         if (images != null && !images.isEmpty()) {
-            this.image = Collections.singletonList(String.join(",", images));
+            this.images = images;
             this.thumbnailImage = images.get(0);
         }
     }
@@ -164,7 +157,7 @@ public class Party {
         this.description = description != null ? description : this.description;
 
         if (images != null && !images.isEmpty()) {
-            this.image = Collections.singletonList(String.join(",", images));
+            this.images = images;
             this.thumbnailImage = images.get(0);
         }
     }

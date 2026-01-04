@@ -7,26 +7,23 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import ita.tinybite.domain.auth.entity.JwtTokenProvider;
-import ita.tinybite.domain.chat.entity.ChatRoom;
 import ita.tinybite.domain.party.dto.request.PartyCreateRequest;
+import ita.tinybite.domain.party.dto.request.PartyQueryListResponse;
+import ita.tinybite.domain.party.dto.request.PartyUpdateRequest;
 import ita.tinybite.domain.party.dto.response.ChatRoomResponse;
 import ita.tinybite.domain.party.dto.response.PartyDetailResponse;
 import ita.tinybite.domain.party.dto.response.PartyListResponse;
 import ita.tinybite.domain.party.entity.PartyParticipant;
 import ita.tinybite.domain.party.enums.PartyCategory;
+import ita.tinybite.domain.party.service.PartySearchService;
 import ita.tinybite.domain.party.service.PartyService;
+import ita.tinybite.global.response.APIResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.ErrorResponse;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -37,7 +34,7 @@ import java.util.List;
 public class PartyController {
 
     private final PartyService partyService;
-    private final JwtTokenProvider jwtTokenProvider;
+    private final PartySearchService partySearchService;
 
 
     @Operation(
@@ -68,9 +65,8 @@ public class PartyController {
     @PostMapping("/{partyId}/join")
     public ResponseEntity<Long> joinParty(
             @PathVariable Long partyId,
-            @RequestHeader("Authorization") String token) {
+            @Parameter(hidden = true) @AuthenticationPrincipal Long userId) {
 
-        Long userId = jwtTokenProvider.getUserId(token);
         partyService.joinParty(partyId, userId);
 
         return ResponseEntity.ok().build();
@@ -103,10 +99,9 @@ public class PartyController {
     public ResponseEntity<Void> approveParticipant(
             @PathVariable Long partyId,
             @PathVariable Long participantId,
-            @RequestHeader("Authorization") String token) {
+            @Parameter(hidden = true) @AuthenticationPrincipal Long userId) {
 
-        Long hostId = jwtTokenProvider.getUserId(token);
-        partyService.approveParticipant(partyId, participantId, hostId);
+        partyService.approveParticipant(partyId, participantId, userId);
 
         return ResponseEntity.ok().build();
     }
@@ -138,10 +133,9 @@ public class PartyController {
     public ResponseEntity<Void> rejectParticipant(
             @PathVariable Long partyId,
             @PathVariable Long participantId,
-            @RequestHeader("Authorization") String token) {
+            @Parameter(hidden = true) @AuthenticationPrincipal Long userId) {
 
-        Long hostId = jwtTokenProvider.getUserId(token);
-        partyService.rejectParticipant(partyId, participantId, hostId);
+        partyService.rejectParticipant(partyId, participantId, userId);
 
         return ResponseEntity.ok().build();
     }
@@ -172,9 +166,8 @@ public class PartyController {
     @GetMapping("{partyId}/chat/group")
     public ResponseEntity<ChatRoomResponse> getGroupChatRoom(
             @PathVariable Long partyId,
-            @RequestHeader("Authorization") String token) {
+            @Parameter(hidden = true) @AuthenticationPrincipal Long userId) {
 
-        Long userId = jwtTokenProvider.getUserId(token);
         ChatRoomResponse chatRoom = partyService.getGroupChatRoom(partyId, userId);
 
         return ResponseEntity.ok(chatRoom);
@@ -230,10 +223,9 @@ public class PartyController {
     @PostMapping("{partyId}/settle")
     public ResponseEntity<Void> settleParty(
             @PathVariable Long partyId,
-            @RequestHeader("Authorization") String token) {
+            @Parameter(hidden = true) @AuthenticationPrincipal Long userId) {
 
-        Long hostId = jwtTokenProvider.getUserId(token);
-        partyService.settleParty(partyId, hostId);
+        partyService.settleParty(partyId, userId);
 
         return ResponseEntity.ok().build();
     }
@@ -264,40 +256,28 @@ public class PartyController {
     @GetMapping("{partyId}/participants/pending")
     public ResponseEntity<List<PartyParticipant>> getPendingParticipants(
             @PathVariable Long partyId,
-            @RequestHeader("Authorization") String token) {
+            @Parameter(hidden = true) @AuthenticationPrincipal Long userId) {
 
-        Long hostId = jwtTokenProvider.getUserId(token);
-        List<PartyParticipant> participants = partyService.getPendingParticipants(partyId, hostId);
+        List<PartyParticipant> participants = partyService.getPendingParticipants(partyId, userId);
 
         return ResponseEntity.ok(participants);
     }
-
-
 
     /**
      * 파티 목록 조회 (홈 화면)
      */
     @GetMapping
     public ResponseEntity<PartyListResponse> getPartyList(
-            @Parameter(description = "JWT 토큰", required = false)
-            @RequestHeader(value = "Authorization", required = false) String token,
-
+            @Parameter(hidden = true) @AuthenticationPrincipal Long userId,
             @Parameter(
                     description = "파티 카테고리",
                     example = "ALL",
                     schema = @Schema(allowableValues = {"ALL", "DELIVERY", "GROCERY", "HOUSEHOLD"})
             )
-            @RequestParam(defaultValue = "ALL") PartyCategory category,
-
-            @Parameter(description = "사용자 위도", required = true, example = "37.4979")
-            @RequestParam String latitude,
-
-            @Parameter(description = "사용자 경도", required = true, example = "127.0276")
-            @RequestParam String longitude) {
-        Long userId = jwtTokenProvider.getUserId(token);
-
+            @RequestParam(defaultValue = "ALL") PartyCategory category
+    ) {
         PartyListResponse response = partyService.getPartyList(
-                userId, category, latitude, longitude);
+                userId, category);
 
         return ResponseEntity.ok(response);
     }
@@ -330,12 +310,11 @@ public class PartyController {
     @GetMapping("/{partyId}")
     public ResponseEntity<PartyDetailResponse> getPartyDetail(
             @PathVariable Long partyId,
-            @RequestHeader("Authorization") String token,
-            @RequestParam Double latitude,
-            @RequestParam Double longitude) {
-        Long userId = jwtTokenProvider.getUserId(token);
-
-        PartyDetailResponse response = partyService.getPartyDetail(partyId, userId, latitude, longitude);
+            @Parameter(hidden = true) @AuthenticationPrincipal Long userId,
+            @RequestParam(required = false) Double userLat,
+            @RequestParam(required = false) Double userLon
+    ) {
+        PartyDetailResponse response = partyService.getPartyDetail(partyId, userId,userLat,userLon);
         return ResponseEntity.ok(response);
     }
 
@@ -365,13 +344,158 @@ public class PartyController {
     })
     @PostMapping
     public ResponseEntity<Long> createParty(
-            @RequestHeader("Authorization") String token,
+            @Parameter(hidden = true) @AuthenticationPrincipal Long userId,
             @Valid @RequestBody PartyCreateRequest request) {
 
-        Long userId = jwtTokenProvider.getUserId(token);
         Long partyId = partyService.createParty(userId, request);
 
         return ResponseEntity.ok(partyId);
     }
 
+    /**
+     * 파티 수정
+     */
+    @Operation(
+            summary = "파티 수정",
+            description = """
+            파티 정보를 수정합니다.
+            
+            **수정 권한**
+            - 파티 호스트만 수정 가능
+            
+            **수정 가능 범위**
+            - 승인된 파티원이 없을 때: 모든 항목 수정 가능
+            - 승인된 파티원이 있을 때: 설명, 이미지만 수정 가능 (가격, 인원, 수령 정보 수정 불가)
+            """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "파티 수정 성공"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 (수정 권한 없음, 유효하지 않은 데이터)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "파티를 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @PatchMapping("/{partyId}")
+    public ResponseEntity<Void> updateParty(
+            @PathVariable Long partyId,
+            @AuthenticationPrincipal Long userId,
+            @RequestBody PartyUpdateRequest request) {
+
+        partyService.updateParty(partyId, userId, request);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 파티 삭제
+     */
+     @Operation(
+            summary = "파티 삭제",
+            description = """
+            파티를 삭제합니다.
+            
+            **삭제 권한**
+            - 파티 호스트만 삭제 가능
+            
+            **삭제 제한**
+            - 승인된 파티원이 있는 경우 삭제 불가능
+            - 승인된 파티원이 없을 때만 삭제 가능
+            
+            **삭제 시 처리**
+            - 관련 채팅방 비활성화
+            - 대기 중인 참가 신청 모두 삭제
+            """
+     )
+     @ApiResponses({
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "파티 삭제 성공"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 (삭제 권한 없음, 승인된 파티원 존재)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "파티를 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @DeleteMapping("/{partyId}")
+    public ResponseEntity<Void> deleteParty(
+            @PathVariable Long partyId,
+            @AuthenticationPrincipal Long userId) {
+
+        partyService.deleteParty(partyId, userId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(
+            summary = "파티 검색",
+            description = """
+                    q 문자열을 포함하는 제목을 가진 파티를 검색합니다. <br>
+                    slice 페이지 처리를 위해, 조회할 다음 페이지가 있는지 체크하는 hasNext 필드와, <br>
+                    몇 번째 페이지 인지 (page), 한 페이지 당 몇 개의 파티를 조회할 지 (size) 파라미터로 입력해주시면 됩니다.
+                    """
+    )
+    @GetMapping("/search")
+    public APIResponse<PartyQueryListResponse> getParty(
+            @RequestParam String q,
+            @Parameter(
+                    description = "파티 카테고리",
+                    example = "ALL",
+                    schema = @Schema(allowableValues = {"ALL", "DELIVERY", "GROCERY", "HOUSEHOLD"})
+            )
+            @RequestParam(defaultValue = "ALL") PartyCategory category,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        return APIResponse.success(partySearchService.searchParty(q, category, page, size));
+    }
+
+    @Operation(
+            summary = "최근 검색어 조회",
+            description = """
+                    검색 돋보기 클릭 시 보이는 최근 검색어를 조회합니다. <br>
+                    한 번에 20개가 조회됩니다.
+                    """
+    )
+    @GetMapping("/search/log")
+    public APIResponse<List<String>> getRecentLog() {
+         return APIResponse.success(partySearchService.getLog());
+    }
+
+    @Operation(
+            summary = "특정 최근 검색어 삭제",
+            description = """
+                    최근 검색어에서 특정 검색어를 삭제합니다. <br> 
+                    이때 검색어에 대한 Id값은 없고, 최근 검색어 자체를 keyword에 넣어주시면 됩니다.
+                    """
+    )
+    @DeleteMapping("/search/log/{keyword}")
+    public APIResponse<?>  deleteRecentLog(@PathVariable String keyword) {
+        partySearchService.deleteLog(keyword);
+         return APIResponse.success();
+    }
+
+    @Operation(
+            summary = "모든 최근 검색어 삭제",
+            description = """
+                    특정 유저에 대한 모든 최근 검색어를 삭제합니다.
+                    """
+    )
+    @DeleteMapping("/search/log")
+    public APIResponse<?> deleteRecentLogAll() {
+         partySearchService.deleteAllLog();
+         return APIResponse.success();
+    }
 }

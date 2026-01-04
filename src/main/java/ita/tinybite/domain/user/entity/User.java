@@ -11,8 +11,11 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Comment;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users")
@@ -50,6 +53,8 @@ public class User extends BaseEntity {
     @Column(length = 100)
     private String location;
 
+    private LocalDateTime withdrawAt;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserTermAgreement>  agreements = new ArrayList<>();;
 
@@ -75,5 +80,22 @@ public class User extends BaseEntity {
 
     public void addTerms(List<UserTermAgreement> agreements) {
         this.agreements.addAll(agreements);
+    }
+
+    public void withdraw() {
+        String uniqueId = UUID.randomUUID().toString().substring(0, 8);
+        this.nickname = "탈퇴한 사용자"+ uniqueId;
+        this.profileImage = "/images/default-profile.jpg";
+        this.email = "withdrawn_" + uniqueId + "@deleted.com";
+        this.phone = String.format("010-%04d-%04d",
+                new Random().nextInt(10000),
+                new Random().nextInt(10000));
+        this.status = UserStatus.WITHDRAW;
+        this.withdrawAt = LocalDateTime.now();
+    }
+
+    // 탈퇴 여부 확인
+    public boolean isWithdrawn() {
+        return this.status == UserStatus.WITHDRAW;
     }
 }

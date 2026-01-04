@@ -1,12 +1,15 @@
 package ita.tinybite.domain.user.service;
 
 import ita.tinybite.domain.auth.service.AuthService;
+import ita.tinybite.domain.party.entity.Party;
+import ita.tinybite.domain.party.repository.PartyParticipantRepository;
 import ita.tinybite.domain.user.constant.LoginType;
 import ita.tinybite.domain.user.constant.UserStatus;
 import ita.tinybite.domain.user.dto.req.UpdateUserReqDto;
 import ita.tinybite.domain.user.dto.res.UserResDto;
 import ita.tinybite.domain.user.entity.User;
 import ita.tinybite.domain.user.repository.UserRepository;
+import ita.tinybite.domain.user.repository.WithDrawUserRepository;
 import ita.tinybite.domain.user.service.fake.FakeLocationService;
 import ita.tinybite.domain.user.service.fake.FakeSecurityProvider;
 import ita.tinybite.global.exception.BusinessException;
@@ -24,6 +27,12 @@ class UserServiceTest {
     private UserRepository userRepository;
 
     @Autowired
+    private PartyParticipantRepository participantRepository;
+
+    @Autowired
+    private WithDrawUserRepository withDrawUserRepository;
+
+    @Autowired
     private AuthService authService;
 
     // Fake 객체
@@ -37,7 +46,7 @@ class UserServiceTest {
     void setUp() {
         securityProvider = new FakeSecurityProvider(userRepository);
         locationService = new FakeLocationService();
-        userService = new UserService(securityProvider, userRepository, locationService);
+        userService = new UserService(securityProvider, userRepository, locationService,participantRepository,withDrawUserRepository);
 
         User user = User.builder()
                 .email("yyytir777@gmail.com")
@@ -82,10 +91,10 @@ class UserServiceTest {
     }
 
     @Test
-    void deleteUser() {
+    void deleteUser(Long userId) {
         // when
         User currentUser = securityProvider.getCurrentUser();
-        userService.deleteUser();
+        userService.deleteUser(userId);
 
         // then
         assertThat(userRepository.findById(currentUser.getUserId())).isEmpty();
