@@ -4,8 +4,8 @@ import ita.tinybite.domain.chat.entity.ChatRoom;
 import ita.tinybite.domain.chat.enums.ChatRoomType;
 import ita.tinybite.domain.chat.repository.ChatRoomRepository;
 import ita.tinybite.domain.party.dto.request.PartyCreateRequest;
+import ita.tinybite.domain.party.dto.request.PartyQueryListResponse;
 import ita.tinybite.domain.party.dto.request.PartyUpdateRequest;
-import ita.tinybite.domain.party.dto.request.UserLocation;
 import ita.tinybite.domain.party.dto.response.*;
 import ita.tinybite.domain.party.entity.Party;
 import ita.tinybite.domain.party.entity.PartyParticipant;
@@ -19,14 +19,15 @@ import ita.tinybite.domain.user.entity.User;
 import ita.tinybite.domain.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import ita.tinybite.global.location.LocationService;
 import ita.tinybite.global.util.DistanceCalculator;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -665,6 +666,30 @@ public class PartyService {
 
     private String formatDistanceIfExists(Double distance) {
         return distance!= null? DistanceCalculator.formatDistance(distance):null;
+    }
+
+    // 파티 검색 조회
+    public PartyQueryListResponse searchParty(String q, PartyCategory category, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        // category가 없을 시에는 ALL로 처리
+        Page<Party> result = (category == null || category == PartyCategory.ALL)
+                ? partyRepository.findByTitleContaining(q, pageable)
+                : partyRepository.findByTitleContainingAndCategory(q, category, pageable);
+
+
+        List<PartyCardResponse> partyCardResponseList = result.stream()
+                .map(party -> {
+                    int currentParticipants = participantRepository
+                            .countByPartyIdAndStatus(party.getId(), ParticipantStatus.APPROVED);
+                    return PartyCardResponse.from(party, currentParticipants);
+                })
+                .toList();
+
+        return PartyQueryListResponse.builder()
+                .parties(partyCardResponseList)
+                .hasNext(result.hasNext())
+                .build();
     }
 }
 

@@ -26,7 +26,7 @@ public class PartyCardResponse {
     private PartyCategory category;
     private LocalDateTime createdAt;
 
-    public static PartyCardResponse from(Party party, int currentParticipants, boolean isHost, ParticipantStatus status) {
+    public static PartyCardResponse from(Party party, int currentParticipants) {
         return PartyCardResponse.builder()
                 .partyId(party.getId())
                 .thumbnailImage(party.getThumbnailImage())
