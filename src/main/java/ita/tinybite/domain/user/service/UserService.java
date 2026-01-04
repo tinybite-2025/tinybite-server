@@ -102,8 +102,7 @@ public class UserService {
                     Party party = pp.getParty();
                     int currentParticipants = participantRepository
                             .countByPartyIdAndStatus(party.getId(), ParticipantStatus.APPROVED);
-                    boolean isHost = party.getHost().getUserId().equals(userId);
-                    return PartyCardResponse.from(party, currentParticipants, isHost, pp.getStatus());
+                    return PartyCardResponse.from(party, currentParticipants);
                 })
                 .collect(Collectors.toList());
     }
@@ -185,7 +184,7 @@ public class UserService {
                 .map(party -> {
                     int currentParticipants = participantRepository
                             .countByPartyIdAndStatus(party.getId(), ParticipantStatus.APPROVED);
-                    return PartyCardResponse.from(party, currentParticipants, true, ParticipantStatus.APPROVED);
+                    return PartyCardResponse.from(party, currentParticipants);
                 })
                 .collect(Collectors.toList());
     }
@@ -203,7 +202,7 @@ public class UserService {
                     Party party = pp.getParty();
                     int currentParticipants = participantRepository
                             .countByPartyIdAndStatus(party.getId(), ParticipantStatus.APPROVED);
-                    return PartyCardResponse.from(party, currentParticipants, false, pp.getStatus());
+                    return PartyCardResponse.from(party, currentParticipants);
                 })
                 .collect(Collectors.toList());
     }

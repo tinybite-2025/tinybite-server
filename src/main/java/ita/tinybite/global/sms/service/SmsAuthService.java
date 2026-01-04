@@ -60,7 +60,7 @@ public class SmsAuthService {
         if(!Pattern.matches("010-\\d{4}-\\d{4}", phone))
             throw BusinessException.of(AuthErrorCode.INVALID_PHONE_NUMBER);
 
-        if(!WHITELIST.contains(phone))
-            throw BusinessException.of(AuthErrorCode.INVALID_PHONE_NUMBER);
+//        if(!WHITELIST.contains(phone))
+//            throw BusinessException.of(AuthErrorCode.INVALID_PHONE_NUMBER);
     }
 }

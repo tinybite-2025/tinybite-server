@@ -8,16 +8,16 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import ita.tinybite.domain.auth.entity.JwtTokenProvider;
-import ita.tinybite.domain.chat.entity.ChatRoom;
 import ita.tinybite.domain.party.dto.request.PartyCreateRequest;
+import ita.tinybite.domain.party.dto.request.PartyQueryListResponse;
 import ita.tinybite.domain.party.dto.request.PartyUpdateRequest;
-import ita.tinybite.domain.party.dto.request.UserLocation;
 import ita.tinybite.domain.party.dto.response.ChatRoomResponse;
 import ita.tinybite.domain.party.dto.response.PartyDetailResponse;
 import ita.tinybite.domain.party.dto.response.PartyListResponse;
 import ita.tinybite.domain.party.entity.PartyParticipant;
 import ita.tinybite.domain.party.enums.PartyCategory;
 import ita.tinybite.domain.party.service.PartyService;
+import ita.tinybite.global.response.APIResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -437,5 +437,15 @@ public class PartyController {
 
         partyService.deleteParty(partyId, userId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/search")
+    public APIResponse<PartyQueryListResponse> getParty(
+            @RequestParam String q,
+            @RequestParam(defaultValue = "ALL") PartyCategory category,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        return APIResponse.success(partyService.searchParty(q, category, page, size));
     }
 }
