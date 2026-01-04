@@ -4,6 +4,7 @@ import ita.tinybite.domain.chat.entity.ChatRoom;
 import ita.tinybite.domain.chat.enums.ChatRoomType;
 import ita.tinybite.domain.chat.repository.ChatRoomRepository;
 import ita.tinybite.domain.party.dto.request.PartyCreateRequest;
+import ita.tinybite.domain.party.dto.request.PartyListRequest;
 import ita.tinybite.domain.party.dto.request.PartyUpdateRequest;
 import ita.tinybite.domain.party.dto.response.*;
 import ita.tinybite.domain.party.entity.Party;
@@ -11,21 +12,22 @@ import ita.tinybite.domain.party.entity.PartyParticipant;
 import ita.tinybite.domain.party.entity.PickupLocation;
 import ita.tinybite.domain.party.enums.ParticipantStatus;
 import ita.tinybite.domain.party.enums.PartyCategory;
+import ita.tinybite.domain.party.enums.PartySortType;
 import ita.tinybite.domain.party.enums.PartyStatus;
 import ita.tinybite.domain.party.repository.PartyParticipantRepository;
 import ita.tinybite.domain.party.repository.PartyRepository;
 import ita.tinybite.domain.user.entity.User;
 import ita.tinybite.domain.user.repository.UserRepository;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import ita.tinybite.global.location.LocationService;
 import ita.tinybite.global.util.DistanceCalculator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -38,6 +40,7 @@ public class PartyService {
     private final PartyParticipantRepository partyParticipantRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final PartyParticipantRepository participantRepository;
+
     /**
      * 파티 생성
      */
@@ -101,72 +104,43 @@ public class PartyService {
     /**
      * 파티 목록 조회 (홈 화면)
      */
-    public PartyListResponse getPartyList(Long userId, PartyCategory category) {
+    public PartyListResponse getPartyList(Long userId, PartyListRequest request) {
         User user = null;
         if (userId != null) {
             user = userRepository.findById(userId).orElse(null);
         }
 
         // 동네 기준으로 파티 조회
-        List<Party> parties = List.of();
-        if (user != null && user.getLocation() != null) {
-            if (category == PartyCategory.ALL) {
-                parties = partyRepository.findByPickupLocation_Place(user.getLocation());
-            } else {
-                parties = partyRepository.findByPickupLocation_PlaceAndCategory(
-                        user.getLocation(), category);
-            }
-        }
-//          else {
-//            // 비회원이거나 동네 미설정 시
-//            String location = locationService.getLocation(userLat, userLon);
-//            if (category == PartyCategory.ALL) {
-//                parties = partyRepository.findByPickupLocation_Place(location);
-//            } else {
-//                parties = partyRepository.findByPickupLocation_PlaceAndCategory(
-//                        location, category);
-//            }
-//        }
+        List<Party> parties = fetchPartiesByLocation(user, request);
 
-//        List<PartyCardResponse> cardResponses = parties.stream()
-//                .map(party -> {
-//                    // DistanceCalculator 활용
-//                    double distance = DistanceCalculator.calculateDistance(
-//                            Double.parseDouble(userLat), Double.parseDouble(userLon),
-//                            party.getLatitude(), party.getLongitude()
-//                    );
-//                    return convertToCardResponse(party, distance, userId, party.getCreatedAt());
-//                })
-//                .collect(Collectors.toList());
-//
-//        // 진행 중 파티: 거리 가까운 순 정렬
-//        List<PartyCardResponse> activeParties = cardResponses.stream()
-//                .filter(p -> !p.getIsClosed())
-//                .sorted((a, b) -> Double.compare(a.getDistanceKm(), b.getDistanceKm()))
-//                .collect(Collectors.toList());
-//
-//        // 마감된 파티: 거리 가까운 순 정렬
-//        List<PartyCardResponse> closedParties = cardResponses.stream()
-//                .filter(PartyCardResponse::getIsClosed)
-//                .sorted((a, b) -> Double.compare(a.getDistanceKm(), b.getDistanceKm()))
-//                .collect(Collectors.toList());
-
-
+        // PartyCardResponse로 변환
         List<PartyCardResponse> cardResponses = parties.stream()
-                .map(party -> convertToCardResponse(party, userId, party.getCreatedAt()))
+                .map(party -> {
+                    // 거리순 정렬인 경우 거리 계산
+                    if (request.getSortType() == PartySortType.DISTANCE) {
+                        double distance = DistanceCalculator.calculateDistance(
+                                request.getUserLat(),
+                                request.getUserLon(),
+                                party.getPickupLocation().getPickupLatitude(),
+                                party.getPickupLocation().getPickupLongitude()
+                        );
+                        return convertToCardResponseWithDistance(party, distance);
+                    }
+                    return convertToCardResponse(party,party.getCreatedAt());
+                })
+                .toList();
+
+        // 진행 중 파티 정렬
+        List<PartyCardResponse> activeParties = cardResponses.stream()
+                .filter(p -> !p.getIsClosed())
+                .sorted(getComparator(request.getSortType()))
                 .collect(Collectors.toList());
 
-        // 진행 중 파티: 최신순 정렬 (createdAt 기준 내림차순)
-                List<PartyCardResponse> activeParties = cardResponses.stream()
-                        .filter(p -> !p.getIsClosed())
-                        .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
-                        .collect(Collectors.toList());
-
-        // 마감된 파티: 최신순 정렬 (createdAt 기준 내림차순)
-                List<PartyCardResponse> closedParties = cardResponses.stream()
-                        .filter(PartyCardResponse::getIsClosed)
-                        .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
-                        .collect(Collectors.toList());
+        // 마감된 파티 정렬
+        List<PartyCardResponse> closedParties = cardResponses.stream()
+                .filter(PartyCardResponse::getIsClosed)
+                .sorted(getComparator(request.getSortType()))
+                .collect(Collectors.toList());
 
         return PartyListResponse.builder()
                 .activeParties(activeParties)
@@ -268,7 +242,7 @@ public class PartyService {
         };
     }
 
-    private PartyCardResponse convertToCardResponse(Party party, Long userId,
+    private PartyCardResponse convertToCardResponse(Party party,
                                                     LocalDateTime createdAt) {
         int pricePerPerson = party.getPrice() / party.getMaxParticipants();
         String participantStatus = party.getCurrentParticipants() + "/"
@@ -671,6 +645,40 @@ public class PartyService {
         return distance!= null? DistanceCalculator.formatDistance(distance):null;
     }
 
+    //카테고리에 따라 파티 조회
+    private List<Party> fetchPartiesByLocation(User user, PartyListRequest request) {
+        if (user == null || user.getLocation() == null) {
+            return List.of();
+        }
 
+        String location = user.getLocation();
+        PartyCategory category = request.getCategory();
+
+        if (category == PartyCategory.ALL) {
+            return partyRepository.findByPickupLocation_Place(location);
+        } else {
+            return partyRepository.findByPickupLocation_PlaceAndCategory(location, category);
+        }
+    }
+
+    // 정렬 기준에 따른 Comparator 반환
+    private Comparator<PartyCardResponse> getComparator(PartySortType sortType) {
+        if (sortType == PartySortType.DISTANCE) {
+            // 거리 가까운 순
+            return Comparator.comparing(PartyCardResponse::getDistanceKm)
+                    .thenComparing((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
+        } else {
+            // 최신순 (createdAt 내림차순)
+            return (a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt());
+        }
+    }
+
+    // 거리 정보 포함 변환
+    private PartyCardResponse convertToCardResponseWithDistance(
+            Party party, Double distance) {
+        PartyCardResponse response = convertToCardResponse(party, party.getCreatedAt());
+        response.addDistanceKm(distance);
+        return response;
+    }
 }
 
