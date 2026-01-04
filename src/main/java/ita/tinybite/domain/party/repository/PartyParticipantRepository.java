@@ -1,6 +1,5 @@
 package ita.tinybite.domain.party.repository;
 
-import io.lettuce.core.dynamic.annotation.Param;
 import ita.tinybite.domain.party.entity.Party;
 import ita.tinybite.domain.party.entity.PartyParticipant;
 import ita.tinybite.domain.party.enums.ParticipantStatus;
@@ -8,6 +7,7 @@ import ita.tinybite.domain.party.enums.PartyStatus;
 import ita.tinybite.domain.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
