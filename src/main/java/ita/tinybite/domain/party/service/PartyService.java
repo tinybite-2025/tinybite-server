@@ -406,7 +406,7 @@ public class PartyService {
 
         // 호스트 제외한 승인된 파티원 수 확인
         int approvedParticipantsExcludingHost = participantRepository
-                .countByPartyIdAndStatusAndUserIdNot(
+                .countByPartyIdAndStatusAndUser_UserIdNot(
                         partyId,
                         ParticipantStatus.APPROVED,
                         userId
