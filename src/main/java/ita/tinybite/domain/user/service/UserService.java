@@ -7,6 +7,7 @@ import ita.tinybite.domain.party.entity.PartyParticipant;
 import ita.tinybite.domain.party.enums.ParticipantStatus;
 import ita.tinybite.domain.party.enums.PartyStatus;
 import ita.tinybite.domain.party.repository.PartyParticipantRepository;
+import ita.tinybite.domain.party.repository.PartyRepository;
 import ita.tinybite.domain.user.dto.req.UpdateUserReqDto;
 import ita.tinybite.domain.user.dto.res.RejoinValidationResponse;
 import ita.tinybite.domain.user.dto.res.UserResDto;
@@ -19,6 +20,7 @@ import ita.tinybite.global.exception.ActivePartyExistsException;
 import ita.tinybite.global.exception.BusinessException;
 import ita.tinybite.global.exception.errorcode.AuthErrorCode;
 import ita.tinybite.global.location.LocationService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +31,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class UserService {
 
@@ -37,18 +40,7 @@ public class UserService {
     private final LocationService locationService;
     private final WithDrawUserRepository withDrawUserRepository;
     private final PartyParticipantRepository participantRepository;
-
-    public UserService(SecurityProvider securityProvider,
-                       UserRepository userRepository,
-                       LocationService locationService,
-                       PartyParticipantRepository participantRepository,
-                       WithDrawUserRepository withDrawUserRepository) {
-        this.securityProvider = securityProvider;
-        this.userRepository = userRepository;
-        this.locationService = locationService;
-        this.participantRepository = participantRepository;
-        this.withDrawUserRepository = withDrawUserRepository;
-    }
+    private final PartyRepository partyRepository;
 
     public UserResDto getUser() {
         User user = securityProvider.getCurrentUser();
@@ -183,4 +175,36 @@ public class UserService {
                 .build();
     }
 
+    public List<PartyCardResponse> getHostingParties(Long userId) {
+        List<Party> parties = partyRepository.findByHostUserIdAndStatus(
+                userId,
+                PartyStatus.RECRUITING
+        );
+
+        return parties.stream()
+                .map(party -> {
+                    int currentParticipants = participantRepository
+                            .countByPartyIdAndStatus(party.getId(), ParticipantStatus.APPROVED);
+                    return PartyCardResponse.from(party, currentParticipants, true, ParticipantStatus.APPROVED);
+                })
+                .collect(Collectors.toList());
+    }
+
+    public List<PartyCardResponse> getParticipatingParties(Long userId) {
+        List<PartyParticipant> participants = participantRepository
+                .findActivePartiesByUserIdExcludingHost(
+                        userId,
+                        PartyStatus.RECRUITING,
+                        ParticipantStatus.APPROVED
+                );
+
+        return participants.stream()
+                .map(pp -> {
+                    Party party = pp.getParty();
+                    int currentParticipants = participantRepository
+                            .countByPartyIdAndStatus(party.getId(), ParticipantStatus.APPROVED);
+                    return PartyCardResponse.from(party, currentParticipants, false, pp.getStatus());
+                })
+                .collect(Collectors.toList());
+    }
 }

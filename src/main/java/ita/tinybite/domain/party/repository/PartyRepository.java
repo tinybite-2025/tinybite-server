@@ -7,6 +7,7 @@ import ita.tinybite.domain.party.enums.PartyCategory;
 import java.util.List;
 import java.util.Optional;
 
+import ita.tinybite.domain.party.enums.PartyStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -20,5 +21,7 @@ public interface PartyRepository extends JpaRepository<Party, Long> {
     List<Party> findByPickupLocation_Place(String place);
 
     List<Party> findByPickupLocation_PlaceAndCategory(String place, PartyCategory category);
+
+    List<Party> findByHostUserIdAndStatus(Long userId, PartyStatus partyStatus);
 }
 
