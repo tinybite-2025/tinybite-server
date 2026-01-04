@@ -27,7 +27,7 @@ public interface PartyParticipantRepository extends JpaRepository<PartyParticipa
     boolean existsByPartyAndUserAndStatus(Party party, User user, ParticipantStatus status);
 
     @Query("SELECT pp FROM PartyParticipant pp " +
-            "WHERE pp.user.id = :userId " +
+            "WHERE pp.user.userId = :userId " +
             "AND pp.party.status =:partyStatus " +
             "AND pp.status = :participantStatus")
     List<PartyParticipant> findActivePartiesByUserId(
@@ -82,5 +82,5 @@ public interface PartyParticipantRepository extends JpaRepository<PartyParticipa
             @Param("participantStatus") ParticipantStatus participantStatus
     );
 
-    int countByPartyIdAndStatusAndUserIdNot(Long partyId, ParticipantStatus participantStatus, Long userId);
+    int countByPartyIdAndStatusAndUser_UserIdNot(Long partyId, ParticipantStatus participantStatus, Long userId);
 }
