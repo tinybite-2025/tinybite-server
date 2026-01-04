@@ -8,16 +8,16 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import ita.tinybite.domain.auth.entity.JwtTokenProvider;
-import ita.tinybite.domain.chat.entity.ChatRoom;
 import ita.tinybite.domain.party.dto.request.PartyCreateRequest;
+import ita.tinybite.domain.party.dto.request.PartyQueryListResponse;
 import ita.tinybite.domain.party.dto.request.PartyUpdateRequest;
-import ita.tinybite.domain.party.dto.request.UserLocation;
 import ita.tinybite.domain.party.dto.response.ChatRoomResponse;
 import ita.tinybite.domain.party.dto.response.PartyDetailResponse;
 import ita.tinybite.domain.party.dto.response.PartyListResponse;
 import ita.tinybite.domain.party.entity.PartyParticipant;
 import ita.tinybite.domain.party.enums.PartyCategory;
 import ita.tinybite.domain.party.service.PartyService;
+import ita.tinybite.global.response.APIResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -437,5 +437,28 @@ public class PartyController {
 
         partyService.deleteParty(partyId, userId);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(
+            summary = "파티 검색",
+            description = """
+                    q 문자열을 포함하는 제목을 가진 파티를 검색합니다. <br>
+                    slice 페이지 처리를 위해, 조회할 다음 페이지가 있는지 체크하는 hasNext 필드와, <br>
+                    몇 번째 페이지 인지 (page), 한 페이지 당 몇 개의 파티를 조회할 지 (size) 파라미터로 입력해주시면 됩니다.
+                    """
+    )
+    @GetMapping("/search")
+    public APIResponse<PartyQueryListResponse> getParty(
+            @RequestParam String q,
+            @Parameter(
+                    description = "파티 카테고리",
+                    example = "ALL",
+                    schema = @Schema(allowableValues = {"ALL", "DELIVERY", "GROCERY", "HOUSEHOLD"})
+            )
+            @RequestParam(defaultValue = "ALL") PartyCategory category,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        return APIResponse.success(partyService.searchParty(q, category, page, size));
     }
 }
