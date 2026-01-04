@@ -17,6 +17,7 @@ import ita.tinybite.global.response.APIResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -111,18 +112,64 @@ public class UserController {
         return success(response);
     }
 
-    @Operation(summary = "활성 파티 목록 조회", description = "사용자가 참여 중인 활성 파티 목록을 조회합니다.")
+    @Operation(
+            summary = "호스팅 중인 파티 목록 조회",
+            description = "현재 사용자가 호스트로 있는 활성 파티 목록을 조회합니다."
+    )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "조회 성공",
-                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = PartyCardResponse.class)))),
-            @ApiResponse(responseCode = "401", description = "인증 실패")
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "조회 성공",
+                    content = @Content(
+                            array = @ArraySchema(schema = @Schema(implementation = PartyCardResponse.class))
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
     })
-    @GetMapping("/parties/active")
-    public ResponseEntity<List<PartyCardResponse>> getActiveParties(
+    @GetMapping("/parties/hosting")
+    public ResponseEntity<List<PartyCardResponse>> getHostingParties(
             @AuthenticationPrincipal Long userId) {
-        List<PartyCardResponse> response = userService.getActiveParties(userId);
+        List<PartyCardResponse> response = userService.getHostingParties(userId);
         return ResponseEntity.ok(response);
     }
+
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "조회 성공",
+                    content = @Content(
+                            array = @ArraySchema(schema = @Schema(implementation = PartyCardResponse.class))
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @GetMapping("/parties/participating")
+    public ResponseEntity<List<PartyCardResponse>> getParticipatingParties(
+            @AuthenticationPrincipal Long userId) {
+        List<PartyCardResponse> response = userService.getParticipatingParties(userId);
+        return ResponseEntity.ok(response);
+    }
+
+//    @Operation(summary = "활성 파티 목록 조회", description = "사용자가 참여 중인 활성 파티 목록을 조회합니다.")
+//    @ApiResponses({
+//            @ApiResponse(responseCode = "200", description = "조회 성공",
+//                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = PartyCardResponse.class)))),
+//            @ApiResponse(responseCode = "401", description = "인증 실패")
+//    })
+//    @GetMapping("/parties/active")
+//    public ResponseEntity<List<PartyCardResponse>> getActiveParties(
+//            @AuthenticationPrincipal Long userId) {
+//        List<PartyCardResponse> response = userService.getActiveParties(userId);
+//        return ResponseEntity.ok(response);
+//    }
 
     @Operation(summary = "닉네임 중복 확인", description = "닉네임 사용 가능 여부를 확인합니다.")
     @ApiResponses({
