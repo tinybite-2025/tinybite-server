@@ -17,34 +17,43 @@ public class ChatEventListener {
 
     private final ChatSubscribeRegistry registry;
 
+    /**
+     * 구독 시, 호출되는 메서드 <br>
+     * 1. StompHeader에서 userId, destination, sessionId, subscriptionId 받아옴 (destination 예 : /subscribe/chat/room/{chatRoomId}) <br>
+     * 2. destination에서 roomId resolve <br>
+     * 3. 이후 세션정보를 registry에 등록
+     */
     @EventListener
     public void onSubscribe(SessionSubscribeEvent event) {
         StompHeaderAccessor acc = StompHeaderAccessor.wrap(event.getMessage());
 
         Long userId = (Long) acc.getSessionAttributes().get("userId");
         String destination = acc.getDestination();
+        String sessionId = acc.getSessionId();
+        String subscriptionId = acc.getSubscriptionId();
 
         if (userId == null || destination == null) return;
 
         // /subscribe/chat/room/1
         Long roomId = extractRoomId(destination);
-        if (roomId != null) {
-            registry.add(roomId, userId);
-        }
+        registry.register(sessionId, subscriptionId, roomId, userId);
     }
 
+    /**
+     * 구독취소시 호출되는 메서드 <br>
+     * 1. StompHeader에서 sessionId, subscriptionId resolve <br>
+     * 2. 해당 구독정보를 가지고 있는 사용자를 registry에서 삭제 <br>
+     * 3. 만약 네트워크 에러 등으로 유저 정보가 없을 시, 유저에 해당하는 구독 정보를 삭제
+     */
     @EventListener
     public void onUnsubscribe(SessionUnsubscribeEvent event) {
         StompHeaderAccessor acc = StompHeaderAccessor.wrap(event.getMessage());
 
-        Long userId = (Long) acc.getSessionAttributes().get("userId");
-        String destination = acc.getDestination();
+        String sessionId = acc.getSessionId();
+        String subscriptionId = acc.getSubscriptionId();
 
-        if (userId == null || destination == null) return;
-
-        Long roomId = extractRoomId(destination);
-        if (roomId != null) {
-            registry.remove(roomId, userId);
+        if (sessionId != null && subscriptionId != null) {
+            registry.unregister(sessionId, subscriptionId);
         }
     }
 
@@ -52,7 +61,13 @@ public class ChatEventListener {
     public void onDisconnect(SessionDisconnectEvent event) {
         StompHeaderAccessor acc = StompHeaderAccessor.wrap(event.getMessage());
 
-        Long userId = (Long) acc.getSessionAttributes().get("userId");
+        String sessionId = acc.getSessionId();
+        if (sessionId != null) {
+            registry.unregisterSession(sessionId);
+            return;
+        }
+
+        Long userId = acc.getSessionAttributes() != null ? (Long) acc.getSessionAttributes().get("userId") : null;
         if (userId != null) {
             registry.removeUserEverywhere(userId);
         }
@@ -60,7 +75,6 @@ public class ChatEventListener {
 
     private Long extractRoomId(String destination) {
         // /subscribe/chat/room/{roomId}
-        if (!destination.startsWith("/subscribe/chat/room/")) return null;
         try {
             return Long.parseLong(destination.substring("/subscribe/chat/room/".length()));
         } catch (NumberFormatException e) {
@@ -68,4 +82,3 @@ public class ChatEventListener {
         }
     }
 }
-

@@ -24,7 +24,8 @@ public class SecurityConfig {
             "/swagger-ui/**",
             "/api/v1/test/**",
             "/test/health",
-            "/api/v1/error-code"
+            "/api/v1/error-code",
+            "/ws-chat"
     };
 
     @Bean
