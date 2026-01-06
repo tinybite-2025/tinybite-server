@@ -131,7 +131,7 @@ public class PartyController {
                 content = @Content
         )
     })
-    @PostMapping("/participants/{participantId}/reject")
+    @PostMapping("/{partyId}/participants/{participantId}/reject")
     public ResponseEntity<Void> rejectParticipant(
             @PathVariable Long partyId,
             @PathVariable Long participantId,
