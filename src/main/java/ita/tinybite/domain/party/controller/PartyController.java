@@ -7,7 +7,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import ita.tinybite.domain.auth.entity.JwtTokenProvider;
 import ita.tinybite.domain.party.dto.request.PartyCreateRequest;
 import ita.tinybite.domain.party.dto.request.PartyListRequest;
 import ita.tinybite.domain.party.dto.request.PartyQueryListResponse;
@@ -130,9 +129,9 @@ public class PartyController {
                 responseCode = "404",
                 description = "파티 또는 참여자를 찾을 수 없음",
                 content = @Content
-        )        
+        )
     })
-    @PostMapping("/participants/{participantId}/reject")
+    @PostMapping("/{partyId}/participants/{participantId}/reject")
     public ResponseEntity<Void> rejectParticipant(
             @PathVariable Long partyId,
             @PathVariable Long participantId,

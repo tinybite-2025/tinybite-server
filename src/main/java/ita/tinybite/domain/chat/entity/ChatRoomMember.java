@@ -28,10 +28,6 @@ public class ChatRoomMember {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "party_id")
-    private Party party;
-
     @Column(nullable = false)
     @Builder.Default
     private Boolean isActive = true;
@@ -41,6 +37,8 @@ public class ChatRoomMember {
     private LocalDateTime joinedAt;
 
     private LocalDateTime leftAt;
+
+    private LocalDateTime lastReadAt;
 
     /**
      * 퇴장
