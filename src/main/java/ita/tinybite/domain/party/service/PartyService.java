@@ -386,6 +386,8 @@ public class PartyService {
             throw new IllegalStateException("승인된 파티원이 있어 삭제할 수 없습니다");
         }
 
+         chatRoomRepository.deleteByPartyIdAndType(partyId, ChatRoomType.GROUP);
+        
         // 삭제 실행
         partyRepository.delete(party);
     }
