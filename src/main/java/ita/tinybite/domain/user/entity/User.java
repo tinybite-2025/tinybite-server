@@ -104,6 +104,6 @@ public class User extends BaseEntity {
     }
 
     public void deleteProfileImage() {
-        this.profileImage = "";
+        this.profileImage = null;
     }
 }
