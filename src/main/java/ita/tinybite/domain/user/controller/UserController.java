@@ -208,10 +208,10 @@ public class UserController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    @PutMapping("/profile-image")
+    @PatchMapping("/me/profile-image")
     public ResponseEntity<Void> updateProfileImage(
             @Parameter(description = "변경할 프로필 이미지 URL", required = true, example = "https://example.com/image.jpg")
-            @RequestParam("image") String image,
+            @RequestBody String image,
             @Parameter(hidden = true)
             @AuthenticationPrincipal Long userId) {
 
@@ -239,7 +239,7 @@ public class UserController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    @DeleteMapping("/profile-image")
+    @DeleteMapping("/me/profile-image")
     public ResponseEntity<Void> deleteProfileImage(
             @Parameter(hidden = true)
             @AuthenticationPrincipal Long userId) {
