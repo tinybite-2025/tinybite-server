@@ -182,4 +182,69 @@ public class UserController {
         userService.validateNickname(nickname);
         return success();
     }
+
+    @Operation(
+            summary = "프로필 이미지 변경",
+            description = "사용자의 프로필 이미지를 변경합니다. 이미지 URL을 전달받아 업데이트합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "프로필 이미지 변경 성공"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 (유효하지 않은 이미지 URL)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "사용자를 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @PutMapping("/profile-image")
+    public ResponseEntity<Void> updateProfileImage(
+            @Parameter(description = "변경할 프로필 이미지 URL", required = true, example = "https://example.com/image.jpg")
+            @RequestParam("image") String image,
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal Long userId) {
+
+        userService.updateProfileImage(userId, image);
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(
+            summary = "프로필 이미지 삭제",
+            description = "사용자의 프로필 이미지를 삭제하고 기본 이미지로 변경합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "프로필 이미지 삭제 성공 (기본 이미지로 변경됨)"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "사용자를 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @DeleteMapping("/profile-image")
+    public ResponseEntity<Void> deleteProfileImage(
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal Long userId) {
+
+        userService.deleteProfileImage(userId);
+        return ResponseEntity.ok().build();
+    }
 }

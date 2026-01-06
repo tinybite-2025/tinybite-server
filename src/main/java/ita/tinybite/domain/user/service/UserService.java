@@ -206,4 +206,20 @@ public class UserService {
                 })
                 .collect(Collectors.toList());
     }
+
+    @Transactional
+    public void updateProfileImage(Long userId, String image) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다"));
+
+        user.updateProfileImage(image);
+    }
+
+    @Transactional
+    public void deleteProfileImage(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다"));
+
+        user.deleteProfileImage();
+    }
 }
