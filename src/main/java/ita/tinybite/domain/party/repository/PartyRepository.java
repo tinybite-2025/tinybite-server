@@ -1,6 +1,7 @@
 package ita.tinybite.domain.party.repository;
 
 import io.lettuce.core.dynamic.annotation.Param;
+import ita.tinybite.domain.chat.enums.ChatRoomType;
 import ita.tinybite.domain.party.entity.Party;
 import ita.tinybite.domain.party.enums.PartyCategory;
 import java.util.List;
