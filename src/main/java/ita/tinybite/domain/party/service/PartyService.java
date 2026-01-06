@@ -304,6 +304,7 @@ public class PartyService {
                 .build();
     }
 
+    @Transactional
     public void updateParty(Long partyId, Long userId, PartyUpdateRequest request) {
         Party party = partyRepository.findById(partyId)
                 .orElseThrow(() -> new IllegalArgumentException("파티를 찾을 수 없습니다"));
