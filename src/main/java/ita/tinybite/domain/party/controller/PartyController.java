@@ -490,10 +490,13 @@ public class PartyController {
                     schema = @Schema(allowableValues = {"ALL", "DELIVERY", "GROCERY", "HOUSEHOLD"})
             )
             @RequestParam(defaultValue = "ALL") PartyCategory category,
+            @RequestParam(required = false, name = "lat") Double userLat,
+            @RequestParam(required = false, name = "lon") Double userLon,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
-        return APIResponse.success(partySearchService.searchParty(q, category, page, size));
+
+        return APIResponse.success(partySearchService.searchParty(q, category, page, size, userLat, userLon));
     }
 
     @Operation(
@@ -511,7 +514,7 @@ public class PartyController {
     @Operation(
             summary = "특정 최근 검색어 삭제",
             description = """
-                    최근 검색어에서 특정 검색어를 삭제합니다. <br> 
+                    최근 검색어에서 특정 검색어를 삭제합니다. <br>
                     이때 검색어에 대한 Id값은 없고, 최근 검색어 자체를 keyword에 넣어주시면 됩니다.
                     """
     )
