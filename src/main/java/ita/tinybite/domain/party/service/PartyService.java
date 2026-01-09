@@ -304,6 +304,7 @@ public class PartyService {
                 .build();
     }
 
+    @Transactional
     public void updateParty(Long partyId, Long userId, PartyUpdateRequest request) {
         Party party = partyRepository.findById(partyId)
                 .orElseThrow(() -> new IllegalArgumentException("파티를 찾을 수 없습니다"));
@@ -386,6 +387,8 @@ public class PartyService {
             throw new IllegalStateException("승인된 파티원이 있어 삭제할 수 없습니다");
         }
 
+         chatRoomRepository.deleteByPartyIdAndType(partyId, ChatRoomType.GROUP);
+        
         // 삭제 실행
         partyRepository.delete(party);
     }

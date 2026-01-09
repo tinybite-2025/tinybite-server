@@ -10,7 +10,8 @@ import java.util.Optional;
 
 @Repository
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
-
     Optional<ChatRoom> findByPartyAndType(Party party, ChatRoomType type);
+
+    void deleteByPartyIdAndType(Long partyId, ChatRoomType type);
 
 }

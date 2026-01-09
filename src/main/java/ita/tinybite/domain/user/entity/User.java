@@ -1,6 +1,7 @@
 package ita.tinybite.domain.user.entity;
 
 import ita.tinybite.domain.auth.dto.request.GoogleAndAppleSignupRequest;
+import ita.tinybite.domain.chat.entity.ChatRoomMember;
 import ita.tinybite.domain.user.constant.LoginType;
 import ita.tinybite.domain.user.constant.UserStatus;
 import ita.tinybite.domain.user.dto.req.UpdateUserReqDto;
@@ -57,6 +58,9 @@ public class User extends BaseEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserTermAgreement>  agreements = new ArrayList<>();;
 
+    @OneToMany(mappedBy = "user")
+    private List<ChatRoomMember> chatRoomUsers = new ArrayList<>();
+
     public void update(UpdateUserReqDto req) {
         this.nickname = req.nickname();
     }
@@ -93,5 +97,13 @@ public class User extends BaseEntity {
     // 탈퇴 여부 확인
     public boolean isWithdrawn() {
         return this.status == UserStatus.WITHDRAW;
+    }
+
+    public void updateProfileImage(String image) {
+        this.profileImage = image;
+    }
+
+    public void deleteProfileImage() {
+        this.profileImage = null;
     }
 }
