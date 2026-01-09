@@ -7,7 +7,8 @@ import ita.tinybite.domain.party.entity.Party;
 import ita.tinybite.domain.party.enums.ParticipantStatus;
 import ita.tinybite.domain.party.enums.PartyCategory;
 import ita.tinybite.domain.party.repository.PartyParticipantRepository;
-import ita.tinybite.domain.party.repository.PartyRepository;
+import ita.tinybite.domain.party.repository.PartySearchRepository;
+import ita.tinybite.global.util.DistanceCalculator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,7 +24,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PartySearchService {
 
-    private final PartyRepository partyRepository;
+    private final PartySearchRepository partySearchRepository;
     private final PartyParticipantRepository participantRepository;
     private final StringRedisTemplate redisTemplate;
     private final SecurityProvider securityProvider;
@@ -35,7 +36,7 @@ public class PartySearchService {
     }
 
     // 파티 검색 조회
-    public PartyQueryListResponse searchParty(String q, PartyCategory category, int page, int size) {
+    public PartyQueryListResponse searchParty(String q, PartyCategory category, int page, int size, Double lat, Double lon) {
         Long userId = securityProvider.getCurrentUser().getUserId();
 
         // recent_search:{userId}
@@ -45,24 +46,49 @@ public class PartySearchService {
         redisTemplate.opsForZSet().add(key, q, System.currentTimeMillis());
 
         Pageable pageable = PageRequest.of(page, size);
+        List<PartyCardResponse> partyCardResponseList;
 
-        // category가 없을 시에는 ALL로 처리
-        Page<Party> result = (category == null || category == PartyCategory.ALL)
-                ? partyRepository.findByTitleContaining(q, pageable)
-                : partyRepository.findByTitleContainingAndCategory(q, category, pageable);
+        // 거리 정보 X
+        if(lat == null || lon == null) {
+            // category가 없을 시에는 ALL로 처리
+            Page<Party> queryResults = (category == null || category == PartyCategory.ALL)
+                    ? partySearchRepository.findByTitleContaining(q, pageable)
+                    : partySearchRepository.findByTitleContainingAndCategory(q, category, pageable);
 
-        List<PartyCardResponse> partyCardResponseList = result.stream()
-                .map(party -> {
-                    int currentParticipants = participantRepository
-                            .countByPartyIdAndStatus(party.getId(), ParticipantStatus.APPROVED);
-                    return PartyCardResponse.from(party, currentParticipants);
-                })
-                .toList();
+            partyCardResponseList = queryResults.stream()
+                    .map(party -> {
+                        int currentParticipants = participantRepository
+                                .countByPartyIdAndStatus(party.getId(), ParticipantStatus.APPROVED);
+                        return PartyCardResponse.from(party, currentParticipants);
+                    })
+                    .toList();
 
-        return PartyQueryListResponse.builder()
-                .parties(partyCardResponseList)
-                .hasNext(result.hasNext())
-                .build();
+            return PartyQueryListResponse.builder()
+                    .parties(partyCardResponseList)
+                    .hasNext(queryResults.hasNext())
+                    .build();
+        } else {
+            // 거리 정보 O (lat, lon)
+            Page<Party> queryResults = (category == null || category == PartyCategory.ALL)
+                    ? partySearchRepository.findByTitleContainingWithDistance(q, lat, lon, pageable)
+                    : partySearchRepository.findByTitleContainingAndCategoryWithDistance(q, lat, lon, category, pageable);
+
+            partyCardResponseList = queryResults.stream()
+                    .map(party -> {
+                        int currentParticipants = participantRepository
+                                .countByPartyIdAndStatus(party.getId(), ParticipantStatus.APPROVED);
+                        PartyCardResponse res = PartyCardResponse.from(party, currentParticipants);
+                        Double distance = DistanceCalculator.calculateDistance(lat, lon, party.getPickupLocation().getPickupLatitude(), party.getPickupLocation().getPickupLongitude());
+                        res.addDistanceKm(distance);
+                        return res;
+                    })
+                    .toList();
+
+            return PartyQueryListResponse.builder()
+                    .parties(partyCardResponseList)
+                    .hasNext(queryResults.hasNext())
+                    .build();
+        }
     }
 
 
