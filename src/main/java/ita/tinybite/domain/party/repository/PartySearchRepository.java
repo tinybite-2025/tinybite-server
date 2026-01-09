@@ -44,5 +44,9 @@ public interface PartySearchRepository extends JpaRepository<Party, Long> {
     FROM party p
     WHERE p.title LIKE CONCAT('%', :title, '%') AND p.category = :category
     """, nativeQuery = true)
-    Page<Party> findByTitleContainingAndCategoryWithDistance(String title, @Param("lat") Double lat, @Param("lon") Double lon, PartyCategory category, Pageable pageable);
+    Page<Party> findByTitleContainingAndCategoryWithDistance(@Param("title") String title,
+                                                             @Param("lat") Double lat,
+                                                             @Param("lon") Double lon,
+                                                             @Param("category") PartyCategory category,
+                                                             Pageable pageable);
 }
