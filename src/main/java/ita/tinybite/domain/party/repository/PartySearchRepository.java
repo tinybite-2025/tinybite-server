@@ -34,7 +34,7 @@ public interface PartySearchRepository extends JpaRepository<Party, Long> {
     @Query(value = """
     SELECT p.*
     FROM party p
-    WHERE p.
+    WHERE p.title LIKE CONCAT('%', :title, '%')
     ORDER BY (6371000 * acos(
           cos(radians(:lat)) * cos(radians(p.pickup_latitude))
         * cos(radians(p.pickup_longitude) - radians(:lon))
@@ -44,5 +44,5 @@ public interface PartySearchRepository extends JpaRepository<Party, Long> {
     FROM party p
     WHERE p.title LIKE CONCAT('%', :title, '%')
     """, nativeQuery = true)
-    Page<Party> findByTitleContainingAndCategoryWithDistance(String q, Double lat, Double lon, PartyCategory category, Pageable pageable);
+    Page<Party> findByTitleContainingAndCategoryWithDistance(String title, @Param("lat") Double lat, @Param("lon") Double lon, PartyCategory category, Pageable pageable);
 }
