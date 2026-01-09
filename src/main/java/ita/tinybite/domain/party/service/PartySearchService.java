@@ -71,7 +71,7 @@ public class PartySearchService {
             // 거리 정보 O (lat, lon)
             Page<Party> queryResults = (category == null || category == PartyCategory.ALL)
                     ? partySearchRepository.findByTitleContainingWithDistance(q, lat, lon, pageable)
-                    : partySearchRepository.findByTitleContainingAndCategoryWithDistance(q, lat, lon, category, pageable);
+                    : partySearchRepository.findByTitleContainingAndCategoryWithDistance(q, lat, lon, category.name(), pageable);
 
             partyCardResponseList = queryResults.stream()
                     .map(party -> {
