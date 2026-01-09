@@ -47,6 +47,6 @@ public interface PartySearchRepository extends JpaRepository<Party, Long> {
     Page<Party> findByTitleContainingAndCategoryWithDistance(@Param("title") String title,
                                                              @Param("lat") Double lat,
                                                              @Param("lon") Double lon,
-                                                             @Param("category") PartyCategory category,
+                                                             @Param("category") String category,
                                                              Pageable pageable);
 }
