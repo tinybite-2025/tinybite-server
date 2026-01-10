@@ -39,7 +39,7 @@ public class PartyDetailResponse {
     // 설명
     private String description;
 
-    private String thumbnailImage;
+    private String thumbnailImageDetail;
 
     // 이미지 (최대 5장)
     private List<String> images;
