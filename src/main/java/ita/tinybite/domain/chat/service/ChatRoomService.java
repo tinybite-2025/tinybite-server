@@ -77,6 +77,7 @@ public class ChatRoomService {
                 .map(chatRoom -> {
                     // chatRoom으로 가장 최신의 메시지 조회
                     ChatMessage recentMessage = chatMessageRepository.findByChatRoomIdOrderByCreatedAtDesc(chatRoom.getId(), Limit.of(1));
+                    String recentContent = recentMessage != null ? recentMessage.getContent() : null;
                     String timeAgo = getTimeAgo(chatRoom.getCreatedAt());
 
                     ChatRoomMember chatRoomMember = chatRoomMemberRepository.findByChatRoomAndUser(chatRoom, user).orElseThrow();
@@ -84,7 +85,7 @@ public class ChatRoomService {
                     // 마지막으로 읽은 시점을 기점으로 몇 개의 메시지가 안 읽혔는지 확인
                     long unreadCnt = chatMessageRepository.countByChatRoomIdAndCreatedAtAfterAndSenderIdNot(chatRoom.getId(), chatRoomMember.getLastReadAt(), user.getUserId());
 
-                    return GroupChatRoomResDto.of(chatRoom, timeAgo, recentMessage.getContent(), unreadCnt);
+                    return GroupChatRoomResDto.of(chatRoom, timeAgo, recentContent, unreadCnt);
                 })
                 .toList();
     }
