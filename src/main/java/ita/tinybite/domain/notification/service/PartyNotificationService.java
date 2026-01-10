@@ -1,10 +1,16 @@
 package ita.tinybite.domain.notification.service;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.firebase.messaging.BatchResponse;
 
 import ita.tinybite.domain.notification.dto.request.NotificationMulticastRequest;
@@ -12,6 +18,11 @@ import ita.tinybite.domain.notification.enums.NotificationType;
 import ita.tinybite.domain.notification.infra.fcm.FcmNotificationSender;
 import ita.tinybite.domain.notification.infra.helper.NotificationTransactionHelper;
 import ita.tinybite.domain.notification.service.manager.PartyMessageManager;
+import ita.tinybite.domain.user.entity.User;
+import ita.tinybite.domain.user.repository.UserRepository;
+import ita.tinybite.global.exception.BusinessException;
+import ita.tinybite.global.exception.errorcode.CommonErrorCode;
+import ita.tinybite.global.exception.errorcode.UserErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,6 +36,9 @@ public class PartyNotificationService {
 	private final PartyMessageManager partyMessageManager;
 	private final NotificationLogService notificationLogService;
 	private final NotificationTransactionHelper notificationTransactionHelper;
+	private final RedisTemplate<String, String> redisTemplate;
+	private final ObjectMapper objectMapper; // JSON 변환을 위해
+	private final UserRepository userRepository;
 
 	//
 	@Transactional
@@ -198,6 +212,48 @@ public class PartyNotificationService {
 
 		NotificationMulticastRequest request =
 			partyMessageManager.createMemberLeaveRequest(tokens, partyId, title, detail);
+
+		BatchResponse response = fcmNotificationSender.send(request);
+		notificationTransactionHelper.handleBatchResponse(response, tokens);
+	}
+
+	@Transactional
+	public void reservePendingApprovalReminder(Long managerId, Long requesterId, Long partyId) {
+		User requester = userRepository.findById(requesterId)
+			.orElseThrow(() -> new BusinessException(UserErrorCode.USER_NOT_EXISTS));
+
+		String key = "pending_reminder:" + partyId + ":" + requesterId;
+
+		Map<String, Object> reminderData = new HashMap<>();
+		reminderData.put("hostId", managerId);
+		reminderData.put("requesterId", requesterId);
+		reminderData.put("requesterNickname", requester.getNickname());
+		reminderData.put("partyId", partyId);
+		reminderData.put("lastSentAt", LocalDateTime.now().toString());
+		reminderData.put("retryCount", 0);
+
+		try {
+			String jsonValue = objectMapper.writeValueAsString(reminderData);
+			redisTemplate.opsForValue().set(key, jsonValue);
+		} catch (JsonProcessingException e) {
+			throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@Transactional
+	public void sendPendingApprovalReminder(Long managerId, String requesterNickname, Long partyId) {
+		String title = "⏰ 참여 요청이 기다리고 있어요";
+		String detail = String.format("%s님이 아직 응답을 기다리고 있어요", requesterNickname);
+
+		notificationLogService.saveLog(managerId, "PENDING_APPROVAL_REMINDER", title, detail);
+
+		List<String> tokens = fcmTokenService.getTokensAndLogIfEmpty(managerId);
+		if (tokens.isEmpty()) {
+			return;
+		}
+
+		NotificationMulticastRequest request =
+			partyMessageManager.createPendingApprovalReminderRequest(tokens, partyId, title, detail);
 
 		BatchResponse response = fcmNotificationSender.send(request);
 		notificationTransactionHelper.handleBatchResponse(response, tokens);

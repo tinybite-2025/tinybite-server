@@ -8,6 +8,7 @@ import ita.tinybite.domain.party.enums.ParticipantStatus;
 import ita.tinybite.domain.party.enums.PartyCategory;
 import ita.tinybite.domain.party.repository.PartyParticipantRepository;
 import ita.tinybite.domain.party.repository.PartySearchRepository;
+import ita.tinybite.domain.user.entity.User;
 import ita.tinybite.global.util.DistanceCalculator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -37,10 +38,10 @@ public class PartySearchService {
 
     // 파티 검색 조회
     public PartyQueryListResponse searchParty(String q, PartyCategory category, int page, int size, Double lat, Double lon) {
-        Long userId = securityProvider.getCurrentUser().getUserId();
+        User user = securityProvider.getCurrentUser();
 
         // recent_search:{userId}
-        String key = key(userId);
+        String key = key(user.getUserId());
 
         redisTemplate.opsForZSet().remove(key, q);
         redisTemplate.opsForZSet().add(key, q, System.currentTimeMillis());
@@ -70,8 +71,8 @@ public class PartySearchService {
         } else {
             // 거리 정보 O (lat, lon)
             Page<Party> queryResults = (category == null || category == PartyCategory.ALL)
-                    ? partySearchRepository.findByTitleContainingWithDistance(q, lat, lon, pageable)
-                    : partySearchRepository.findByTitleContainingAndCategoryWithDistance(q, lat, lon, category.name(), pageable);
+                    ? partySearchRepository.findByTitleContainingWithDistance(q, lat, lon, user.getLocation(), pageable)
+                    : partySearchRepository.findByTitleContainingAndCategoryWithDistance(q, lat, lon, category.name(), user.getLocation(), pageable);
 
             partyCardResponseList = queryResults.stream()
                     .map(party -> {
@@ -96,7 +97,7 @@ public class PartySearchService {
     public List<String> getLog() {
         Long userId = securityProvider.getCurrentUser().getUserId();
          return redisTemplate.opsForZSet()
-                .reverseRange(key(userId), 0, 19)
+                .reverseRange(key(userId), 0, 9)
                  .stream().toList();
     }
 

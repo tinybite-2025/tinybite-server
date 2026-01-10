@@ -17,7 +17,9 @@ public class ChatMessage extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Enumerated(EnumType.STRING)
     private MessageType messageType;
+
     // 채팅룸 아이디
     private Long chatRoomId;
     // 전송자 아이디

@@ -35,6 +35,9 @@ public class Party {
     private String thumbnailImage; // 섬네일 이미지 URL
 
     @Column(length = 500)
+    private String thumbnailImageDetail; // 파티상세 썸네일 이미지 URL
+
+    @Column(length = 500)
     private List<String> images; // 이미지 URL
 
     @Column(nullable = false)
@@ -89,6 +92,15 @@ public class Party {
             throw new IllegalStateException("파티 인원이 가득 찼습니다");
         }
         this.currentParticipants++;
+    }
+
+    public void decrementParticipants() {
+        this.currentParticipants--;
+    }
+
+
+    public void changePartyStatus(PartyStatus partyStatus) {
+        this.status = partyStatus;
     }
 
     public String getTimeAgo() {

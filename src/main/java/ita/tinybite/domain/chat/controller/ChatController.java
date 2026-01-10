@@ -4,7 +4,6 @@ import ita.tinybite.domain.chat.dto.req.ChatMessageReqDto;
 import ita.tinybite.domain.chat.dto.res.ChatMessageResDto;
 import ita.tinybite.domain.chat.dto.res.ChatMessageSliceResDto;
 import ita.tinybite.domain.chat.entity.ChatMessage;
-import ita.tinybite.domain.chat.enums.MessageType;
 import ita.tinybite.domain.chat.service.ChatService;
 import ita.tinybite.global.response.APIResponse;
 import lombok.RequiredArgsConstructor;

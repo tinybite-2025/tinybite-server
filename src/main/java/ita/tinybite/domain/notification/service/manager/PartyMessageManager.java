@@ -96,4 +96,13 @@ public class PartyMessageManager {
 
 		return requestConverter.toMulticastRequest(tokens, title, detail, data);
 	}
+
+	public NotificationMulticastRequest createPendingApprovalReminderRequest(List<String> tokens, Long partyId, String title, String detail) {
+		Map<String, String> data = new HashMap<>();
+		data.put(KEY_PARTY_ID, String.valueOf(partyId));
+
+		data.put(KEY_EVENT_TYPE, "PENDING_APPROVAL_REMINDER");
+
+		return requestConverter.toMulticastRequest(tokens, title, detail, data);
+	}
 }
