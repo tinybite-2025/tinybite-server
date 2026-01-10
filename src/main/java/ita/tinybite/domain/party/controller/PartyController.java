@@ -29,6 +29,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import static ita.tinybite.global.response.APIResponse.*;
+
 @Tag(name = "파티 API", description = "파티 생성, 조회, 참여 관련 API")
 @RestController
 @RequestMapping("/api/parties")
@@ -65,13 +67,10 @@ public class PartyController {
             )
     })
     @PostMapping("/{partyId}/join")
-    public ResponseEntity<Long> joinParty(
+    public APIResponse<Long> joinParty(
             @PathVariable Long partyId,
             @Parameter(hidden = true) @AuthenticationPrincipal Long userId) {
-
-        partyService.joinParty(partyId, userId);
-
-        return ResponseEntity.ok().build();
+        return success(partyService.joinParty(partyId, userId));
     }
 
     @Operation(summary = "참여 승인", description = "파티장이 참여를 승인하면 단체 채팅방에 자동 입장됩니다")
@@ -496,7 +495,7 @@ public class PartyController {
             @RequestParam(defaultValue = "20") int size
     ) {
 
-        return APIResponse.success(partySearchService.searchParty(q, category, page, size, userLat, userLon));
+        return success(partySearchService.searchParty(q, category, page, size, userLat, userLon));
     }
 
     @Operation(
@@ -508,7 +507,7 @@ public class PartyController {
     )
     @GetMapping("/search/log")
     public APIResponse<List<String>> getRecentLog() {
-         return APIResponse.success(partySearchService.getLog());
+         return success(partySearchService.getLog());
     }
 
     @Operation(
@@ -521,7 +520,7 @@ public class PartyController {
     @DeleteMapping("/search/log/{keyword}")
     public APIResponse<?>  deleteRecentLog(@PathVariable String keyword) {
         partySearchService.deleteLog(keyword);
-         return APIResponse.success();
+         return success();
     }
 
     @Operation(
@@ -533,6 +532,6 @@ public class PartyController {
     @DeleteMapping("/search/log")
     public APIResponse<?> deleteRecentLogAll() {
          partySearchService.deleteAllLog();
-         return APIResponse.success();
+         return success();
     }
 }
