@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PartyParticipantRepository extends JpaRepository<PartyParticipant, Long> {
@@ -88,4 +89,7 @@ public interface PartyParticipantRepository extends JpaRepository<PartyParticipa
         Long userId,
         ParticipantStatus status
     );
+
+    @Query("SELECT pp FROM PartyParticipant pp WHERE pp.party.id = :partyId AND pp.user.id = :userId")
+    Optional<PartyParticipant> findByPartyIdAndUserId(@Param("partyId") Long partyId, @Param("userId") Long userId);
 }
