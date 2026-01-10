@@ -4,7 +4,9 @@ import ita.tinybite.domain.auth.service.SecurityProvider;
 import ita.tinybite.domain.chat.dto.res.ChatMessageResDto;
 import ita.tinybite.domain.chat.dto.res.ChatMessageSliceResDto;
 import ita.tinybite.domain.chat.entity.ChatMessage;
+import ita.tinybite.domain.chat.entity.ChatRoom;
 import ita.tinybite.domain.chat.entity.ChatRoomMember;
+import ita.tinybite.domain.chat.enums.ChatRoomType;
 import ita.tinybite.domain.chat.enums.MessageType;
 import ita.tinybite.domain.chat.repository.ChatMessageRepository;
 import ita.tinybite.domain.chat.repository.ChatRoomRepository;
@@ -57,19 +59,38 @@ public class ChatService {
 
         // 4. 해당 비구독자 유저들에게 메시지가 왔다는 알림 전송
         String messageContent;
-        if(message.getMessageType().equals(MessageType.TEXT)) {
-            messageContent = message.getText();
-        } else if (message.getMessageType().equals(MessageType.IMAGE)) {
-            messageContent = message.getImageUrl();
-        } else if (message.getMessageType().equals(MessageType.SYSTEM)) {
-            messageContent = message.getSystemMessage();
-        } else {
-            messageContent = "";
-        }
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow();
 
-        unsubscribers.forEach(unsubscriber ->
-                notificationFacade.notifyNewChatMessage(unsubscriber.getUserId(), chatRoomId, unsubscriber.getNickname(), messageContent)
-        );
+        // 1대1일 때
+        if (chatRoom.getType().equals(ChatRoomType.ONE_TO_ONE)) {
+            switch (message.getMessageType()) {
+                case TEXT -> {
+                    messageContent = message.getText();
+                    unsubscribers.forEach(unsubscriber ->
+                            notificationFacade.notifyOneToOneChat(unsubscriber.getUserId(), chatRoomId, unsubscriber.getNickname(), messageContent)
+                    );
+                }
+                case IMAGE -> {
+                    unsubscribers.forEach(unsubscriber ->
+                            notificationFacade.notifyOneToOneImage(unsubscriber.getUserId(), chatRoomId, unsubscriber.getNickname())
+                    );
+                }
+            }
+        } else { // 그룹일 때
+            switch (message.getMessageType()) {
+                case TEXT -> {
+                    messageContent = message.getText();
+                    unsubscribers.forEach(unsubscriber ->
+                            notificationFacade.notifyGroupChat(unsubscriber.getUserId(), chatRoomId, chatRoom.getParty().getTitle(), message.getSenderName(), messageContent)
+                    );
+                }
+                case IMAGE -> {
+                    unsubscribers.forEach(unsubscriber ->
+                            notificationFacade.notifyGroupImage(unsubscriber.getUserId(), chatRoomId, chatRoom.getParty().getTitle(), message.getSenderName())
+                    );
+                }
+            }
+        }
     }
 
     public ChatMessageSliceResDto getChatMessage(Long roomId, int page, int size) {
