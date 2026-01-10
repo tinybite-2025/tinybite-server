@@ -234,9 +234,17 @@ public class PartyService {
 
         PartyParticipant saved = partyParticipantRepository.save(participant);
 
+        // 즉시 알림 발송
         notificationFacade.notifyNewPartyRequest(
             party.getHost().getUserId(), // 파티장 ID
             userId,                      // 신청자 ID
+            partyId
+        );
+
+        // 리마인드 등록
+        notificationFacade.reservePartyRequestReminder(
+            party.getHost().getUserId(),
+            userId,
             partyId
         );
 
@@ -450,6 +458,9 @@ public class PartyService {
         // 단체 채팅방에 참여자 추가
         groupChatRoom.addMember(participant.getUser());
 
+        // 리마인드 예약 삭제
+        notificationFacade.cancelPendingApprovalReminder(partyId, participant.getUser().getUserId());
+
         // 승인 알림
         notificationFacade.notifyApproval(
             participant.getUser().getUserId(),
@@ -482,6 +493,9 @@ public class PartyService {
         if (participant.getOneToOneChatRoom() != null) {
             participant.getOneToOneChatRoom().deactivate();
         }
+
+        // 리마인드 예약 삭제
+        notificationFacade.cancelPendingApprovalReminder(partyId, participant.getUser().getUserId());
 
         notificationFacade.notifyRejection(
             participant.getUser().getUserId(),

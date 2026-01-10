@@ -1,4 +1,4 @@
-package ita.tinybite.domain.notification.infra.fcm; // 별도의 scheduler 패키지 권장
+package ita.tinybite.domain.notification.infra.scheduler;
 
 import ita.tinybite.domain.notification.service.FcmTokenService;
 import lombok.RequiredArgsConstructor;
