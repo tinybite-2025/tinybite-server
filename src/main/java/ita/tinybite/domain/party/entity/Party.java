@@ -94,6 +94,15 @@ public class Party {
         this.currentParticipants++;
     }
 
+    public void decrementParticipants() {
+        this.currentParticipants--;
+    }
+
+
+    public void changePartyStatus(PartyStatus partyStatus) {
+        this.status = partyStatus;
+    }
+
     public String getTimeAgo() {
         LocalDateTime now = LocalDateTime.now();
 

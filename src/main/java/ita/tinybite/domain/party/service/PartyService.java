@@ -260,6 +260,48 @@ public class PartyService {
         return oneToOneChatRoom.getId();
     }
 
+    /**
+     * 파티 탈퇴 - 인원 감소 시 다시 모집 중으로 변경
+     */
+    public void leaveParty(Long partyId, Long userId) {
+        Party party = partyRepository.findById(partyId)
+                .orElseThrow(() -> new IllegalArgumentException("파티를 찾을 수 없습니다."));
+
+        PartyParticipant member = partyParticipantRepository
+                .findByPartyIdAndUserId(partyId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("파티에 참가하지 않은 사용자입니다."));
+
+        partyParticipantRepository.delete(member);
+
+        // 파티 현재 참여자 수 감소
+        party.decrementParticipants();
+
+        // 모집 완료 상태였다면 다시 모집 중으로 변경
+        if (party.getStatus() == PartyStatus.COMPLETED) {
+            party.changePartyStatus(PartyStatus.RECRUITING);
+            partyRepository.save(party);
+        }
+    }
+
+
+    public void completeRecruitment(Long partyId, Long userId) {
+        Party party = partyRepository.findById(partyId)
+                .orElseThrow(() -> new IllegalArgumentException("파티를 찾을 수 없습니다."));
+
+        // 파티장 권한 확인
+        if (!party.getHost().getUserId().equals(userId)) {
+            throw new IllegalStateException("파티장만 승인할 수 있습니다");
+        }
+
+        if (party.getStatus() != PartyStatus.RECRUITING) {
+            throw new IllegalStateException("모집 중인 파티만 완료 처리할 수 있습니다.");
+        }
+
+        party.changePartyStatus(PartyStatus.COMPLETED);
+        partyRepository.save(party);
+    }
+
+
     private void validateProductLink(PartyCategory category, String productLink) {
         // 배달은 링크 불가
         if (category == PartyCategory.DELIVERY && productLink != null) {

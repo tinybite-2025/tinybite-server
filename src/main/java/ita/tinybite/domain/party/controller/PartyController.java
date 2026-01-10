@@ -3,6 +3,7 @@ package ita.tinybite.domain.party.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -71,6 +72,103 @@ public class PartyController {
             @PathVariable Long partyId,
             @Parameter(hidden = true) @AuthenticationPrincipal Long userId) {
         return success(partyService.joinParty(partyId, userId));
+    }
+
+
+    /**
+     * 파티 탈퇴
+     */
+    @Operation(
+            summary = "파티 탈퇴",
+            description = "현재 참가 중인 파티에서 탈퇴합니다. 탈퇴 시 인원이 줄어들면 모집 완료 상태가 다시 모집 중으로 변경될 수 있습니다."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "파티 탈퇴 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = String.class),
+                            examples = @ExampleObject(value = "\"파티에서 탈퇴했습니다.\"")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 (파티에 참가하지 않은 사용자)",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = "{\"message\": \"파티에 참가하지 않은 사용자입니다.\"}")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "파티를 찾을 수 없음",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = "{\"message\": \"파티를 찾을 수 없습니다.\"}")
+                    )
+            )
+    })
+    @DeleteMapping("/{partyId}/leave")
+    public ResponseEntity<?> leaveParty(
+            @PathVariable Long partyId,
+            @AuthenticationPrincipal Long userId) {
+
+        partyService.leaveParty(partyId, userId);
+        return ResponseEntity.ok("파티에서 탈퇴했습니다.");
+    }
+
+
+    /**
+     * 파티 모집 완료
+     */
+
+    @Operation(
+            summary = "파티 모집 완료 처리",
+            description = "파티 관리자가 정원 미달이어도 수동으로 모집을 완료 처리합니다. 모집 중 상태의 파티만 완료 처리할 수 있습니다."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "모집 완료 처리 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = String.class),
+                            examples = @ExampleObject(value = "\"모집이 완료되었습니다.\"")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 (모집 중 상태가 아님)",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = "{\"message\": \"모집 중인 파티만 완료 처리할 수 있습니다.\"}")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "권한 없음 (관리자가 아님)",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = "{\"message\": \"파티 관리자만 모집을 완료할 수 있습니다.\"}")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "파티를 찾을 수 없음",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = "{\"message\": \"파티를 찾을 수 없습니다.\"}")
+                    )
+            )
+    })
+    @PatchMapping("/{partyId}/complete")
+    public ResponseEntity<?> completeRecruitment(
+            @PathVariable Long partyId,
+            @AuthenticationPrincipal Long userId) {
+
+        partyService.completeRecruitment(partyId, userId);
+        return ResponseEntity.ok("모집이 완료되었습니다.");
     }
 
     @Operation(summary = "참여 승인", description = "파티장이 참여를 승인하면 단체 채팅방에 자동 입장됩니다")
