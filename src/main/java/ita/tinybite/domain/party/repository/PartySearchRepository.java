@@ -19,7 +19,7 @@ public interface PartySearchRepository extends JpaRepository<Party, Long> {
     @Query(value = """
       SELECT p.*
       FROM party p
-      WHERE p.title LIKE CONCAT('%', :title, '%')
+      WHERE p.title LIKE CONCAT('%', :title, '%') AND p.place = :userLocation
       ORDER BY (6371000 * acos(
           cos(radians(:lat)) * cos(radians(p.pickup_latitude))
         * cos(radians(p.pickup_longitude) - radians(:lon))
@@ -29,12 +29,12 @@ public interface PartySearchRepository extends JpaRepository<Party, Long> {
       FROM party p
       WHERE p.title LIKE CONCAT('%', :title, '%')
       """, nativeQuery = true)
-    Page<Party> findByTitleContainingWithDistance(String title, @Param("lat") Double lat, @Param("lon") Double lon, Pageable pageable);
+    Page<Party> findByTitleContainingWithDistance(String title, @Param("lat") Double lat, @Param("lon") Double lon, String userLocation, Pageable pageable);
 
     @Query(value = """
     SELECT p.*
     FROM party p
-    WHERE p.title LIKE CONCAT('%', :title, '%') AND p.category = :category
+    WHERE p.title LIKE CONCAT('%', :title, '%') AND p.category = :category AND p.place = :userLocation
     ORDER BY (6371000 * acos(
           cos(radians(:lat)) * cos(radians(p.pickup_latitude))
         * cos(radians(p.pickup_longitude) - radians(:lon))
@@ -48,5 +48,6 @@ public interface PartySearchRepository extends JpaRepository<Party, Long> {
                                                              @Param("lat") Double lat,
                                                              @Param("lon") Double lon,
                                                              @Param("category") String category,
+                                                             String userLocation,
                                                              Pageable pageable);
 }

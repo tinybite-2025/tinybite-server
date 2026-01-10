@@ -3,9 +3,12 @@ package ita.tinybite.domain.chat.dto.res;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import ita.tinybite.domain.chat.entity.ChatMessage;
 import ita.tinybite.domain.chat.enums.MessageType;
+import ita.tinybite.global.exception.BusinessException;
+import ita.tinybite.global.exception.errorcode.BusinessErrorCode;
 import lombok.Builder;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -21,7 +24,9 @@ public record ChatMessageResDto(
         String text,
         String imageUrl,
 
-        String systemMessage
+        String systemMessage,
+
+        String date
 ) {
 
     public static ChatMessageResDto of(ChatMessage message) {
@@ -29,54 +34,41 @@ public record ChatMessageResDto(
     }
 
     public static ChatMessageResDto of(ChatMessage chatMessage, Long senderId) {
+        ChatMessageResDtoBuilder messageBuilder = ChatMessageResDto.builder()
+                .messageId(chatMessage.getId())
+                .messageType(chatMessage.getMessageType())
+                .createdAt(chatMessage.getCreatedAt());
+
+
         switch (chatMessage.getMessageType()) {
             case SYSTEM -> {
-                return ChatMessageResDto.builder()
-                        .messageId(chatMessage.getId())
+                return messageBuilder
                         .systemMessage(chatMessage.getSystemMessage())
                         .build();
             }
             case DATE -> {
-                return ChatMessageResDto.builder()
-                        .messageId(chatMessage.getId())
-                        .createdAt(chatMessage.getCreatedAt())
+                return messageBuilder
+                        .date(chatMessage.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy.MM.dd")))
                         .build();
             }
             case IMAGE -> {
-                return ChatMessageResDto.builder()
-                        .messageId(chatMessage.getId())
+                return messageBuilder
                         .senderId(chatMessage.getSenderId())
                         .nickname(chatMessage.getSenderName())
+                        .isMine(senderId != null && senderId.equals(chatMessage.getSenderId()))
                         .imageUrl(chatMessage.getImageUrl())
-                        .messageType(chatMessage.getMessageType())
-                        .createdAt(chatMessage.getCreatedAt())
                         .build();
 
             }
             case TEXT -> {
-                return ChatMessageResDto.builder()
-                        .messageId(chatMessage.getId())
+                return messageBuilder
                         .senderId(chatMessage.getSenderId())
                         .nickname(chatMessage.getSenderName())
-                        .messageType(chatMessage.getMessageType())
+                        .isMine(senderId != null && senderId.equals(chatMessage.getSenderId()))
                         .text(chatMessage.getText())
-                        .createdAt(chatMessage.getCreatedAt())
                         .build();
             }
-            default -> {
-
-            }
+            default -> throw BusinessException.of(BusinessErrorCode.INVALID_MESSAGE_TYPE);
         }
-        return ChatMessageResDto.builder()
-                .messageId(chatMessage.getId())
-                .messageType(chatMessage.getMessageType())
-                .createdAt(chatMessage.getCreatedAt())
-                .senderId(chatMessage.getSenderId())
-                .isMine(senderId.equals(chatMessage.getSenderId()))
-                .nickname(chatMessage.getSenderName())
-                .text(chatMessage.getText())
-                .imageUrl(chatMessage.getImageUrl())
-                .systemMessage(chatMessage.getSystemMessage())
-                .build();
     }
 }

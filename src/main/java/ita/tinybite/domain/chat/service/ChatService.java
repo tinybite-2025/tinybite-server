@@ -105,9 +105,9 @@ public class ChatService {
         List<ChatMessageResDto> list = messages
                 .getContent()
                 .stream()
-                .map(chatMessage -> {
-                    return ChatMessageResDto.of(chatMessage, currentUserId);
-                })
+                .map(chatMessage ->
+                    ChatMessageResDto.of(chatMessage, currentUserId)
+                )
                 .toList();
 
         return ChatMessageSliceResDto.builder()
