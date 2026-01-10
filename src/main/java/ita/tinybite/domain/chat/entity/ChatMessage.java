@@ -1,5 +1,6 @@
 package ita.tinybite.domain.chat.entity;
 
+import ita.tinybite.domain.chat.enums.MessageType;
 import ita.tinybite.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -16,6 +17,7 @@ public class ChatMessage extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private MessageType messageType;
     // 채팅룸 아이디
     private Long chatRoomId;
 
@@ -26,6 +28,10 @@ public class ChatMessage extends BaseEntity {
     private String senderName;
 
     // 메시지 내용
-    private String content;
+    private String text;
+
+    private String imageUrl;
+
+    private String systemMessage;
 }
 
