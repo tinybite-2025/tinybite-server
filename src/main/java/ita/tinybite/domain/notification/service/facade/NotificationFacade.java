@@ -32,6 +32,7 @@ public class NotificationFacade {
 	private final PartyRepository partyRepository;
 	private final UserRepository userRepository;
 
+	@Transactional
 	public void notifyNewPartyRequest(Long managerId, Long requesterId, Long partyId) {
 		Party party = partyRepository.findById(partyId)
 			.orElseThrow(() -> new BusinessException(PartyErrorCode.PARTY_NOT_FOUND));
@@ -47,6 +48,7 @@ public class NotificationFacade {
 		);
 	}
 
+	@Transactional
 	public void notifyApproval(Long targetUserId, Long partyId) {
 		Party party = partyRepository.findById(partyId)
 			.orElseThrow(() -> new BusinessException(PartyErrorCode.PARTY_NOT_FOUND));
@@ -60,6 +62,7 @@ public class NotificationFacade {
 	}
 
 	// 인원 모집 완료
+	@Transactional
 	public void notifyPartyAutoClose(List<Long> memberIds, Long partyId, Long managerId) {
 		Party party = partyRepository.findById(partyId)
 			.orElseThrow(() -> new BusinessException(PartyErrorCode.PARTY_NOT_FOUND));
@@ -68,6 +71,7 @@ public class NotificationFacade {
 	}
 
 	// 파티 종료
+	@Transactional
 	public void notifyPartyComplete(List<Long> memberIds, Long partyId) {
 		Party party = partyRepository.findById(partyId)
 			.orElseThrow(() -> new BusinessException(PartyErrorCode.PARTY_NOT_FOUND));
@@ -75,15 +79,17 @@ public class NotificationFacade {
 		partyNotificationService.sendPartyCompleteNotification(memberIds, party.getTitle(), partyId);
 	}
 
-	/*
+	@Transactional
 	public void notifyOrderComplete(List<Long> memberIds, Long partyId) {
 		partyNotificationService.sendOrderCompleteNotification(memberIds, partyId);
-	}*/
+	}
 
+	@Transactional
 	public void notifyDeliveryReminder(List<Long> memberIds, Long partyId, Long managerId) {
 		partyNotificationService.sendDeliveryReminderNotification(memberIds, partyId, managerId);
 	}
 
+	@Transactional
 	public void notifyMemberLeave(Long managerId, Long partyId, String leaverName) {
 		partyNotificationService.sendMemberLeaveNotification(managerId, partyId, leaverName);
 	}
