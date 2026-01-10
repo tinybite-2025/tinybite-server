@@ -1,5 +1,6 @@
 package ita.tinybite.domain.party.repository;
 
+import ita.tinybite.domain.chat.entity.ChatRoom;
 import ita.tinybite.domain.party.entity.Party;
 import ita.tinybite.domain.party.entity.PartyParticipant;
 import ita.tinybite.domain.party.enums.ParticipantStatus;
@@ -89,7 +90,9 @@ public interface PartyParticipantRepository extends JpaRepository<PartyParticipa
         Long userId,
         ParticipantStatus status
     );
-
+  
     @Query("SELECT pp FROM PartyParticipant pp WHERE pp.party.id = :partyId AND pp.user.id = :userId")
     Optional<PartyParticipant> findByPartyIdAndUserId(@Param("partyId") Long partyId, @Param("userId") Long userId);
+
+    Optional<PartyParticipant> findByOneToOneChatRoom(ChatRoom oneToOneChatRoom);
 }

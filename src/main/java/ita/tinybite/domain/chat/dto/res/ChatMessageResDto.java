@@ -43,7 +43,7 @@ public record ChatMessageResDto(
         switch (chatMessage.getMessageType()) {
             case SYSTEM -> {
                 return messageBuilder
-                        .systemMessage(chatMessage.getSystemMessage())
+                        .systemMessage(chatMessage.getContent())
                         .build();
             }
             case DATE -> {
@@ -56,7 +56,7 @@ public record ChatMessageResDto(
                         .senderId(chatMessage.getSenderId())
                         .nickname(chatMessage.getSenderName())
                         .isMine(senderId != null && senderId.equals(chatMessage.getSenderId()))
-                        .imageUrl(chatMessage.getImageUrl())
+                        .imageUrl(chatMessage.getContent())
                         .build();
 
             }
@@ -65,7 +65,7 @@ public record ChatMessageResDto(
                         .senderId(chatMessage.getSenderId())
                         .nickname(chatMessage.getSenderName())
                         .isMine(senderId != null && senderId.equals(chatMessage.getSenderId()))
-                        .text(chatMessage.getText())
+                        .text(chatMessage.getContent())
                         .build();
             }
             default -> throw BusinessException.of(BusinessErrorCode.INVALID_MESSAGE_TYPE);

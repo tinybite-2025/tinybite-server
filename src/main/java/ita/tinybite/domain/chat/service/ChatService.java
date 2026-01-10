@@ -68,7 +68,7 @@ public class ChatService {
         if (chatRoom.getType().equals(ChatRoomType.ONE_TO_ONE)) {
             switch (message.getMessageType()) {
                 case TEXT -> {
-                    messageContent = message.getText();
+                    messageContent = message.getContent();
                     unsubscribers.forEach(unsubscriber ->
                             notificationFacade.notifyOneToOneChat(unsubscriber.getUserId(), chatRoomId, unsubscriber.getNickname(), messageContent)
                     );
@@ -82,7 +82,7 @@ public class ChatService {
         } else { // 그룹일 때
             switch (message.getMessageType()) {
                 case TEXT -> {
-                    messageContent = message.getText();
+                    messageContent = message.getContent();
                     unsubscribers.forEach(unsubscriber ->
                             notificationFacade.notifyGroupChat(unsubscriber.getUserId(), chatRoomId, chatRoom.getParty().getTitle(), message.getSenderName(), messageContent)
                     );
@@ -122,7 +122,7 @@ public class ChatService {
         ChatMessage message = ChatMessage.builder()
                 .chatRoomId(chatRoom.getId())
                 .messageType(MessageType.SYSTEM)
-                .systemMessage("파티가 생성되었습니다.")
+                .content("파티가 생성되었습니다.")
                 .build();
 
         chatMessageRepository.save(message);
