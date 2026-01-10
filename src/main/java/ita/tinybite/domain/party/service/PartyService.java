@@ -42,6 +42,12 @@ public class PartyService {
     private String defaultGroceryImage;
     @Value("${default.image.household}")
     private String defaultHouseholdImage;
+    @Value("${default.image.detail.delivery}")
+    private String defaultDeliveryDetailImage;
+    @Value("${default.image.detail.grocery}")
+    private String defaultGroceryDetailImage;
+    @Value("${default.image.detail.household}")
+    private String defaultHouseholdDetailImage;
     private final PartyRepository partyRepository;
     private final UserRepository userRepository;
     private final LocationService locationService;
@@ -73,6 +79,7 @@ public class PartyService {
                         .build())
                 .images(getImagesIfPresent(request.getImages()))
                 .thumbnailImage(getThumbnailIfPresent(request.getImages(), request.getCategory()))
+                .thumbnailImageDetail(getThumbnailDetailIfPresent(request.getImages(), request.getCategory()))
                 .link(getLinkIfValid(request.getProductLink(), request.getCategory()))
                 .description(getDescriptionIfPresent(request.getDescription()))
                 .currentParticipants(1)
@@ -668,6 +675,18 @@ public class PartyService {
             case DELIVERY -> defaultDeliveryImage;
             case GROCERY -> defaultGroceryImage;
             case HOUSEHOLD -> defaultHouseholdImage;
+            default -> throw new IllegalArgumentException("존재하지 않는 카테고리입니다: " + category);
+        };
+    }
+
+    private String getThumbnailDetailIfPresent(List<String> images, PartyCategory category) {
+        if (images != null && !images.isEmpty()) {
+            return images.get(0);
+        }
+        return switch (category) {
+            case DELIVERY -> defaultDeliveryDetailImage;
+            case GROCERY -> defaultGroceryDetailImage;
+            case HOUSEHOLD -> defaultHouseholdDetailImage;
             default -> throw new IllegalArgumentException("존재하지 않는 카테고리입니다: " + category);
         };
     }

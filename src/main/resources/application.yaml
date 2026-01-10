@@ -42,6 +42,11 @@ fcm:
 
 default:
   image:
-    delivery: ${DEFAULT_IMAGE_DELIVERY}
-    grocery: ${DEFAULT_IMAGE_GROCERY}
-    household: ${DEFAULT_IMAGE_HOUSEHOLD}
+    thumbnail:
+      delivery: ${DEFAULT_IMAGE_DELIVERY}
+      grocery: ${DEFAULT_IMAGE_GROCERY}
+      household: ${DEFAULT_IMAGE_HOUSEHOLD}
+    detail:
+      delivery: ${DEFAULT_DETAIL_IMAGE_DELIVERY}
+      grocery: ${DEFAULT_DETAIL_IMAGE_GROCERY}
+      household: ${DEFAULT_DETAIL_IMAGE_HOUSEHOLD}
