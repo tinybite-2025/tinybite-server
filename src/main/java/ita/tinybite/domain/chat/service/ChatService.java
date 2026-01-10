@@ -1,9 +1,13 @@
 package ita.tinybite.domain.chat.service;
 
+import ita.tinybite.domain.auth.service.SecurityProvider;
 import ita.tinybite.domain.chat.dto.res.ChatMessageResDto;
 import ita.tinybite.domain.chat.dto.res.ChatMessageSliceResDto;
 import ita.tinybite.domain.chat.entity.ChatMessage;
+import ita.tinybite.domain.chat.entity.ChatRoom;
 import ita.tinybite.domain.chat.entity.ChatRoomMember;
+import ita.tinybite.domain.chat.enums.ChatRoomType;
+import ita.tinybite.domain.chat.enums.MessageType;
 import ita.tinybite.domain.chat.repository.ChatMessageRepository;
 import ita.tinybite.domain.chat.repository.ChatRoomRepository;
 import ita.tinybite.domain.notification.service.facade.NotificationFacade;
@@ -30,6 +34,7 @@ public class ChatService {
     private final ChatRoomRepository chatRoomRepository;
     private final ChatSubscribeRegistry registry;
     private final NotificationFacade notificationFacade;
+    private final SecurityProvider securityProvider;
 
     public ChatMessage saveMessage(ChatMessage message) {
         return chatMessageRepository.save(message);
@@ -53,19 +58,53 @@ public class ChatService {
                 .collect(Collectors.toSet());
 
         // 4. 해당 비구독자 유저들에게 메시지가 왔다는 알림 전송
-        unsubscribers.forEach(unsubscriber ->
-                notificationFacade.notifyNewChatMessage(unsubscriber.getUserId(), chatRoomId, unsubscriber.getNickname(), message.getContent())
-        );
+        String messageContent;
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow();
+
+        // 1대1일 때
+        if (chatRoom.getType().equals(ChatRoomType.ONE_TO_ONE)) {
+            switch (message.getMessageType()) {
+                case TEXT -> {
+                    messageContent = message.getText();
+                    unsubscribers.forEach(unsubscriber ->
+                            notificationFacade.notifyOneToOneChat(unsubscriber.getUserId(), chatRoomId, unsubscriber.getNickname(), messageContent)
+                    );
+                }
+                case IMAGE -> {
+                    unsubscribers.forEach(unsubscriber ->
+                            notificationFacade.notifyOneToOneImage(unsubscriber.getUserId(), chatRoomId, unsubscriber.getNickname())
+                    );
+                }
+            }
+        } else { // 그룹일 때
+            switch (message.getMessageType()) {
+                case TEXT -> {
+                    messageContent = message.getText();
+                    unsubscribers.forEach(unsubscriber ->
+                            notificationFacade.notifyGroupChat(unsubscriber.getUserId(), chatRoomId, chatRoom.getParty().getTitle(), message.getSenderName(), messageContent)
+                    );
+                }
+                case IMAGE -> {
+                    unsubscribers.forEach(unsubscriber ->
+                            notificationFacade.notifyGroupImage(unsubscriber.getUserId(), chatRoomId, chatRoom.getParty().getTitle(), message.getSenderName())
+                    );
+                }
+            }
+        }
     }
 
     public ChatMessageSliceResDto getChatMessage(Long roomId, int page, int size) {
+        Long currentUserId = securityProvider.getCurrentUser().getUserId();
+
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Slice<ChatMessage> messages = chatMessageRepository.findByChatRoomId(roomId, pageable);
 
         List<ChatMessageResDto> list = messages
                 .getContent()
                 .stream()
-                .map(ChatMessageResDto::of)
+                .map(chatMessage -> {
+                    return ChatMessageResDto.of(chatMessage, currentUserId);
+                })
                 .toList();
 
         return ChatMessageSliceResDto.builder()

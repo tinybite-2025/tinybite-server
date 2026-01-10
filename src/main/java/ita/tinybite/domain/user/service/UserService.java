@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -181,6 +182,7 @@ public class UserService {
         );
 
         return parties.stream()
+                .sorted(Comparator.comparing(Party::getCreatedAt).reversed())
                 .map(party -> {
                     int currentParticipants = participantRepository
                             .countByPartyIdAndStatus(party.getId(), ParticipantStatus.APPROVED);
@@ -198,6 +200,8 @@ public class UserService {
                 );
 
         return participants.stream()
+                .sorted(Comparator.comparing(pp -> pp.getParty().getCreatedAt(),
+                        Comparator.reverseOrder()))
                 .map(pp -> {
                     Party party = pp.getParty();
                     int currentParticipants = participantRepository
@@ -205,5 +209,21 @@ public class UserService {
                     return PartyCardResponse.from(party, currentParticipants);
                 })
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void updateProfileImage(Long userId, String image) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다"));
+
+        user.updateProfileImage(image);
+    }
+
+    @Transactional
+    public void deleteProfileImage(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다"));
+
+        user.deleteProfileImage();
     }
 }

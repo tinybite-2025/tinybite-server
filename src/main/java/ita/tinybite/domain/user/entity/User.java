@@ -98,4 +98,12 @@ public class User extends BaseEntity {
     public boolean isWithdrawn() {
         return this.status == UserStatus.WITHDRAW;
     }
+
+    public void updateProfileImage(String image) {
+        this.profileImage = image;
+    }
+
+    public void deleteProfileImage() {
+        this.profileImage = null;
+    }
 }

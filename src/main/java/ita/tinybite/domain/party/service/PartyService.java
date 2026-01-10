@@ -3,6 +3,7 @@ package ita.tinybite.domain.party.service;
 import ita.tinybite.domain.chat.entity.ChatRoom;
 import ita.tinybite.domain.chat.enums.ChatRoomType;
 import ita.tinybite.domain.chat.repository.ChatRoomRepository;
+import ita.tinybite.domain.notification.service.facade.NotificationFacade;
 import ita.tinybite.domain.party.dto.request.PartyCreateRequest;
 import ita.tinybite.domain.party.dto.request.PartyListRequest;
 import ita.tinybite.domain.party.dto.request.PartyUpdateRequest;
@@ -21,6 +22,7 @@ import ita.tinybite.domain.user.repository.UserRepository;
 import ita.tinybite.global.location.LocationService;
 import ita.tinybite.global.util.DistanceCalculator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,12 +36,19 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class PartyService {
+    @Value("${default.image.delivery}")
+    private String defaultDeliveryImage;
+    @Value("${default.image.grocery}")
+    private String defaultGroceryImage;
+    @Value("${default.image.household}")
+    private String defaultHouseholdImage;
     private final PartyRepository partyRepository;
     private final UserRepository userRepository;
     private final LocationService locationService;
     private final PartyParticipantRepository partyParticipantRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final PartyParticipantRepository participantRepository;
+    private final NotificationFacade notificationFacade;
 
     /**
      * 파티 생성
@@ -218,6 +227,12 @@ public class PartyService {
 
         PartyParticipant saved = partyParticipantRepository.save(participant);
 
+        notificationFacade.notifyNewPartyRequest(
+            party.getHost().getUserId(), // 파티장 ID
+            userId,                      // 신청자 ID
+            partyId
+        );
+
         return saved.getId();
     }
 
@@ -304,6 +319,7 @@ public class PartyService {
                 .build();
     }
 
+    @Transactional
     public void updateParty(Long partyId, Long userId, PartyUpdateRequest request) {
         Party party = partyRepository.findById(partyId)
                 .orElseThrow(() -> new IllegalArgumentException("파티를 찾을 수 없습니다"));
@@ -386,6 +402,8 @@ public class PartyService {
             throw new IllegalStateException("승인된 파티원이 있어 삭제할 수 없습니다");
         }
 
+         chatRoomRepository.deleteByPartyIdAndType(partyId, ChatRoomType.GROUP);
+        
         // 삭제 실행
         partyRepository.delete(party);
     }
@@ -425,6 +443,12 @@ public class PartyService {
         // 단체 채팅방에 참여자 추가
         groupChatRoom.addMember(participant.getUser());
 
+        // 승인 알림
+        notificationFacade.notifyApproval(
+            participant.getUser().getUserId(),
+            partyId
+        );
+
         // 목표 인원 달성 확인
         checkAndCloseIfFull(party);
     }
@@ -452,6 +476,10 @@ public class PartyService {
             participant.getOneToOneChatRoom().deactivate();
         }
 
+        notificationFacade.notifyRejection(
+            participant.getUser().getUserId(),
+            partyId
+        );
     }
 
     /**
@@ -543,6 +571,15 @@ public class PartyService {
 
         // 파티 마감
         party.close();
+
+        // 알림 대상
+        List<Long> memberIds = partyParticipantRepository.findAllByPartyAndStatus(party, ParticipantStatus.APPROVED)
+            .stream()
+            .map(p -> p.getUser().getUserId())
+            .toList();
+
+        // 파티 종료 알림
+        notificationFacade.notifyPartyComplete(memberIds, party.getId());
     }
 
     // ========== Private Methods ==========
@@ -611,6 +648,7 @@ public class PartyService {
         }
     }
 
+    // ??
     private void checkAndCloseIfFull(Party party) {
         if (party.getCurrentParticipants() >= party.getMaxParticipants()) {
             party.close();
@@ -626,7 +664,12 @@ public class PartyService {
         if (images != null && !images.isEmpty()) {
             return images.get(0);
         }
-        return null;
+        return switch (category) {
+            case DELIVERY -> defaultDeliveryImage;
+            case GROCERY -> defaultGroceryImage;
+            case HOUSEHOLD -> defaultHouseholdImage;
+            default -> throw new IllegalArgumentException("존재하지 않는 카테고리입니다: " + category);
+        };
     }
 
     private String getLinkIfValid(String link, PartyCategory category) {

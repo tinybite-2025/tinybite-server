@@ -2,7 +2,9 @@ package ita.tinybite.domain.chat.controller;
 
 import ita.tinybite.domain.chat.dto.req.ChatMessageReqDto;
 import ita.tinybite.domain.chat.dto.res.ChatMessageResDto;
+import ita.tinybite.domain.chat.dto.res.ChatMessageSliceResDto;
 import ita.tinybite.domain.chat.entity.ChatMessage;
+import ita.tinybite.domain.chat.enums.MessageType;
 import ita.tinybite.domain.chat.service.ChatService;
 import ita.tinybite.global.response.APIResponse;
 import lombok.RequiredArgsConstructor;
@@ -32,18 +34,24 @@ public class ChatController {
     @MessageMapping("/send")
     public void sendMessage(ChatMessageReqDto req,
                             SimpMessageHeaderAccessor accessor) {
+        Long userId = (Long) accessor.getSessionAttributes().get("userId");
+
         // message entity 생성
         ChatMessage message = ChatMessage.builder()
+                .messageType(req.messageType())
                 .chatRoomId(req.chatRoomId())
-                .senderId((Long) accessor.getSessionAttributes().get("userId"))
+                .senderId(userId)
                 .senderName(req.nickname())
-                .content(req.content()).build();
+                .text(req.text())
+                .imageUrl(req.imageUrl())
+                .systemMessage(req.systemMessage())
+                .build();
 
         // message 저장
         ChatMessage saved = chatService.saveMessage(message);
 
         // subscribe 한 사용자에게 전송
-        simpMessagingTemplate.convertAndSend("/subscribe/chat/room/" + saved.getChatRoomId(), ChatMessageResDto.of(saved));
+        simpMessagingTemplate.convertAndSend("/subscribe/chat/room/" + saved.getChatRoomId(), ChatMessageResDto.of(saved, userId));
 
         // subscribe하지 않았으나, 채팅방에 존재하는 사람들에게 전송
         chatService.sendNotification(saved, req.chatRoomId());
@@ -51,9 +59,9 @@ public class ChatController {
 
     @ResponseBody
     @GetMapping("/api/v1/chat/{chatRoomId}")
-    public APIResponse<?> getChatMessages(@PathVariable Long chatRoomId,
-                                          @RequestParam(defaultValue = "0") int page,
-                                          @RequestParam(defaultValue = "20") int size) {
+    public APIResponse<ChatMessageSliceResDto> getChatMessages(@PathVariable Long chatRoomId,
+                                                               @RequestParam(defaultValue = "0") int page,
+                                                               @RequestParam(defaultValue = "20") int size) {
         return success(chatService.getChatMessage(chatRoomId, page, size));
     }
 }
