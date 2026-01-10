@@ -1,9 +1,11 @@
 package ita.tinybite.domain.chat.service;
 
+import ita.tinybite.domain.auth.service.SecurityProvider;
 import ita.tinybite.domain.chat.dto.res.ChatMessageResDto;
 import ita.tinybite.domain.chat.dto.res.ChatMessageSliceResDto;
 import ita.tinybite.domain.chat.entity.ChatMessage;
 import ita.tinybite.domain.chat.entity.ChatRoomMember;
+import ita.tinybite.domain.chat.enums.MessageType;
 import ita.tinybite.domain.chat.repository.ChatMessageRepository;
 import ita.tinybite.domain.chat.repository.ChatRoomRepository;
 import ita.tinybite.domain.notification.service.facade.NotificationFacade;
@@ -30,6 +32,7 @@ public class ChatService {
     private final ChatRoomRepository chatRoomRepository;
     private final ChatSubscribeRegistry registry;
     private final NotificationFacade notificationFacade;
+    private final SecurityProvider securityProvider;
 
     public ChatMessage saveMessage(ChatMessage message) {
         return chatMessageRepository.save(message);
@@ -53,19 +56,34 @@ public class ChatService {
                 .collect(Collectors.toSet());
 
         // 4. 해당 비구독자 유저들에게 메시지가 왔다는 알림 전송
+        String messageContent;
+        if(message.getMessageType().equals(MessageType.TEXT)) {
+            messageContent = message.getText();
+        } else if (message.getMessageType().equals(MessageType.IMAGE)) {
+            messageContent = message.getImageUrl();
+        } else if (message.getMessageType().equals(MessageType.SYSTEM)) {
+            messageContent = message.getSystemMessage();
+        } else {
+            messageContent = "";
+        }
+
         unsubscribers.forEach(unsubscriber ->
-                notificationFacade.notifyNewChatMessage(unsubscriber.getUserId(), chatRoomId, unsubscriber.getNickname(), message.getContent())
+                notificationFacade.notifyNewChatMessage(unsubscriber.getUserId(), chatRoomId, unsubscriber.getNickname(), messageContent)
         );
     }
 
     public ChatMessageSliceResDto getChatMessage(Long roomId, int page, int size) {
+        Long currentUserId = securityProvider.getCurrentUser().getUserId();
+
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Slice<ChatMessage> messages = chatMessageRepository.findByChatRoomId(roomId, pageable);
 
         List<ChatMessageResDto> list = messages
                 .getContent()
                 .stream()
-                .map(ChatMessageResDto::of)
+                .map(chatMessage -> {
+                    return ChatMessageResDto.of(chatMessage, currentUserId);
+                })
                 .toList();
 
         return ChatMessageSliceResDto.builder()
