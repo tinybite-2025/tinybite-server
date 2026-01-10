@@ -22,18 +22,11 @@ public class ChatMessage extends BaseEntity {
 
     // 채팅룸 아이디
     private Long chatRoomId;
-
     // 전송자 아이디
     private Long senderId;
-
     // 전송자 이름 (nickname)
     private String senderName;
-
     // 메시지 내용
-    private String text;
-
-    private String imageUrl;
-
-    private String systemMessage;
+    private String content;
 }
 
