@@ -17,6 +17,7 @@ import ita.tinybite.domain.auth.repository.TermRepository;
 import ita.tinybite.domain.user.constant.LoginType;
 import ita.tinybite.domain.user.constant.PlatformType;
 import ita.tinybite.domain.user.constant.UserStatus;
+import ita.tinybite.domain.user.dto.res.UserResDto;
 import ita.tinybite.domain.user.entity.Term;
 import ita.tinybite.domain.user.entity.User;
 import ita.tinybite.domain.user.entity.UserTermAgreement;
@@ -224,7 +225,7 @@ public class AuthService {
                 .refreshToken(refreshToken)
                 .tokenType("Bearer")
                 .expiresIn(3600L)
-                .user(UserDto.from(user))
+                .user(UserResDto.of(user))
                 .build();
     }
 
@@ -340,7 +341,7 @@ public class AuthService {
                 .refreshToken(newRefreshToken)
                 .tokenType("Bearer")
                 .expiresIn(3600L)
-                .user(UserDto.from(user))
+                .user(UserResDto.of(user))
                 .build();
     }
 
