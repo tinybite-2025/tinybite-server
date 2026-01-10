@@ -240,7 +240,7 @@ public class PartyService {
             partyId
         );
 
-        return saved.getId();
+        return oneToOneChatRoom.getId();
     }
 
     private void validateProductLink(PartyCategory category, String productLink) {
