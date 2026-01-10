@@ -308,7 +308,7 @@ public class PartyService {
                         .profileImage(party.getHost().getProfileImage())
                         .build())
                 .pickupLocation(party.getPickupLocation())
-                .thumbnailImage(party.getThumbnailImage())
+                .thumbnailImageDetail(party.getThumbnailImageDetail())
                 .distance(formatDistanceIfExists(distance))
                 .currentParticipants(currentCount)
                 .maxParticipants(party.getMaxParticipants())
