@@ -30,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -135,13 +136,16 @@ public class PartyService {
             user = userRepository.findById(userId).orElse(null);
         }
 
+        // 페이지네이션 파라미터 (기본값: page=0, size=20)
+        int page = request.getPage() != null ? request.getPage() : 0;
+        int size = request.getSize() != null ? request.getSize() : 20;
+
         // 동네 기준으로 파티 조회
         List<Party> parties = fetchPartiesByLocation(user, request);
 
         // PartyCardResponse로 변환
         List<PartyCardResponse> cardResponses = parties.stream()
                 .map(party -> {
-                    // 거리순 정렬인 경우 거리 계산
                     if (request.getSortType() == PartySortType.DISTANCE) {
                         double distance = DistanceCalculator.calculateDistance(
                                 request.getUserLat(),
@@ -167,11 +171,37 @@ public class PartyService {
                 .sorted(getComparator(request.getSortType()))
                 .collect(Collectors.toList());
 
+        // 진행 중 + 마감된 파티 합치기 (진행 중이 먼저)
+        List<PartyCardResponse> allParties = new ArrayList<>();
+        allParties.addAll(activeParties);
+        allParties.addAll(closedParties);
+
+        // 페이지네이션 적용
+        int startIndex = page * size;
+        int endIndex = Math.min(startIndex + size, allParties.size());
+
+        List<PartyCardResponse> paginatedParties = allParties.subList(
+                Math.min(startIndex, allParties.size()),
+                endIndex
+        );
+
+        // hasNext 계산
+        boolean hasNext = endIndex < allParties.size();
+
+        // 페이지네이션된 결과를 다시 진행 중/마감으로 분리
+        List<PartyCardResponse> paginatedActiveParties = paginatedParties.stream()
+                .filter(p -> !p.getIsClosed())
+                .collect(Collectors.toList());
+
+        List<PartyCardResponse> paginatedClosedParties = paginatedParties.stream()
+                .filter(PartyCardResponse::getIsClosed)
+                .collect(Collectors.toList());
+
         return PartyListResponse.builder()
-                .activeParties(activeParties)
-                .closedParties(closedParties)
-                .totalCount(parties.size())
-                .hasNext(false)
+                .activeParties(paginatedActiveParties)
+                .closedParties(paginatedClosedParties)
+                .totalCount(allParties.size())
+                .hasNext(hasNext)
                 .build();
     }
 

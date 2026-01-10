@@ -90,5 +90,6 @@ public interface PartyParticipantRepository extends JpaRepository<PartyParticipa
         ParticipantStatus status
     );
 
-    Optional<PartyParticipant> findByPartyIdAndUserId(Long partyId, Long userId);
+    @Query("SELECT pp FROM PartyParticipant pp WHERE pp.party.id = :partyId AND pp.user.id = :userId")
+    Optional<PartyParticipant> findByPartyIdAndUserId(@Param("partyId") Long partyId, @Param("userId") Long userId);
 }
