@@ -22,6 +22,7 @@ import ita.tinybite.domain.user.repository.UserRepository;
 import ita.tinybite.global.location.LocationService;
 import ita.tinybite.global.util.DistanceCalculator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +36,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class PartyService {
+    @Value("${default.image.delivery}")
+    private String defaultDeliveryImage;
+    @Value("${default.image.grocery}")
+    private String defaultGroceryImage;
+    @Value("${default.image.household}")
+    private String defaultHouseholdImage;
     private final PartyRepository partyRepository;
     private final UserRepository userRepository;
     private final LocationService locationService;
@@ -657,7 +664,12 @@ public class PartyService {
         if (images != null && !images.isEmpty()) {
             return images.get(0);
         }
-        return null;
+        return switch (category) {
+            case DELIVERY -> defaultDeliveryImage;
+            case GROCERY -> defaultGroceryImage;
+            case HOUSEHOLD -> defaultHouseholdImage;
+            default -> throw new IllegalArgumentException("존재하지 않는 카테고리입니다: " + category);
+        };
     }
 
     private String getLinkIfValid(String link, PartyCategory category) {
