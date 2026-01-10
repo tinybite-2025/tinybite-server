@@ -101,7 +101,7 @@ public class PartyMessageManager {
 		Map<String, String> data = new HashMap<>();
 		data.put(KEY_PARTY_ID, String.valueOf(partyId));
 
-		data.put(KEY_EVENT_TYPE, "PENDING_APPROVAL_REMINDER");
+		data.put(KEY_EVENT_TYPE, NotificationType.PENDING_APPROVAL_REMINDER.name());
 
 		return requestConverter.toMulticastRequest(tokens, title, detail, data);
 	}
