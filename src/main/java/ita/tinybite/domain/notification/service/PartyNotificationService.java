@@ -26,16 +26,38 @@ public class PartyNotificationService {
 	private final NotificationLogService notificationLogService;
 	private final NotificationTransactionHelper notificationTransactionHelper;
 
+	//
 	@Transactional
-	public void sendApprovalNotification(Long targetUserId, Long partyId) {
-		String title = "🎉 파티 참여 승인";
-		String detail = "파티 참여가 승인되었습니다! 지금 확인하세요.";
-		notificationLogService.saveLog(targetUserId, NotificationType.PARTY_APPROVAL.name(), title, detail);
+	public void sendNewPartyRequestNotification(Long managerId, String requesterNickname, String partyTitle, Long partyId) {
+		String title = String.format("🍽️ [%s]님이 참여 요청했어요", requesterNickname);
+		String detail = String.format("‘[%s]’ 파티 승인 여부를 확인해 주세요", partyTitle);
 
-		List<String> tokens = fcmTokenService.getTokensAndLogIfEmpty(targetUserId);
+		notificationLogService.saveLog(managerId, NotificationType.PARTY_NEW_REQUEST.name(), title, detail);
+
+		List<String> tokens = fcmTokenService.getTokensAndLogIfEmpty(managerId);
 		if (tokens.isEmpty()) {
 			return;
 		}
+
+		NotificationMulticastRequest request =
+			partyMessageManager.createNewPartyRequest(tokens, partyId, title, detail);
+
+		BatchResponse response = fcmNotificationSender.send(request);
+		notificationTransactionHelper.handleBatchResponse(response, tokens);
+	}
+
+	//
+	@Transactional
+	public void sendApprovalNotification(Long targetUserId, String partyTitle, Long partyId) {
+		// 참여 승인 (파티원에게 전송)
+		String title = String.format("🍽️ ‘[%s]’ 파티 승인 완료!", partyTitle);
+		String detail = "파티 채팅방에 입장했어요";
+
+		notificationLogService.saveLog(targetUserId, NotificationType.PARTY_APPROVAL.name(), title, detail);
+
+		List<String> tokens = fcmTokenService.getTokensAndLogIfEmpty(targetUserId);
+		if (tokens.isEmpty()) return;
+
 		NotificationMulticastRequest request =
 			partyMessageManager.createApprovalRequest(tokens, partyId, title, detail);
 
@@ -43,45 +65,20 @@ public class PartyNotificationService {
 		notificationTransactionHelper.handleBatchResponse(response, tokens);
 	}
 
+	//
 	@Transactional
-	public void sendRejectionNotification(Long targetUserId, Long partyId) {
-		String title = "🚨 파티 참여 거절";
-		String detail = "죄송합니다. 파티 참여가 거절되었습니다.";
+	public void sendRejectionNotification(Long targetUserId, String partyTitle, Long partyId) {
+		// 참여 거절 (파티원에게 전송)
+		String title = String.format("🍽️ ‘[%s]’ 😢 참여 거절", partyTitle);
+		String detail = "아쉽게도 이번 파티는 함께하지 못해요";
+
 		notificationLogService.saveLog(targetUserId, NotificationType.PARTY_REJECTION.name(), title, detail);
 
 		List<String> tokens = fcmTokenService.getTokensAndLogIfEmpty(targetUserId);
-		if (tokens.isEmpty()) {
-			return;
-		}
+		if (tokens.isEmpty()) return;
+
 		NotificationMulticastRequest request =
 			partyMessageManager.createRejectionRequest(tokens, partyId, title, detail);
-
-		BatchResponse response = fcmNotificationSender.send(request);
-		notificationTransactionHelper.handleBatchResponse(response, tokens);
-	}
-
-	/**
-	 * 아래 메서드들 파티장,파티멤버의 알림 내용 다른지에 따라 추후 수정 필요
-	 */
-
-	@Transactional
-	public void sendAutoCloseNotification(List<Long> memberIds, Long partyId, Long managerId) {
-		String title = "🎉 파티 자동 마감";
-		String memberDetail = "참여 인원이 모두 차서 파티가 마감되었습니다.";
-		String managerDetail = "축하합니다! 목표 인원 달성으로 파티가 자동 마감되었습니다.";
-
-		memberIds.forEach(userId -> {
-			String detail = userId.equals(managerId) ? managerDetail : memberDetail;
-			notificationLogService.saveLog(userId, NotificationType.PARTY_AUTO_CLOSE.name(), title, detail);
-		});
-
-		List<String> tokens = fcmTokenService.getMulticastTokensAndLogIfEmpty(memberIds);
-		if (tokens.isEmpty()) {
-			return;
-		}
-
-		NotificationMulticastRequest request =
-			partyMessageManager.createAutoCloseRequest(tokens, partyId, title, memberDetail);
 
 		BatchResponse response = fcmNotificationSender.send(request);
 		notificationTransactionHelper.handleBatchResponse(response, tokens);
@@ -147,18 +144,38 @@ public class PartyNotificationService {
 		}
 	}
 
+	//
 	@Transactional
-	public void sendPartyCompleteNotification(List<Long> memberIds, Long partyId) {
-		String title = "👋 파티 종료";
-		String detail = "파티장이 수령 완료 처리했습니다. 파티가 종료되었습니다.";
+	public void sendAutoCloseNotification(List<Long> memberIds, String partyTitle, Long partyId, Long managerId) {
+		String title = String.format("🎯 [%s] 인원 모집 완료 !", partyTitle);
+		String detail = "파티가 시작 되었어요";
+
+		memberIds.forEach(userId -> {
+			notificationLogService.saveLog(userId, NotificationType.PARTY_AUTO_CLOSE.name(), title, detail);
+		});
+
+		List<String> tokens = fcmTokenService.getMulticastTokensAndLogIfEmpty(memberIds);
+		if (tokens.isEmpty()) return;
+
+		NotificationMulticastRequest request =
+			partyMessageManager.createAutoCloseRequest(tokens, partyId, title, detail);
+
+		BatchResponse response = fcmNotificationSender.send(request);
+		notificationTransactionHelper.handleBatchResponse(response, tokens);
+	}
+
+	//
+	@Transactional
+	public void sendPartyCompleteNotification(List<Long> memberIds, String partyTitle, Long partyId) {
+		String title = String.format("✅ [%s] 파티 종료", partyTitle);
+		String detail = "참여해 주셔서 감사합니다";
+
 		memberIds.forEach(userId ->
 			notificationLogService.saveLog(userId, NotificationType.PARTY_COMPLETE.name(), title, detail)
 		);
 
 		List<String> tokens = fcmTokenService.getMulticastTokensAndLogIfEmpty(memberIds);
-		if (tokens.isEmpty()) {
-			return;
-		}
+		if (tokens.isEmpty()) return;
 
 		NotificationMulticastRequest request =
 			partyMessageManager.createPartyCompleteRequest(tokens, partyId, title, detail);
@@ -166,26 +183,6 @@ public class PartyNotificationService {
 		BatchResponse response = fcmNotificationSender.send(request);
 		notificationTransactionHelper.handleBatchResponse(response, tokens);
 	}
-
-	@Transactional
-	public void sendNewPartyRequestNotification(Long managerId, Long partyId) {
-		String title = "🔔 새 참여 요청";
-		String detail = "새로운 참여 요청이 도착했습니다. 지금 승인해 주세요.";
-
-		notificationLogService.saveLog(managerId, NotificationType.PARTY_NEW_REQUEST.name(), title, detail);
-
-		List<String> tokens = fcmTokenService.getTokensAndLogIfEmpty(managerId);
-		if (tokens.isEmpty()) {
-			return;
-		}
-
-		NotificationMulticastRequest request =
-			partyMessageManager.createNewPartyRequest(tokens, partyId, title, detail);
-
-		BatchResponse response = fcmNotificationSender.send(request);
-		notificationTransactionHelper.handleBatchResponse(response, tokens);
-	}
-
 
 	@Transactional
 	public void sendMemberLeaveNotification(Long managerId, Long partyId, String leaverName) {

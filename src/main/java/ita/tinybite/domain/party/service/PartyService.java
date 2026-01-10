@@ -3,6 +3,7 @@ package ita.tinybite.domain.party.service;
 import ita.tinybite.domain.chat.entity.ChatRoom;
 import ita.tinybite.domain.chat.enums.ChatRoomType;
 import ita.tinybite.domain.chat.repository.ChatRoomRepository;
+import ita.tinybite.domain.notification.service.facade.NotificationFacade;
 import ita.tinybite.domain.party.dto.request.PartyCreateRequest;
 import ita.tinybite.domain.party.dto.request.PartyListRequest;
 import ita.tinybite.domain.party.dto.request.PartyUpdateRequest;
@@ -40,6 +41,7 @@ public class PartyService {
     private final PartyParticipantRepository partyParticipantRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final PartyParticipantRepository participantRepository;
+    private final NotificationFacade notificationFacade;
 
     /**
      * 파티 생성
@@ -217,6 +219,12 @@ public class PartyService {
                 .build();
 
         PartyParticipant saved = partyParticipantRepository.save(participant);
+
+        notificationFacade.notifyNewPartyRequest(
+            party.getHost().getUserId(), // 파티장 ID
+            userId,                      // 신청자 ID
+            partyId
+        );
 
         return saved.getId();
     }
@@ -428,6 +436,12 @@ public class PartyService {
         // 단체 채팅방에 참여자 추가
         groupChatRoom.addMember(participant.getUser());
 
+        // 승인 알림
+        notificationFacade.notifyApproval(
+            participant.getUser().getUserId(),
+            partyId
+        );
+
         // 목표 인원 달성 확인
         checkAndCloseIfFull(party);
     }
@@ -455,6 +469,10 @@ public class PartyService {
             participant.getOneToOneChatRoom().deactivate();
         }
 
+        notificationFacade.notifyRejection(
+            participant.getUser().getUserId(),
+            partyId
+        );
     }
 
     /**
@@ -546,6 +564,15 @@ public class PartyService {
 
         // 파티 마감
         party.close();
+
+        // 알림 대상
+        List<Long> memberIds = partyParticipantRepository.findAllByPartyAndStatus(party, ParticipantStatus.APPROVED)
+            .stream()
+            .map(p -> p.getUser().getUserId())
+            .toList();
+
+        // 파티 종료 알림
+        notificationFacade.notifyPartyComplete(memberIds, party.getId());
     }
 
     // ========== Private Methods ==========
@@ -614,6 +641,7 @@ public class PartyService {
         }
     }
 
+    // ??
     private void checkAndCloseIfFull(Party party) {
         if (party.getCurrentParticipants() >= party.getMaxParticipants()) {
             party.close();

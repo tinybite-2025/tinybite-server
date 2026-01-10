@@ -7,6 +7,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import ita.tinybite.domain.notification.service.ChatNotificationService;
 import ita.tinybite.domain.notification.service.PartyNotificationService;
+import ita.tinybite.domain.party.entity.Party;
+import ita.tinybite.domain.party.repository.PartyRepository;
+import ita.tinybite.domain.user.entity.User;
+import ita.tinybite.domain.user.repository.UserRepository;
+import ita.tinybite.global.exception.BusinessException;
+import ita.tinybite.global.exception.errorcode.PartyErrorCode;
+import ita.tinybite.global.exception.errorcode.UserErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -22,19 +29,55 @@ public class NotificationFacade {
 	private final PartyNotificationService partyNotificationService;
 	private final ChatNotificationService chatNotificationService;
 
+	private final PartyRepository partyRepository;
+	private final UserRepository userRepository;
+
+	@Transactional
+	public void notifyNewPartyRequest(Long managerId, Long requesterId, Long partyId) {
+		Party party = partyRepository.findById(partyId)
+			.orElseThrow(() -> new BusinessException(PartyErrorCode.PARTY_NOT_FOUND));
+
+		User requester = userRepository.findById(requesterId)
+			.orElseThrow(() -> new BusinessException(UserErrorCode.USER_NOT_EXISTS));
+
+		partyNotificationService.sendNewPartyRequestNotification(
+			managerId,
+			requester.getNickname(),
+			party.getTitle(),
+			partyId
+		);
+	}
+
 	@Transactional
 	public void notifyApproval(Long targetUserId, Long partyId) {
-		partyNotificationService.sendApprovalNotification(targetUserId, partyId);
+		Party party = partyRepository.findById(partyId)
+			.orElseThrow(() -> new BusinessException(PartyErrorCode.PARTY_NOT_FOUND));
+		partyNotificationService.sendApprovalNotification(targetUserId, party.getTitle(), partyId);
 	}
 
 	@Transactional
 	public void notifyRejection(Long targetUserId, Long partyId) {
-		partyNotificationService.sendRejectionNotification(targetUserId, partyId);
+		Party party = partyRepository.findById(partyId)
+			.orElseThrow(() -> new BusinessException(PartyErrorCode.PARTY_NOT_FOUND));
+		partyNotificationService.sendRejectionNotification(targetUserId, party.getTitle(), partyId);
 	}
 
+	// 인원 모집 완료
 	@Transactional
 	public void notifyPartyAutoClose(List<Long> memberIds, Long partyId, Long managerId) {
-		partyNotificationService.sendAutoCloseNotification(memberIds, partyId, managerId);
+		Party party = partyRepository.findById(partyId)
+			.orElseThrow(() -> new BusinessException(PartyErrorCode.PARTY_NOT_FOUND));
+
+		partyNotificationService.sendAutoCloseNotification(memberIds, party.getTitle(), partyId, managerId);
+	}
+
+	// 파티 종료
+	@Transactional
+	public void notifyPartyComplete(List<Long> memberIds, Long partyId) {
+		Party party = partyRepository.findById(partyId)
+			.orElseThrow(() -> new BusinessException(PartyErrorCode.PARTY_NOT_FOUND));
+
+		partyNotificationService.sendPartyCompleteNotification(memberIds, party.getTitle(), partyId);
 	}
 
 	@Transactional
@@ -45,16 +88,6 @@ public class NotificationFacade {
 	@Transactional
 	public void notifyDeliveryReminder(List<Long> memberIds, Long partyId, Long managerId) {
 		partyNotificationService.sendDeliveryReminderNotification(memberIds, partyId, managerId);
-	}
-
-	@Transactional
-	public void notifyPartyComplete(List<Long> memberIds, Long partyId) {
-		partyNotificationService.sendPartyCompleteNotification(memberIds, partyId);
-	}
-
-	@Transactional
-	public void notifyNewPartyRequest(Long managerId, Long partyId) {
-		partyNotificationService.sendNewPartyRequestNotification(managerId, partyId);
 	}
 
 	@Transactional
