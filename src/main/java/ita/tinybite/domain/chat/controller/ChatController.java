@@ -37,15 +37,8 @@ public class ChatController {
         Long userId = (Long) accessor.getSessionAttributes().get("userId");
 
         // message entity 생성
-        ChatMessage message = ChatMessage.builder()
-                .messageType(req.messageType())
-                .chatRoomId(req.chatRoomId())
-                .senderId(userId)
-                .senderName(req.nickname())
-                .text(req.text())
-                .imageUrl(req.imageUrl())
-                .systemMessage(req.systemMessage())
-                .build();
+
+        ChatMessage message = ChatMessageReqDto.of(req, userId);
 
         // message 저장
         ChatMessage saved = chatService.saveMessage(message);

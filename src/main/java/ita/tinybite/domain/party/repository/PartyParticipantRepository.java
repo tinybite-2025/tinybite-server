@@ -1,5 +1,6 @@
 package ita.tinybite.domain.party.repository;
 
+import ita.tinybite.domain.chat.entity.ChatRoom;
 import ita.tinybite.domain.party.entity.Party;
 import ita.tinybite.domain.party.entity.PartyParticipant;
 import ita.tinybite.domain.party.enums.ParticipantStatus;
@@ -11,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PartyParticipantRepository extends JpaRepository<PartyParticipant, Long> {
@@ -82,4 +84,12 @@ public interface PartyParticipantRepository extends JpaRepository<PartyParticipa
     int countByPartyIdAndStatusAndUser_UserIdNot(Long partyId, ParticipantStatus participantStatus, Long userId);
 
     List<PartyParticipant> findAllByPartyAndStatus(Party party, ParticipantStatus status);
+
+    boolean existsByParty_IdAndUser_UserIdAndStatus(
+        Long partyId,
+        Long userId,
+        ParticipantStatus status
+    );
+
+    Optional<PartyParticipant> findByOneToOneChatRoom(ChatRoom oneToOneChatRoom);
 }

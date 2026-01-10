@@ -17,6 +17,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +32,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ChatService {
 
+    private final SimpMessagingTemplate simpMessagingTemplate;
     private final ChatMessageRepository chatMessageRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final ChatSubscribeRegistry registry;
@@ -65,7 +68,7 @@ public class ChatService {
         if (chatRoom.getType().equals(ChatRoomType.ONE_TO_ONE)) {
             switch (message.getMessageType()) {
                 case TEXT -> {
-                    messageContent = message.getText();
+                    messageContent = message.getContent();
                     unsubscribers.forEach(unsubscriber ->
                             notificationFacade.notifyOneToOneChat(unsubscriber.getUserId(), chatRoomId, unsubscriber.getNickname(), messageContent)
                     );
@@ -79,7 +82,7 @@ public class ChatService {
         } else { // 그룹일 때
             switch (message.getMessageType()) {
                 case TEXT -> {
-                    messageContent = message.getText();
+                    messageContent = message.getContent();
                     unsubscribers.forEach(unsubscriber ->
                             notificationFacade.notifyGroupChat(unsubscriber.getUserId(), chatRoomId, chatRoom.getParty().getTitle(), message.getSenderName(), messageContent)
                     );
@@ -102,14 +105,28 @@ public class ChatService {
         List<ChatMessageResDto> list = messages
                 .getContent()
                 .stream()
-                .map(chatMessage -> {
-                    return ChatMessageResDto.of(chatMessage, currentUserId);
-                })
+                .map(chatMessage ->
+                    ChatMessageResDto.of(chatMessage, currentUserId)
+                )
                 .toList();
 
         return ChatMessageSliceResDto.builder()
                 .messages(list)
                 .hasNext(messages.hasNext())
                 .build();
+    }
+
+    @Async
+    // ChatMessage 생성 (systemMessage : 파티가 생성되엇씁니다)
+    public void saveSystemMessage(ChatRoom chatRoom) {
+        ChatMessage message = ChatMessage.builder()
+                .chatRoomId(chatRoom.getId())
+                .messageType(MessageType.SYSTEM)
+                .content("파티가 생성되었습니다.")
+                .build();
+
+        chatMessageRepository.save(message);
+
+        simpMessagingTemplate.convertAndSend("/subscribe/chat/room/" + chatRoom.getId(), ChatMessageResDto.of(message));
     }
 }

@@ -612,8 +612,7 @@ public class PartyService {
 
         ChatRoom saved = chatRoomRepository.save(chatRoom);
 
-        // 파티장과 신청자 추가
-        saved.addMember(party.getHost());
+        // 신청자만 추가 (호스트는 chatRoom -> party -> host로 조회하기)
         saved.addMember(applicant);
 
         return saved;
