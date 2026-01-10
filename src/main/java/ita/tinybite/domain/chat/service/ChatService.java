@@ -17,6 +17,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +32,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ChatService {
 
+    private final SimpMessagingTemplate simpMessagingTemplate;
     private final ChatMessageRepository chatMessageRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final ChatSubscribeRegistry registry;
@@ -111,5 +114,19 @@ public class ChatService {
                 .messages(list)
                 .hasNext(messages.hasNext())
                 .build();
+    }
+
+    @Async
+    // ChatMessage 생성 (systemMessage : 파티가 생성되엇씁니다)
+    public void saveSystemMessage(ChatRoom chatRoom) {
+        ChatMessage message = ChatMessage.builder()
+                .chatRoomId(chatRoom.getId())
+                .messageType(MessageType.SYSTEM)
+                .systemMessage("파티가 생성되었습니다.")
+                .build();
+
+        chatMessageRepository.save(message);
+
+        simpMessagingTemplate.convertAndSend("/subscribe/chat/room/" + chatRoom.getId(), ChatMessageResDto.of(message));
     }
 }
