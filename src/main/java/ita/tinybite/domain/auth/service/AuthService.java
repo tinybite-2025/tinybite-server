@@ -7,11 +7,9 @@ import com.google.api.client.json.gson.GsonFactory;
 import ita.tinybite.domain.auth.dto.request.*;
 import ita.tinybite.domain.auth.dto.response.AuthResponse;
 import ita.tinybite.domain.auth.dto.response.LoginAuthResponse;
-import ita.tinybite.domain.auth.dto.response.UserDto;
 import ita.tinybite.domain.auth.entity.JwtTokenProvider;
 import ita.tinybite.domain.auth.entity.RefreshToken;
 import ita.tinybite.domain.auth.kakao.KakaoApiClient;
-import ita.tinybite.domain.auth.kakao.KakaoApiClient.KakaoUserInfo;
 import ita.tinybite.domain.auth.repository.RefreshTokenRepository;
 import ita.tinybite.domain.auth.repository.TermRepository;
 import ita.tinybite.domain.user.constant.LoginType;
@@ -25,7 +23,6 @@ import ita.tinybite.domain.user.repository.UserRepository;
 import ita.tinybite.global.exception.BusinessException;
 import ita.tinybite.global.exception.errorcode.AuthErrorCode;
 import ita.tinybite.global.exception.errorcode.UserErrorCode;
-import ita.tinybite.global.util.NicknameGenerator;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -95,14 +92,14 @@ public class AuthService {
         saveRefreshToken(user.getUserId(), refreshToken);
 
         // 응답 생성
-        UserDto userDto = UserDto.from(user);
+        UserResDto userResDto = UserResDto.of(user);
 
         return AuthResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .tokenType("Bearer")
                 .expiresIn(3600L)
-                .user(userDto)
+                .user(userResDto)
                 .build();
     }
 
@@ -136,7 +133,7 @@ public class AuthService {
                 .refreshToken(refreshToken)
                 .tokenType("Bearer")
                 .expiresIn(3600L)
-                .user(UserDto.from(user))
+                .user(UserResDto.of(user))
                 .build();
     }
 

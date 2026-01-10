@@ -4,7 +4,7 @@ import ita.tinybite.domain.user.entity.User;
 
 public record UserResDto(
         Long userId,
-        String name,
+        String nickname,
         String location,
         String userProfileImage
 ) {
