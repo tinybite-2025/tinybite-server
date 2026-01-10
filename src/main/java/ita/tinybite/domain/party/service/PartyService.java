@@ -36,11 +36,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class PartyService {
-    @Value("${default.image.delivery}")
+    @Value("${default.image.thumbnail.delivery}")
     private String defaultDeliveryImage;
-    @Value("${default.image.grocery}")
+    @Value("${default.image.thumbnail.grocery}")
     private String defaultGroceryImage;
-    @Value("${default.image.household}")
+    @Value("${default.image.thumbnail.household}")
     private String defaultHouseholdImage;
     @Value("${default.image.detail.delivery}")
     private String defaultDeliveryDetailImage;
