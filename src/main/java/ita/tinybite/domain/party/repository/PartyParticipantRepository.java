@@ -82,4 +82,10 @@ public interface PartyParticipantRepository extends JpaRepository<PartyParticipa
     int countByPartyIdAndStatusAndUser_UserIdNot(Long partyId, ParticipantStatus participantStatus, Long userId);
 
     List<PartyParticipant> findAllByPartyAndStatus(Party party, ParticipantStatus status);
+
+    boolean existsByParty_IdAndUser_UserIdAndStatus(
+        Long partyId,
+        Long userId,
+        ParticipantStatus status
+    );
 }
