@@ -47,6 +47,7 @@ public record ChatMessageResDto(
                         .messageId(chatMessage.getId())
                         .senderId(chatMessage.getSenderId())
                         .nickname(chatMessage.getSenderName())
+                        .imageUrl(chatMessage.getImageUrl())
                         .messageType(chatMessage.getMessageType())
                         .createdAt(chatMessage.getCreatedAt())
                         .build();
