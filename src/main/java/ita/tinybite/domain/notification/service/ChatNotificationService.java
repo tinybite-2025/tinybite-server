@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class ChatNotificationService {
+	private static final int MAX_CONTENT_LENGTH = 30;
 
 	private final FcmNotificationSender fcmNotificationSender;
 	private final FcmTokenService fcmTokenService;
@@ -26,7 +27,77 @@ public class ChatNotificationService {
 	private final NotificationLogService notificationLogService;
 	private final NotificationTransactionHelper notificationTransactionHelper;
 
+	// 1:1 채팅 일반 메시지
 	@Transactional
+	public void sendOneToOneChatMessage(Long targetUserId, Long chatRoomId, String senderName, String content) {
+		String title = senderName;
+		String detail = truncateContent(content);
+		send(targetUserId, chatRoomId, title, detail, senderName);
+	}
+
+	// 1:1 채팅 사진 전송
+	@Transactional
+	public void sendOneToOneChatImage(Long targetUserId, Long chatRoomId, String senderName) {
+		String title = senderName;
+		String detail = "📷 사진을 보냈어요";
+		send(targetUserId, chatRoomId, title, detail, senderName);
+	}
+
+	// 단체 채팅 일반 메시지
+	@Transactional
+	public void sendGroupChatMessage(Long targetUserId, Long chatRoomId, String partyTitle, String senderName, String content) {
+		String title = partyTitle;
+		String detail = senderName + ": " + truncateContent(content);
+		send(targetUserId, chatRoomId, title, detail, senderName);
+	}
+
+	// 단체 채팅 사진 전송
+	@Transactional
+	public void sendGroupChatImage(Long targetUserId, Long chatRoomId, String partyTitle, String senderName) {
+		String title = partyTitle;
+		String detail = senderName + ": 📷 사진을 보냈어요";
+		send(targetUserId, chatRoomId, title, detail, senderName);
+	}
+
+	@Transactional
+	public void sendUnreadReminderNotification(Long targetUserId, Long chatRoomId) {
+		String title = "🔔 놓친 메시지가 있어요!";
+		String detail = "안 읽은 메시지가 있어요! 지금 확인해 보세요.";
+		notificationLogService.saveLog(targetUserId, NotificationType.CHAT_UNREAD_REMINDER.name(), title, detail);
+
+		List<String> tokens = fcmTokenService.getTokensAndLogIfEmpty(targetUserId);
+		if (tokens.isEmpty()) {
+			return;
+		}
+
+		NotificationMulticastRequest request =
+			chatMessageManager.createUnreadReminderRequest(tokens, chatRoomId, title, detail);
+
+		BatchResponse response = fcmNotificationSender.send(request);
+		notificationTransactionHelper.handleBatchResponse(response, tokens);
+	}
+
+	/**
+	 * 공통 전송 로직
+	 */
+	private void send(Long targetUserId, Long chatRoomId, String title, String detail, String senderName) {
+		// 알림 로그 저장
+		notificationLogService.saveLog(targetUserId, NotificationType.CHAT_NEW_MESSAGE.name(), title, detail);
+
+		// 토큰 조회
+		List<String> tokens = fcmTokenService.getTokensAndLogIfEmpty(targetUserId);
+		if (tokens.isEmpty()) return;
+
+		// FCM 요청 생성
+		NotificationMulticastRequest request =
+			chatMessageManager.createNewChatMessageRequest(tokens, chatRoomId, title, senderName, detail);
+
+		// 발송 및 후처리
+		BatchResponse response = fcmNotificationSender.send(request);
+		notificationTransactionHelper.handleBatchResponse(response, tokens);
+	}
+
+	/*@Transactional
 	public void sendNewChatMessage(
 		Long targetUserId,
 		Long chatRoomId,
@@ -52,23 +123,14 @@ public class ChatNotificationService {
 
 		BatchResponse response = fcmNotificationSender.send(request);
 		notificationTransactionHelper.handleBatchResponse(response, tokens);
-	}
+	}*/
 
-	@Transactional
-	public void sendUnreadReminderNotification(Long targetUserId, Long chatRoomId) {
-		String title = "🔔 놓친 메시지가 있어요!";
-		String detail = "안 읽은 메시지가 있어요! 지금 확인해 보세요.";
-		notificationLogService.saveLog(targetUserId, NotificationType.CHAT_UNREAD_REMINDER.name(), title, detail);
-
-		List<String> tokens = fcmTokenService.getTokensAndLogIfEmpty(targetUserId);
-		if (tokens.isEmpty()) {
-			return;
+	// 텍스트 30자 제한 헬퍼 메서드
+	private String truncateContent(String content) {
+		if (content == null) return "";
+		if (content.length() > MAX_CONTENT_LENGTH) {
+			return content.substring(0, MAX_CONTENT_LENGTH) + "...";
 		}
-
-		NotificationMulticastRequest request =
-			chatMessageManager.createUnreadReminderRequest(tokens, chatRoomId, title, detail);
-
-		BatchResponse response = fcmNotificationSender.send(request);
-		notificationTransactionHelper.handleBatchResponse(response, tokens);
+		return content;
 	}
 }
