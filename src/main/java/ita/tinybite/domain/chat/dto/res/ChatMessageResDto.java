@@ -23,29 +23,59 @@ public record ChatMessageResDto(
 
         String systemMessage
 ) {
+
+    public static ChatMessageResDto of(ChatMessage message) {
+        return ChatMessageResDto.of(message, null);
+    }
+
     public static ChatMessageResDto of(ChatMessage chatMessage, Long senderId) {
         switch (chatMessage.getMessageType()) {
+            case SYSTEM -> {
+                return ChatMessageResDto.builder()
+                        .messageId(chatMessage.getId())
+                        .systemMessage(chatMessage.getSystemMessage())
+                        .build();
+            }
             case DATE -> {
                 return ChatMessageResDto.builder()
                         .messageId(chatMessage.getId())
+                        .createdAt(chatMessage.getCreatedAt())
+                        .build();
+            }
+            case IMAGE -> {
+                return ChatMessageResDto.builder()
+                        .messageId(chatMessage.getId())
+                        .senderId(chatMessage.getSenderId())
+                        .nickname(chatMessage.getSenderName())
                         .messageType(chatMessage.getMessageType())
                         .createdAt(chatMessage.getCreatedAt())
-                        .systemMessage(chatMessage.getSystemMessage())
+                        .build();
+
+            }
+            case TEXT -> {
+                return ChatMessageResDto.builder()
+                        .messageId(chatMessage.getId())
+                        .senderId(chatMessage.getSenderId())
+                        .nickname(chatMessage.getSenderName())
+                        .messageType(chatMessage.getMessageType())
+                        .text(chatMessage.getText())
+                        .createdAt(chatMessage.getCreatedAt())
                         .build();
             }
             default -> {
-                return ChatMessageResDto.builder()
-                        .messageId(chatMessage.getId())
-                        .messageType(chatMessage.getMessageType())
-                        .createdAt(chatMessage.getCreatedAt())
-                        .senderId(chatMessage.getSenderId())
-                        .isMine(senderId.equals(chatMessage.getSenderId()))
-                        .nickname(chatMessage.getSenderName())
-                        .text(chatMessage.getText())
-                        .imageUrl(chatMessage.getImageUrl())
-                        .systemMessage(chatMessage.getSystemMessage())
-                        .build();
+
             }
         }
+        return ChatMessageResDto.builder()
+                .messageId(chatMessage.getId())
+                .messageType(chatMessage.getMessageType())
+                .createdAt(chatMessage.getCreatedAt())
+                .senderId(chatMessage.getSenderId())
+                .isMine(senderId.equals(chatMessage.getSenderId()))
+                .nickname(chatMessage.getSenderName())
+                .text(chatMessage.getText())
+                .imageUrl(chatMessage.getImageUrl())
+                .systemMessage(chatMessage.getSystemMessage())
+                .build();
     }
 }

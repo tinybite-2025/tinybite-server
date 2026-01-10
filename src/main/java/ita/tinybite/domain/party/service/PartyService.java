@@ -1,8 +1,11 @@
 package ita.tinybite.domain.party.service;
 
+import ita.tinybite.domain.chat.entity.ChatMessage;
 import ita.tinybite.domain.chat.entity.ChatRoom;
 import ita.tinybite.domain.chat.enums.ChatRoomType;
+import ita.tinybite.domain.chat.repository.ChatMessageRepository;
 import ita.tinybite.domain.chat.repository.ChatRoomRepository;
+import ita.tinybite.domain.chat.service.ChatService;
 import ita.tinybite.domain.notification.service.facade.NotificationFacade;
 import ita.tinybite.domain.party.dto.request.PartyCreateRequest;
 import ita.tinybite.domain.party.dto.request.PartyListRequest;
@@ -36,6 +39,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class PartyService {
+    private final ChatMessageRepository chatMessageRepository;
+    private final ChatService chatService;
     @Value("${default.image.thumbnail.delivery}")
     private String defaultDeliveryImage;
     @Value("${default.image.thumbnail.grocery}")
@@ -114,6 +119,10 @@ public class PartyService {
                 .build();
 
         participantRepository.save(participant);
+
+        // 파티가 생성되었다는 메시지를 그룹 채팅방에 저장
+        chatService.saveSystemMessage(chatRoom);
+
         return savedParty.getId();
     }
 
