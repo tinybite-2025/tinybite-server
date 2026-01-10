@@ -55,7 +55,6 @@ public class NotificationFacade {
 		partyNotificationService.sendApprovalNotification(targetUserId, party.getTitle(), partyId);
 	}
 
-	@Transactional
 	public void notifyRejection(Long targetUserId, Long partyId) {
 		Party party = partyRepository.findById(partyId)
 			.orElseThrow(() -> new BusinessException(PartyErrorCode.PARTY_NOT_FOUND));
@@ -95,7 +94,7 @@ public class NotificationFacade {
 		partyNotificationService.sendMemberLeaveNotification(managerId, partyId, leaverName);
 	}
 
-	@Transactional
+	/*
 	public void notifyNewChatMessage(
 		Long targetUserId,
 		Long chatRoomId,
@@ -103,9 +102,29 @@ public class NotificationFacade {
 		String messageContent
 	) {
 		chatNotificationService.sendNewChatMessage(targetUserId, chatRoomId, senderName, messageContent);
+	}*/
+
+	// 1:1 채팅
+	public void notifyOneToOneChat(Long targetUserId, Long chatRoomId, String senderName, String content) {
+		chatNotificationService.sendOneToOneChatMessage(targetUserId, chatRoomId, senderName, content);
 	}
 
-	// 스케줄러/채팅 서비스가 호출하며, 알림 도메인은 전송만 처리
+	// 1:1 사진
+	public void notifyOneToOneImage(Long targetUserId, Long chatRoomId, String senderName) {
+		chatNotificationService.sendOneToOneChatImage(targetUserId, chatRoomId, senderName);
+	}
+
+	// 단체 채팅
+	public void notifyGroupChat(Long targetUserId, Long chatRoomId, String partyTitle, String senderName, String content) {
+		chatNotificationService.sendGroupChatMessage(targetUserId, chatRoomId, partyTitle, senderName, content);
+	}
+
+	// 단체 사진
+	public void notifyGroupImage(Long targetUserId, Long chatRoomId, String partyTitle, String senderName) {
+		chatNotificationService.sendGroupChatImage(targetUserId, chatRoomId, partyTitle, senderName);
+	}
+
+	// 스케줄러/채팅 서비스가 호출하며, 알림 도메인은 전송만 처리(보류)
 	@Transactional
 	public void notifyUnreadReminder(Long targetUserId, Long chatRoomId) {
 		chatNotificationService.sendUnreadReminderNotification(targetUserId, chatRoomId);
