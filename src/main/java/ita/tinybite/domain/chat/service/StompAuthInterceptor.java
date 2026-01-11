@@ -23,22 +23,18 @@ public class StompAuthInterceptor implements ChannelInterceptor {
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
-        log.info("preSend");
         StompHeaderAccessor accessor =
                 MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
-        log.info("accessor : {}", accessor);
 
         if (accessor == null || accessor.getCommand() == null) {
             return message;
         }
 
-        log.info("stomp command : {}", accessor.getCommand());
 
         if (StompCommand.CONNECT.equals(accessor.getCommand())) {
             String authHeader = accessor.getFirstNativeHeader("Authorization");
 
-            log.info("authHeader : {}", authHeader);
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 throw new IllegalArgumentException("Missing or invalid Authorization header");
             }
@@ -46,10 +42,8 @@ public class StompAuthInterceptor implements ChannelInterceptor {
             String token = authHeader.substring(7);
             jwtTokenProvider.validateToken(token);
 
-            log.info("token : {}", token);
             Long userId = jwtTokenProvider.getUserId(token);
 
-            log.info("userId : {}", userId);
             accessor.getSessionAttributes().put("userId", userId);
         }
 

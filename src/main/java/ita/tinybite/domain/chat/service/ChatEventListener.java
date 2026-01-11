@@ -61,7 +61,6 @@ public class ChatEventListener {
     public void onDisconnect(SessionDisconnectEvent event) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
         log.info("[STOMP] DISCONNECT sessionId={}", accessor.getSessionId());
-        log.info("[STOMP] headers={}", accessor.toNativeHeaderMap());
 
         StompHeaderAccessor acc = StompHeaderAccessor.wrap(event.getMessage());
 
@@ -90,7 +89,6 @@ public class ChatEventListener {
     public void onConnect(SessionConnectEvent event) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
         log.info("[STOMP] CONNECT sessionId={}", accessor.getSessionId());
-        log.info("[STOMP] headers={}", accessor.toNativeHeaderMap());
     }
 
     @EventListener

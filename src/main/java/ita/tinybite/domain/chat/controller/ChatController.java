@@ -35,6 +35,8 @@ public class ChatController {
     @MessageMapping("/send")
     public void sendMessage(ChatMessageReqDto req,
                             SimpMessageHeaderAccessor accessor) {
+        log.info("[STOMP] sendMessage={}", req);
+
         Long userId = (Long) accessor.getSessionAttributes().get("userId");
 
         // message entity 생성
