@@ -1,7 +1,6 @@
 package ita.tinybite.global.config;
 
 import ita.tinybite.domain.auth.entity.JwtTokenProvider;
-import ita.tinybite.domain.chat.service.StompAuthInterceptor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
@@ -23,7 +22,6 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-    private final StompAuthInterceptor stompAuthInterceptor;
     private final JwtTokenProvider jwtTokenProvider;
 
     @Override
@@ -35,7 +33,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws-chat")
-                .addInterceptors(stompAuthInterceptor)
                 .setAllowedOriginPatterns("*");
     }
 
