@@ -30,7 +30,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.addEndpoint("/ws-chat")
                 .setAllowedOriginPatterns("*")
                 .setHandshakeHandler(new DefaultHandshakeHandler())
-        ;
+                .withSockJS();
     }
 
     @Override
