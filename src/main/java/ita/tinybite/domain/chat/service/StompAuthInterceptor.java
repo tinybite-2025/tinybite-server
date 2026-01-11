@@ -22,7 +22,6 @@ import java.util.Map;
  * http가 아닌, 웹소켓에서 인증을 위한 인터셉터 (filter는 사용 안됨)
  */
 @Slf4j
-@Component
 @RequiredArgsConstructor
 public class StompAuthInterceptor implements HandshakeInterceptor {
 
