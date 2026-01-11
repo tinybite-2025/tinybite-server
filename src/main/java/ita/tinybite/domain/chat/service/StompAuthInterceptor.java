@@ -29,14 +29,17 @@ public class StompAuthInterceptor implements ChannelInterceptor {
 
         if(StompCommand.CONNECT.equals(accessor.getCommand())) {
             String authHeader = accessor.getFirstNativeHeader("Authorization");
+            log.info("StompAuthInterceptor authHeader: {}", authHeader);
 
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 throw new IllegalArgumentException("Missing or invalid Authorization header");
             }
 
             String token = authHeader.substring(7);
+            log.info("StompAuthInterceptor preSend token: {}", token);
             jwtTokenProvider.validateToken(token);
             Long userId = jwtTokenProvider.getUserId(token);
+            log.info("StompAuthInterceptor preSend userId: {}", userId);
             accessor.getSessionAttributes().put("userId", userId);
         }
         return message;
