@@ -1,16 +1,16 @@
 package ita.tinybite.domain.chat.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
-import org.springframework.web.socket.messaging.SessionDisconnectEvent;
-import org.springframework.web.socket.messaging.SessionSubscribeEvent;
-import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
+import org.springframework.web.socket.messaging.*;
 
 /**
  * subscribe, unsubscribe, disconnect 이벤트 발생 시 registry에 자동으로 값을 변경하는 스프링 빈 클래스
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class ChatEventListener {
@@ -59,6 +59,10 @@ public class ChatEventListener {
 
     @EventListener
     public void onDisconnect(SessionDisconnectEvent event) {
+        StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
+        log.info("[STOMP] DISCONNECT sessionId={}", accessor.getSessionId());
+        log.info("[STOMP] headers={}", accessor.toNativeHeaderMap());
+
         StompHeaderAccessor acc = StompHeaderAccessor.wrap(event.getMessage());
 
         String sessionId = acc.getSessionId();
@@ -80,5 +84,18 @@ public class ChatEventListener {
         } catch (NumberFormatException e) {
             return null;
         }
+    }
+
+    @EventListener
+    public void onConnect(SessionConnectEvent event) {
+        StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
+        log.info("[STOMP] CONNECT sessionId={}", accessor.getSessionId());
+        log.info("[STOMP] headers={}", accessor.toNativeHeaderMap());
+    }
+
+    @EventListener
+    public void onConnected(SessionConnectedEvent event) {
+        StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
+        log.info("[STOMP] CONNECTED sessionId={}", accessor.getSessionId());
     }
 }
