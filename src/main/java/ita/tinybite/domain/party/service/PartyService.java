@@ -395,6 +395,7 @@ public class PartyService {
                         .userId(party.getHost().getUserId())
                         .nickname(party.getHost().getNickname())
                         .profileImage(party.getHost().getProfileImage())
+                        .hostLocation(party.getHost().getLocation())
                         .build())
                 .pickupLocation(party.getPickupLocation())
                 .thumbnailImageDetail(party.getThumbnailImageDetail())

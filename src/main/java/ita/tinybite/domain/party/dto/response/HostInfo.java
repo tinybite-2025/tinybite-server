@@ -10,4 +10,5 @@ public class HostInfo {
     private Long userId;
     private String nickname;
     private String profileImage;
+    private String hostLocation;
 }
