@@ -45,8 +45,10 @@ public class ChatRoomService {
                     // chatRoom으로 가장 최신의 메시지 조회
                     ChatMessage recentMessage = chatMessageRepository.findByChatRoomIdOrderByCreatedAtDesc(chatRoom.getId(), Limit.of(1));
 
-                    // 최신 메시지로부터 시간 계산
-                    String timeAgo = getTimeAgo(recentMessage.getCreatedAt());
+                    // 최신 메시지로부터 시간 계산 (최신 메시지가 없는 경우 "")
+                    String timeAgo = (recentMessage != null && recentMessage.getCreatedAt() != null)
+                            ? getTimeAgo(recentMessage.getCreatedAt())
+                            : "";
 
                     // chatRoom을 통해 상태 조회
                     PartyParticipant partyParticipant = partyParticipantRepository.findByOneToOneChatRoom(chatRoom).orElseThrow();

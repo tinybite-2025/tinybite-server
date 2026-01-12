@@ -122,7 +122,7 @@ public class PartyService {
         participantRepository.save(participant);
 
         // 파티가 생성되었다는 메시지를 그룹 채팅방에 저장
-        chatService.saveSystemMessage(chatRoom);
+        chatService.saveSystemMessage(chatRoom, "파티가 생성되었습니다.");
 
         return savedParty.getId();
     }
@@ -716,6 +716,8 @@ public class PartyService {
 
         // 신청자만 추가 (호스트는 chatRoom -> party -> host로 조회하기)
         saved.addMember(applicant);
+
+        chatService.saveSystemMessage(chatRoom, "일대일 채팅이 생성되었습니다.");
 
         return saved;
     }

@@ -125,11 +125,11 @@ public class ChatService {
 
     @Async
     // ChatMessage 생성 (systemMessage : 파티가 생성되엇씁니다)
-    public void saveSystemMessage(ChatRoom chatRoom) {
+    public void saveSystemMessage(ChatRoom chatRoom, String messageContent) {
         ChatMessage message = ChatMessage.builder()
                 .chatRoomId(chatRoom.getId())
                 .messageType(MessageType.SYSTEM)
-                .content("파티가 생성되었습니다.")
+                .content(messageContent)
                 .build();
 
         chatMessageRepository.save(message);
