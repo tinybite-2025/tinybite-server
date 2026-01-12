@@ -47,4 +47,8 @@ public class ChatRoomMember {
         this.isActive = false;
         this.leftAt = LocalDateTime.now();
     }
+
+    public void updateLastReadAt() {
+        this.lastReadAt = LocalDateTime.now();
+    }
 }

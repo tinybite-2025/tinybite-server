@@ -1,5 +1,6 @@
 package ita.tinybite.domain.auth.dto.response;
 
+import ita.tinybite.domain.user.dto.res.UserResDto;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -10,6 +11,6 @@ public class AuthResponse {
     private String refreshToken;
     private String tokenType;
     private Long expiresIn;
-    private UserDto user;
+    private UserResDto user;
 }
 

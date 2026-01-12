@@ -9,6 +9,7 @@ import ita.tinybite.domain.chat.entity.ChatRoomMember;
 import ita.tinybite.domain.chat.enums.ChatRoomType;
 import ita.tinybite.domain.chat.enums.MessageType;
 import ita.tinybite.domain.chat.repository.ChatMessageRepository;
+import ita.tinybite.domain.chat.repository.ChatRoomMemberRepository;
 import ita.tinybite.domain.chat.repository.ChatRoomRepository;
 import ita.tinybite.domain.notification.service.facade.NotificationFacade;
 import ita.tinybite.domain.user.entity.User;
@@ -38,6 +39,7 @@ public class ChatService {
     private final ChatSubscribeRegistry registry;
     private final NotificationFacade notificationFacade;
     private final SecurityProvider securityProvider;
+    private final ChatRoomMemberRepository chatRoomMemberRepository;
 
     public ChatMessage saveMessage(ChatMessage message) {
         return chatMessageRepository.save(message);
@@ -97,16 +99,21 @@ public class ChatService {
     }
 
     public ChatMessageSliceResDto getChatMessage(Long roomId, int page, int size) {
-        Long currentUserId = securityProvider.getCurrentUser().getUserId();
+        User user = securityProvider.getCurrentUser();
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Slice<ChatMessage> messages = chatMessageRepository.findByChatRoomId(roomId, pageable);
+
+        ChatRoom chatRoom = chatRoomRepository.findById(roomId).orElseThrow();
+        ChatRoomMember chatRoomMember = chatRoomMemberRepository.findByChatRoomAndUser(chatRoom, user).orElseThrow();
+
+        chatRoomMember.updateLastReadAt();
 
         List<ChatMessageResDto> list = messages
                 .getContent()
                 .stream()
                 .map(chatMessage ->
-                    ChatMessageResDto.of(chatMessage, currentUserId)
+                    ChatMessageResDto.of(chatMessage, user.getUserId())
                 )
                 .toList();
 
@@ -118,11 +125,11 @@ public class ChatService {
 
     @Async
     // ChatMessage 생성 (systemMessage : 파티가 생성되엇씁니다)
-    public void saveSystemMessage(ChatRoom chatRoom) {
+    public void saveSystemMessage(ChatRoom chatRoom, String messageContent) {
         ChatMessage message = ChatMessage.builder()
                 .chatRoomId(chatRoom.getId())
                 .messageType(MessageType.SYSTEM)
-                .content("파티가 생성되었습니다.")
+                .content(messageContent)
                 .build();
 
         chatMessageRepository.save(message);

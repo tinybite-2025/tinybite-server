@@ -7,6 +7,7 @@ import ita.tinybite.domain.chat.entity.ChatMessage;
 import ita.tinybite.domain.chat.service.ChatService;
 import ita.tinybite.global.response.APIResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import static ita.tinybite.global.response.APIResponse.*;
 
 
+@Slf4j
 @Controller
 @RequiredArgsConstructor
 public class ChatController {
@@ -33,6 +35,8 @@ public class ChatController {
     @MessageMapping("/send")
     public void sendMessage(ChatMessageReqDto req,
                             SimpMessageHeaderAccessor accessor) {
+        log.info("[STOMP] sendMessage={}", req);
+
         Long userId = (Long) accessor.getSessionAttributes().get("userId");
 
         // message entity 생성

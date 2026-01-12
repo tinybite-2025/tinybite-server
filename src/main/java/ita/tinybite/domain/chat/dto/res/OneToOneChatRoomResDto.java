@@ -14,6 +14,7 @@ public record OneToOneChatRoomResDto(
     String myProfileImage,
     Long targetId,
     String targetProfileImage,
+    String targetName,
     String recentTime,
     String partyTitle,
     ParticipantStatus status,
@@ -29,6 +30,7 @@ public record OneToOneChatRoomResDto(
                 .myProfileImage(myUser.getProfileImage())
                 .targetId(targetUser.getUserId())
                 .targetProfileImage(targetUser.getProfileImage())
+                .targetName(targetUser.getNickname())
                 .recentTime(timeAgo)
                 .partyTitle(chatRoom.getParty().getTitle())
                 .status(status)

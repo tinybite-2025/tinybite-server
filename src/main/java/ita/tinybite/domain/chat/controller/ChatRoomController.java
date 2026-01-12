@@ -1,5 +1,6 @@
 package ita.tinybite.domain.chat.controller;
 
+import ita.tinybite.domain.chat.dto.res.GroupChatRoomResDto;
 import ita.tinybite.domain.chat.dto.res.OneToOneChatRoomResDto;
 import ita.tinybite.domain.chat.service.ChatRoomService;
 import ita.tinybite.global.response.APIResponse;
@@ -10,6 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+import static ita.tinybite.global.response.APIResponse.success;
+
 @RestController
 @RequestMapping("/api/v1/chatroom")
 @RequiredArgsConstructor
@@ -19,6 +22,11 @@ public class ChatRoomController {
 
     @GetMapping("/one-to-one")
     public APIResponse<List<OneToOneChatRoomResDto>> getOneToOneChatRooms() {
-        return APIResponse.success(chatRoomService.getOneToOneRooms());
+        return success(chatRoomService.getOneToOneRooms());
+    }
+
+    @GetMapping("/group")
+    public APIResponse<List<GroupChatRoomResDto>> getGroupChatRooms() {
+        return success(chatRoomService.getGroupRooms());
     }
 }
