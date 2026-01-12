@@ -60,8 +60,9 @@ public class ChatRoomService {
                     // 마지막으로 읽은 시점을 기점으로 몇 개의 메시지가 안 읽혔는지 확인
                     long unreadCnt = chatMessageRepository.countByChatRoomIdAndCreatedAtAfterAndSenderIdNot(chatRoom.getId(), chatRoomMember.getLastReadAt(), user.getUserId());
 
+                    String content = recentMessage != null ? recentMessage.getContent() : "";
                     // dto로 합침
-                    return OneToOneChatRoomResDto.of(chatRoom, user, chatRoom.getParticipants().get(0).getUser(), recentMessage.getContent(), timeAgo, status, unreadCnt);
+                    return OneToOneChatRoomResDto.of(chatRoom, user, chatRoom.getParticipants().get(0).getUser(), content, timeAgo, status, unreadCnt);
                 })
                 .toList();
     }

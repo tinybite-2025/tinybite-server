@@ -15,6 +15,11 @@ spring:
       dev: 'dev'
       test: 'test'
 
+  data:
+    redis:
+      repositories:
+        enabled: false
+
 jwt:
   secret: ${JWT_SECRET}
   access-token-validity: ${JWT_ACCESS_TOKEN_VALIDITY}
