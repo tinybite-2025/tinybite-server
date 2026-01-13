@@ -40,12 +40,12 @@ public record OneToOneChatRoomDetailResDto(
 
         switch(participantStatus) {
             case PENDING -> {
-                if(type.equals(ParticipantType.PARTICIPANT)) {
+                if(type.equals(ParticipantType.HOST)) { // type = HOST
                     resDtoBuilder
                             .participantStatus(ParticipantStatus.REQUESTED)
                             .targetProfileImage(targetUser.getProfileImage())
                             .targetLocation(targetUser.getLocation());
-                } else { // type = HOST
+                } else { // type = PARTICIPANT
                     resDtoBuilder
                             .participantStatus(ParticipantStatus.PENDING);
                 }
