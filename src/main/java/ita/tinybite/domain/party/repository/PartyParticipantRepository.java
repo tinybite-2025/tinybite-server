@@ -91,8 +91,10 @@ public interface PartyParticipantRepository extends JpaRepository<PartyParticipa
         ParticipantStatus status
     );
   
-    @Query("SELECT pp FROM PartyParticipant pp WHERE pp.party.id = :partyId AND pp.user.id = :userId")
+    @Query("SELECT pp FROM PartyParticipant pp WHERE pp.party.id = :partyId AND pp.user.userId = :userId")
     Optional<PartyParticipant> findByPartyIdAndUserId(@Param("partyId") Long partyId, @Param("userId") Long userId);
 
     Optional<PartyParticipant> findByOneToOneChatRoom(ChatRoom oneToOneChatRoom);
+
+    PartyParticipant findByOneToOneChatRoomAndStatus(ChatRoom oneToOneChatRoom, ParticipantStatus status);
 }

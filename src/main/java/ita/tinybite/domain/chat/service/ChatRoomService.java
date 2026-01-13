@@ -17,6 +17,8 @@ import ita.tinybite.domain.party.entity.PartyParticipant;
 import ita.tinybite.domain.party.enums.ParticipantStatus;
 import ita.tinybite.domain.party.repository.PartyParticipantRepository;
 import ita.tinybite.domain.user.entity.User;
+import ita.tinybite.global.exception.BusinessException;
+import ita.tinybite.global.exception.errorcode.ChatRoomErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Service;
@@ -101,21 +103,21 @@ public class ChatRoomService {
     public OneToOneChatRoomDetailResDto getOneToOneRoom(Long chatRoomId) {
         User currentUser = securityProvider.getCurrentUser();
         ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow();
-        PartyParticipant partyParticipant = partyParticipantRepository.findByOneToOneChatRoom(chatRoom).orElseThrow();
+
+        if(!chatRoom.getType().equals(ChatRoomType.ONE_TO_ONE)) throw BusinessException.of(ChatRoomErrorCode.NOT_ONE_TO_ONE);
+
+        PartyParticipant partyParticipant = partyParticipantRepository.findByOneToOneChatRoomAndStatus(chatRoom, ParticipantStatus.PENDING);
 
         ChatRoom groupChatRoom = chatRoomRepository.findByPartyAndType(chatRoom.getParty(), ChatRoomType.GROUP).orElseGet(null);
-
-        User host = chatRoom.getParty().getHost();
-        host.getNickname();
-
-        User targetUser = partyParticipant.getUser();
-        targetUser.getNickname();
-
         return OneToOneChatRoomDetailResDto.of(chatRoom.getParty(), partyParticipant, currentUser, groupChatRoom);
     }
 
     public GroupChatRoomDetailResDto getGroupRoom(Long chatRoomId) {
-        return null;
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow();
+
+        if(!chatRoom.getType().equals(ChatRoomType.GROUP)) throw BusinessException.of(ChatRoomErrorCode.NOT_GROUP);
+
+        return GroupChatRoomDetailResDto.of(chatRoom);
     }
 
     private static String getTimeAgo(LocalDateTime then) {
