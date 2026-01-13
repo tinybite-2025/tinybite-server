@@ -1,7 +1,9 @@
 package ita.tinybite.domain.chat.service;
 
 import ita.tinybite.domain.auth.service.SecurityProvider;
+import ita.tinybite.domain.chat.dto.GroupChatRoomDetailResDto;
 import ita.tinybite.domain.chat.dto.res.GroupChatRoomResDto;
+import ita.tinybite.domain.chat.dto.res.OneToOneChatRoomDetailResDto;
 import ita.tinybite.domain.chat.dto.res.OneToOneChatRoomResDto;
 import ita.tinybite.domain.chat.entity.ChatMessage;
 import ita.tinybite.domain.chat.entity.ChatRoom;
@@ -9,6 +11,8 @@ import ita.tinybite.domain.chat.entity.ChatRoomMember;
 import ita.tinybite.domain.chat.enums.ChatRoomType;
 import ita.tinybite.domain.chat.repository.ChatMessageRepository;
 import ita.tinybite.domain.chat.repository.ChatRoomMemberRepository;
+import ita.tinybite.domain.chat.repository.ChatRoomRepository;
+import ita.tinybite.domain.party.entity.Party;
 import ita.tinybite.domain.party.entity.PartyParticipant;
 import ita.tinybite.domain.party.enums.ParticipantStatus;
 import ita.tinybite.domain.party.repository.PartyParticipantRepository;
@@ -30,6 +34,7 @@ public class ChatRoomService {
     private final ChatRoomMemberRepository chatRoomMemberRepository;
     private final SecurityProvider securityProvider;
     private final PartyParticipantRepository partyParticipantRepository;
+    private final ChatRoomRepository chatRoomRepository;
 
 
     public List<OneToOneChatRoomResDto> getOneToOneRooms() {
@@ -93,7 +98,25 @@ public class ChatRoomService {
                 .toList();
     }
 
+    public OneToOneChatRoomDetailResDto getOneToOneRoom(Long chatRoomId) {
+        User currentUser = securityProvider.getCurrentUser();
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow();
+        PartyParticipant partyParticipant = partyParticipantRepository.findByOneToOneChatRoom(chatRoom).orElseThrow();
 
+        ChatRoom groupChatRoom = chatRoomRepository.findByPartyAndType(chatRoom.getParty(), ChatRoomType.GROUP).orElseGet(null);
+
+        User host = chatRoom.getParty().getHost();
+        host.getNickname();
+
+        User targetUser = partyParticipant.getUser();
+        targetUser.getNickname();
+
+        return OneToOneChatRoomDetailResDto.of(chatRoom.getParty(), partyParticipant, currentUser, groupChatRoom);
+    }
+
+    public GroupChatRoomDetailResDto getGroupRoom(Long chatRoomId) {
+        return null;
+    }
 
     private static String getTimeAgo(LocalDateTime then) {
         LocalDateTime now = LocalDateTime.now();
