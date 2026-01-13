@@ -194,4 +194,10 @@ public class Party {
             throw new IllegalStateException("취소된 파티는 종료할 수 없습니다.");
         }
     }
+
+    // 여기서 pickupLocation는 클라이언트가 입력한 픽업 장소 / location은 좌표값으로 반환한 법정동
+    public void updatePartyLocation(PickupLocation pickupLocation, String location) {
+        this.pickupLocation = pickupLocation;
+        this.town = location;
+    }
 }

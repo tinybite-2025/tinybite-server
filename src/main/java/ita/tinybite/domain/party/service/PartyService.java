@@ -454,6 +454,9 @@ public class PartyService {
                     request.getDescription(),
                     request.getImages()
             );
+
+            String location = locationService.getLocation(request.getPickupLocation().getPickupLatitude().toString(), request.getPickupLocation().getPickupLongitude().toString());
+            party.updatePartyLocation(request.getPickupLocation(), location);
         }
     }
     private PickupLocation getPickUpLocationIfExists(PartyUpdateRequest request, Party currentParty) {
@@ -817,9 +820,11 @@ public class PartyService {
         PartyCategory category = request.getCategory();
 
         if (category == PartyCategory.ALL) {
-            return partyRepository.findByTown(location);
+            return partyRepository.findByPickupLocation_Place(location);
+//            return partyRepository.findByTown(location);
         } else {
-            return partyRepository.findByTownAndCategory(location, category);
+            return partyRepository.findByPickupLocation_PlaceAndCategory(location, category);
+//            return partyRepository.findByTownAndCategory(location, category);
         }
     }
 
