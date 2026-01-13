@@ -52,6 +52,9 @@ public class Party {
     @Column(length = 500)
     private String link; // 링크 (예: 배달앱 링크)
 
+    @Column(length = 30)
+    private String town;
+
     @Embedded
     @Column
     private PickupLocation pickupLocation;
