@@ -380,25 +380,22 @@ public class PartyController {
             ) {
         Double lat = null;
         Double lon = null;
-        // 거리순 정렬 시 위치 정보 검증
-        if (sortType == PartySortType.DISTANCE) {
-            if (userLat == null || userLon == null) {
-                throw new IllegalArgumentException("거리순 정렬을 위해서는 현재 위치 정보가 필요합니다.");
-            }
+        if (userLat == null || userLon == null) {
+            throw new IllegalArgumentException("거리순 정렬을 위해서는 현재 위치 정보가 필요합니다.");
+        }
 
-            try {
-                lat = Double.parseDouble(userLat);
-                lon = Double.parseDouble(userLon);
-            } catch (NumberFormatException e) {
-                throw new IllegalArgumentException(
-                        String.format("위치 정보 형식이 올바르지 않습니다. userLat: %s, userLon: %s", userLat, userLon)
-                );
-            }
+        try {
+            lat = Double.parseDouble(userLat);
+            lon = Double.parseDouble(userLon);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(
+                    String.format("위치 정보 형식이 올바르지 않습니다. userLat: %s, userLon: %s", userLat, userLon)
+            );
+        }
 
-            // 위도/경도 범위 검증
-            if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
-                throw new IllegalArgumentException("위도/경도 값이 유효한 범위를 벗어났습니다.");
-            }
+        // 위도/경도 범위 검증
+        if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+            throw new IllegalArgumentException("위도/경도 값이 유효한 범위를 벗어났습니다.");
         }
 
         PartyListRequest request = PartyListRequest.builder()

@@ -16,6 +16,7 @@ public class PartyDetailResponse {
     private String title;
     private PartyCategory category;
     private String timeAgo;
+    private String town;
 
     // 파티장 정보
     private HostInfo host;
