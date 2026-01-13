@@ -101,21 +101,16 @@ public class ChatRoomService {
     public OneToOneChatRoomDetailResDto getOneToOneRoom(Long chatRoomId) {
         User currentUser = securityProvider.getCurrentUser();
         ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow();
-        PartyParticipant partyParticipant = partyParticipantRepository.findByOneToOneChatRoom(chatRoom).orElseThrow();
+
+        PartyParticipant partyParticipant = partyParticipantRepository.findByOneToOneChatRoomAndStatus(chatRoom, ParticipantStatus.PENDING);
 
         ChatRoom groupChatRoom = chatRoomRepository.findByPartyAndType(chatRoom.getParty(), ChatRoomType.GROUP).orElseGet(null);
-
-        User host = chatRoom.getParty().getHost();
-        host.getNickname();
-
-        User targetUser = partyParticipant.getUser();
-        targetUser.getNickname();
-
         return OneToOneChatRoomDetailResDto.of(chatRoom.getParty(), partyParticipant, currentUser, groupChatRoom);
     }
 
     public GroupChatRoomDetailResDto getGroupRoom(Long chatRoomId) {
-        return null;
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow();
+        return GroupChatRoomDetailResDto.of(chatRoom);
     }
 
     private static String getTimeAgo(LocalDateTime then) {
