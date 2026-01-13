@@ -20,9 +20,11 @@ import ita.tinybite.domain.user.entity.Term;
 import ita.tinybite.domain.user.entity.User;
 import ita.tinybite.domain.user.entity.UserTermAgreement;
 import ita.tinybite.domain.user.repository.UserRepository;
+import ita.tinybite.domain.user.service.UserService;
 import ita.tinybite.global.exception.BusinessException;
 import ita.tinybite.global.exception.errorcode.AuthErrorCode;
 import ita.tinybite.global.exception.errorcode.UserErrorCode;
+import ita.tinybite.global.location.LocationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,6 +53,7 @@ public class AuthService {
     private final KakaoApiClient kakaoApiClient;
     private final JwtTokenProvider jwtTokenProvider;
     private final JwtDecoder appleJwtDecoder;
+    private final UserService userService;
 
     @Value("${apple.client-id}")
     private String appleClientId;
@@ -171,6 +174,9 @@ public class AuthService {
 
         user.addTerms(agreements);
         userRepository.save(user);
+
+        userService.updateAsyncLocation(user.getUserId(), req.location().longitude().toString(), req.location().latitude().toString());
+
         return getAuthResponse(user);
     }
 
