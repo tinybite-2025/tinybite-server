@@ -175,7 +175,7 @@ public class AuthService {
         user.addTerms(agreements);
         userRepository.save(user);
 
-        userService.updateAsyncLocation(user.getUserId(), req.longitude(), req.latitude());
+        userService.updateAsyncLocation(user.getUserId(), req.location().longitude().toString(), req.location().latitude().toString());
 
         return getAuthResponse(user);
     }

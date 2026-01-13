@@ -233,7 +233,7 @@ public class UserService {
     @Transactional
     public void updateAsyncLocation(Long userId, String longitude, String latitude) {
         User user = userRepository.findById(userId).orElseThrow(() -> BusinessException.of(UserErrorCode.USER_NOT_EXISTS));
-        String location = locationService.getLocation(longitude, latitude);
+        String location = locationService.getLocation(latitude, longitude);
         user.updateLocation(location);
         userRepository.save(user);
     }
