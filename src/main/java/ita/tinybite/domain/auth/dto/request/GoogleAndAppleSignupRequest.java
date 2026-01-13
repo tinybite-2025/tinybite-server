@@ -14,8 +14,10 @@ public record GoogleAndAppleSignupRequest(
         String phone,
         @NotBlank(message = "닉네임은 필수입니다")
         String nickname,
-        @NotBlank(message = "위치 정보 필수입니다")
-        String location,
+        // 위도
+        String longitude,
+        // 경도
+        String latitude,
         @NotNull(message = "플랫폼정보는 필수입니다")
         PlatformType platform,
         @NotEmpty

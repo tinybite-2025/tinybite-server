@@ -73,7 +73,6 @@ public class User extends BaseEntity {
         this.email = (email);
         this.nickname = (req.nickname());
         this.phone = (req.phone());
-        this.location = (req.location());
         this.status = UserStatus.ACTIVE;
         this.type = loginType;
     }

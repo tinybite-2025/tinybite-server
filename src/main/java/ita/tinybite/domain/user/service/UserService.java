@@ -19,8 +19,10 @@ import ita.tinybite.domain.user.repository.WithDrawUserRepository;
 import ita.tinybite.global.exception.ActivePartyExistsException;
 import ita.tinybite.global.exception.BusinessException;
 import ita.tinybite.global.exception.errorcode.AuthErrorCode;
+import ita.tinybite.global.exception.errorcode.UserErrorCode;
 import ita.tinybite.global.location.LocationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -225,5 +227,14 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다"));
 
         user.deleteProfileImage();
+    }
+
+    @Async
+    @Transactional
+    public void updateAsyncLocation(Long userId, String longitude, String latitude) {
+        User user = userRepository.findById(userId).orElseThrow(() -> BusinessException.of(UserErrorCode.USER_NOT_EXISTS));
+        String location = locationService.getLocation(latitude, longitude);
+        user.updateLocation(location);
+        userRepository.save(user);
     }
 }
