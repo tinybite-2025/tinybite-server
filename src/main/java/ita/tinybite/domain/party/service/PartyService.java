@@ -143,10 +143,10 @@ public class PartyService {
         int page = request.getPage() != null ? request.getPage() : 0;
         int size = request.getSize() != null ? request.getSize() : 20;
 
-        String myTown = getMyTown(request.getUserLat(),request.getUserLon());
+//        String myTown = getMyTown(request.getUserLat(),request.getUserLon());
 
         // 동네 기준으로 파티 조회
-        List<Party> parties = fetchPartiesByTown(user, request, myTown);
+        List<Party> parties = fetchPartiesByTown(user, request);
 
         // PartyCardResponse로 변환
         List<PartyCardResponse> cardResponses = parties.stream()
@@ -808,7 +808,7 @@ public class PartyService {
     }
 
     //카테고리에 따라 파티 조회
-    private List<Party> fetchPartiesByTown(User user, PartyListRequest request,String myTown) {
+    private List<Party> fetchPartiesByTown(User user, PartyListRequest request) {
         if (user == null || user.getLocation() == null) {
             return List.of();
         }
