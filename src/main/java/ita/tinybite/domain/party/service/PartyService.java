@@ -70,6 +70,8 @@ public class PartyService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다"));
 
+        String myTown = getMyTown(request.getPickupLocation().getPickupLatitude(), request.getPickupLocation().getPickupLongitude());
+
         // 카테고리별 유효성 검증
         validateProductLink(request.getCategory(), request.getProductLink());
 
@@ -78,6 +80,7 @@ public class PartyService {
                 .category(request.getCategory())
                 .price(request.getTotalPrice())
                 .maxParticipants(request.getMaxParticipants())
+                .town(myTown)
                 .pickupLocation(PickupLocation.builder()
                         .place(request.getPickupLocation().getPlace())
                         .pickupLatitude(request.getPickupLocation().getPickupLatitude())
@@ -140,13 +143,17 @@ public class PartyService {
         int page = request.getPage() != null ? request.getPage() : 0;
         int size = request.getSize() != null ? request.getSize() : 20;
 
+        String myTown = getMyTown(request.getUserLat(),request.getUserLon());
+
         // 동네 기준으로 파티 조회
-        List<Party> parties = fetchPartiesByLocation(user, request);
+        List<Party> parties = fetchPartiesByTown(user, request, myTown);
 
         // PartyCardResponse로 변환
         List<PartyCardResponse> cardResponses = parties.stream()
                 .map(party -> {
-                    if (request.getSortType() == PartySortType.DISTANCE) {
+                    // 위치 정보가 있으면 항상 거리 계산
+                    if (request.getUserLat() != null && request.getUserLon() != null
+                            && party.getPickupLocation() != null) {
                         double distance = DistanceCalculator.calculateDistance(
                                 request.getUserLat(),
                                 request.getUserLon(),
@@ -155,21 +162,22 @@ public class PartyService {
                         );
                         return convertToCardResponseWithDistance(party, distance);
                     }
-                    return convertToCardResponse(party,party.getCreatedAt());
+                    return convertToCardResponse(party, party.getCreatedAt());
                 })
                 .toList();
+
 
         // 진행 중 파티 정렬
         List<PartyCardResponse> activeParties = cardResponses.stream()
                 .filter(p -> !p.getIsClosed())
                 .sorted(getComparator(request.getSortType()))
-                .collect(Collectors.toList());
+                .toList();
 
         // 마감된 파티 정렬
         List<PartyCardResponse> closedParties = cardResponses.stream()
                 .filter(PartyCardResponse::getIsClosed)
                 .sorted(getComparator(request.getSortType()))
-                .collect(Collectors.toList());
+                .toList();
 
         // 진행 중 + 마감된 파티 합치기 (진행 중이 먼저)
         List<PartyCardResponse> allParties = new ArrayList<>();
@@ -380,17 +388,12 @@ public class PartyService {
         int currentCount = party.getCurrentParticipants();
         int pricePerPerson = party.getPrice() / party.getMaxParticipants();
 
-        // 이미지 파싱
-//        List<String> images = new ArrayList<>();
-//        if (party.getImages() != null && !party.getImages().isEmpty()) {
-//            images = List.of(party.getImages());
-//        }
-
         return PartyDetailResponse.builder()
                 .partyId(party.getId())
                 .title(party.getTitle())
                 .category(party.getCategory())
                 .timeAgo(party.getTimeAgo())
+                .town(party.getTown())
                 .host(HostInfo.builder()
                         .userId(party.getHost().getUserId())
                         .nickname(party.getHost().getNickname())
@@ -805,7 +808,7 @@ public class PartyService {
     }
 
     //카테고리에 따라 파티 조회
-    private List<Party> fetchPartiesByLocation(User user, PartyListRequest request) {
+    private List<Party> fetchPartiesByTown(User user, PartyListRequest request,String myTown) {
         if (user == null || user.getLocation() == null) {
             return List.of();
         }
@@ -814,9 +817,9 @@ public class PartyService {
         PartyCategory category = request.getCategory();
 
         if (category == PartyCategory.ALL) {
-            return partyRepository.findByPickupLocation_Place(location);
+            return partyRepository.findByTown(location);
         } else {
-            return partyRepository.findByPickupLocation_PlaceAndCategory(location, category);
+            return partyRepository.findByTownAndCategory(location, category);
         }
     }
 
@@ -838,6 +841,10 @@ public class PartyService {
         PartyCardResponse response = convertToCardResponse(party, party.getCreatedAt());
         response.addDistanceKm(distance);
         return response;
+    }
+
+    private String getMyTown(Double pickupLatitude, Double pickupLongitude) {
+        return locationService.getLocation(Double.toString(pickupLatitude), Double.toString(pickupLongitude));
     }
 }
 
