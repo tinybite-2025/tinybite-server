@@ -194,7 +194,7 @@ public class PartyController {
                 content = @Content
         )
     })
-    @PostMapping("{partyId}/participants/{participantId}/approve")
+    @PostMapping("/{partyId}/participants/{participantId}/approve")
     public ResponseEntity<Void> approveParticipant(
             @PathVariable Long partyId,
             @PathVariable Long participantId,
@@ -262,7 +262,7 @@ public class PartyController {
                 content = @Content
         )
     })
-    @GetMapping("{partyId}/chat/group")
+    @GetMapping("/{partyId}/chat/group")
     public ResponseEntity<ChatRoomResponse> getGroupChatRoom(
             @PathVariable Long partyId,
             @Parameter(hidden = true) @AuthenticationPrincipal Long userId) {
@@ -285,7 +285,7 @@ public class PartyController {
                 content = @Content
         )
     })
-    @GetMapping("{partyId}/can-settle")
+    @GetMapping("/{partyId}/can-settle")
     public ResponseEntity<Boolean> canSettle(@PathVariable Long partyId) {
         boolean canSettle = partyService.canSettle(partyId);
         return ResponseEntity.ok(canSettle);
@@ -319,7 +319,7 @@ public class PartyController {
                 content = @Content
         )
    })
-    @PostMapping("{partyId}/settle")
+    @PostMapping("/{partyId}/settle")
     public ResponseEntity<Void> settleParty(
             @PathVariable Long partyId,
             @Parameter(hidden = true) @AuthenticationPrincipal Long userId) {
@@ -352,7 +352,7 @@ public class PartyController {
                 content = @Content
         )
     })
-    @GetMapping("{partyId}/participants/pending")
+    @GetMapping("/{partyId}/participants/pending")
     public ResponseEntity<List<PartyParticipant>> getPendingParticipants(
             @PathVariable Long partyId,
             @Parameter(hidden = true) @AuthenticationPrincipal Long userId) {
