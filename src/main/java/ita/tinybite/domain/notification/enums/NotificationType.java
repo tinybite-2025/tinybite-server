@@ -27,6 +27,9 @@ public enum NotificationType {
 	// 파티 참여 리마인드
 	PENDING_APPROVAL_REMINDER,
 
+	// 테스트 알림
+	TEST_EVENT,
+
 	// 마케팅 알림
 	MARKETING_LOCAL_NEW_PARTY,
 	MARKETING_WEEKLY_POPULAR,
