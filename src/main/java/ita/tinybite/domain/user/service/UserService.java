@@ -21,6 +21,7 @@ import ita.tinybite.global.exception.BusinessException;
 import ita.tinybite.global.exception.errorcode.AuthErrorCode;
 import ita.tinybite.global.exception.errorcode.UserErrorCode;
 import ita.tinybite.global.location.LocationService;
+import ita.tinybite.global.util.DistanceCalculator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -177,7 +178,7 @@ public class UserService {
                 .build();
     }
 
-    public List<PartyCardResponse> getHostingParties(Long userId) {
+    public List<PartyCardResponse> getHostingParties(Long userId, Double latitude, Double longitude) {
         List<Party> parties = partyRepository.findByHostUserIdAndStatus(
                 userId,
                 PartyStatus.RECRUITING
@@ -188,12 +189,14 @@ public class UserService {
                 .map(party -> {
                     int currentParticipants = participantRepository
                             .countByPartyIdAndStatus(party.getId(), ParticipantStatus.APPROVED);
-                    return PartyCardResponse.from(party, currentParticipants);
+                    PartyCardResponse response = PartyCardResponse.from(party, currentParticipants);
+                    addDistanceIfPossible(response, party, latitude, longitude);
+                    return response;
                 })
                 .collect(Collectors.toList());
     }
 
-    public List<PartyCardResponse> getParticipatingParties(Long userId) {
+    public List<PartyCardResponse> getParticipatingParties(Long userId, Double latitude, Double longitude) {
         List<PartyParticipant> participants = participantRepository
                 .findActivePartiesByUserIdExcludingHost(
                         userId,
@@ -208,9 +211,23 @@ public class UserService {
                     Party party = pp.getParty();
                     int currentParticipants = participantRepository
                             .countByPartyIdAndStatus(party.getId(), ParticipantStatus.APPROVED);
-                    return PartyCardResponse.from(party, currentParticipants);
+                    PartyCardResponse response = PartyCardResponse.from(party, currentParticipants);
+                    addDistanceIfPossible(response, party, latitude, longitude);
+                    return response;
                 })
                 .collect(Collectors.toList());
+    }
+
+    private void addDistanceIfPossible(PartyCardResponse response, Party party, Double latitude, Double longitude) {
+        if (latitude != null && longitude != null && party.getPickupLocation() != null) {
+            double distance = DistanceCalculator.calculateDistance(
+                    latitude,
+                    longitude,
+                    party.getPickupLocation().getPickupLatitude(),
+                    party.getPickupLocation().getPickupLongitude()
+            );
+            response.addDistanceKm(distance);
+        }
     }
 
     @Transactional

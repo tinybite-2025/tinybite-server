@@ -194,7 +194,7 @@ public class PartyController {
                 content = @Content
         )
     })
-    @PostMapping("{partyId}/participants/{participantId}/approve")
+    @PostMapping("/{partyId}/participants/{participantId}/approve")
     public ResponseEntity<Void> approveParticipant(
             @PathVariable Long partyId,
             @PathVariable Long participantId,
@@ -262,7 +262,7 @@ public class PartyController {
                 content = @Content
         )
     })
-    @GetMapping("{partyId}/chat/group")
+    @GetMapping("/{partyId}/chat/group")
     public ResponseEntity<ChatRoomResponse> getGroupChatRoom(
             @PathVariable Long partyId,
             @Parameter(hidden = true) @AuthenticationPrincipal Long userId) {
@@ -285,7 +285,7 @@ public class PartyController {
                 content = @Content
         )
     })
-    @GetMapping("{partyId}/can-settle")
+    @GetMapping("/{partyId}/can-settle")
     public ResponseEntity<Boolean> canSettle(@PathVariable Long partyId) {
         boolean canSettle = partyService.canSettle(partyId);
         return ResponseEntity.ok(canSettle);
@@ -319,7 +319,7 @@ public class PartyController {
                 content = @Content
         )
    })
-    @PostMapping("{partyId}/settle")
+    @PostMapping("/{partyId}/settle")
     public ResponseEntity<Void> settleParty(
             @PathVariable Long partyId,
             @Parameter(hidden = true) @AuthenticationPrincipal Long userId) {
@@ -352,7 +352,7 @@ public class PartyController {
                 content = @Content
         )
     })
-    @GetMapping("{partyId}/participants/pending")
+    @GetMapping("/{partyId}/participants/pending")
     public ResponseEntity<List<PartyParticipant>> getPendingParticipants(
             @PathVariable Long partyId,
             @Parameter(hidden = true) @AuthenticationPrincipal Long userId) {
@@ -365,6 +365,27 @@ public class PartyController {
     /**
      * 파티 목록 조회 (홈 화면)
      */
+    @Operation(
+            summary = "파티 목록 조회",
+            description = "홈 화면에서 파티 목록을 조회합니다. 카테고리별 필터링, 정렬, 위치 기반 조회를 지원합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "조회 성공",
+                    content = @Content(schema = @Schema(implementation = PartyListResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 (위치 정보 형식 오류)",
+                    content = @Content
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패",
+                    content = @Content
+            )
+    })
     @GetMapping
     public ResponseEntity<PartyListResponse> getPartyList(
             @Parameter(hidden = true) @AuthenticationPrincipal Long userId,
@@ -391,9 +412,10 @@ public class PartyController {
                 );
             }
 
-        // 위도/경도 범위 검증
-        if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
-            throw new IllegalArgumentException("위도/경도 값이 유효한 범위를 벗어났습니다.");
+            // 위도/경도 범위 검증
+            if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+                throw new IllegalArgumentException("위도/경도 값이 유효한 범위를 벗어났습니다.");
+            }
         }
 
         PartyListRequest request = PartyListRequest.builder()
@@ -573,6 +595,18 @@ public class PartyController {
                     몇 번째 페이지 인지 (page), 한 페이지 당 몇 개의 파티를 조회할 지 (size) 파라미터로 입력해주시면 됩니다.
                     """
     )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "검색 성공",
+                    content = @Content(schema = @Schema(implementation = PartyQueryListResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 (검색어 누락)",
+                    content = @Content
+            )
+    })
     @GetMapping("/search")
     public APIResponse<PartyQueryListResponse> getParty(
             @RequestParam String q,
@@ -598,6 +632,17 @@ public class PartyController {
                     한 번에 20개가 조회됩니다.
                     """
     )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "조회 성공"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패",
+                    content = @Content
+            )
+    })
     @GetMapping("/search/log")
     public APIResponse<List<String>> getRecentLog() {
          return success(partySearchService.getLog());
@@ -610,6 +655,17 @@ public class PartyController {
                     이때 검색어에 대한 Id값은 없고, 최근 검색어 자체를 keyword에 넣어주시면 됩니다.
                     """
     )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "삭제 성공"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패",
+                    content = @Content
+            )
+    })
     @DeleteMapping("/search/log/{keyword}")
     public APIResponse<?>  deleteRecentLog(@PathVariable String keyword) {
         partySearchService.deleteLog(keyword);
@@ -622,6 +678,17 @@ public class PartyController {
                     특정 유저에 대한 모든 최근 검색어를 삭제합니다.
                     """
     )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "전체 삭제 성공"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패",
+                    content = @Content
+            )
+    })
     @DeleteMapping("/search/log")
     public APIResponse<?> deleteRecentLogAll() {
          partySearchService.deleteAllLog();
