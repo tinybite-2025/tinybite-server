@@ -455,7 +455,9 @@ public class PartyService {
                     request.getImages()
             );
 
+            // 주어진 좌표로 법정동 반환
             String location = locationService.getLocation(request.getPickupLocation().getPickupLatitude().toString(), request.getPickupLocation().getPickupLongitude().toString());
+            // place는 pickupLocation, locaton은 town에 저장
             party.updatePartyLocation(request.getPickupLocation(), location);
         }
     }
@@ -820,11 +822,9 @@ public class PartyService {
         PartyCategory category = request.getCategory();
 
         if (category == PartyCategory.ALL) {
-            return partyRepository.findByPickupLocation_Place(location);
-//            return partyRepository.findByTown(location);
+            return partyRepository.findByTown(location);
         } else {
-            return partyRepository.findByPickupLocation_PlaceAndCategory(location, category);
-//            return partyRepository.findByTownAndCategory(location, category);
+            return partyRepository.findByTownAndCategory(location, category);
         }
     }
 
