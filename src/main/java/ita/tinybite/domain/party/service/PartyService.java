@@ -1,9 +1,10 @@
 package ita.tinybite.domain.party.service;
 
-import ita.tinybite.domain.chat.entity.ChatMessage;
 import ita.tinybite.domain.chat.entity.ChatRoom;
+import ita.tinybite.domain.chat.entity.ChatRoomMember;
 import ita.tinybite.domain.chat.enums.ChatRoomType;
 import ita.tinybite.domain.chat.repository.ChatMessageRepository;
+import ita.tinybite.domain.chat.repository.ChatRoomMemberRepository;
 import ita.tinybite.domain.chat.repository.ChatRoomRepository;
 import ita.tinybite.domain.chat.service.ChatService;
 import ita.tinybite.domain.notification.service.facade.NotificationFacade;
@@ -40,7 +41,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class PartyService {
-    private final ChatMessageRepository chatMessageRepository;
     private final ChatService chatService;
     @Value("${default.image.thumbnail.delivery}")
     private String defaultDeliveryImage;
@@ -59,6 +59,7 @@ public class PartyService {
     private final LocationService locationService;
     private final PartyParticipantRepository partyParticipantRepository;
     private final ChatRoomRepository chatRoomRepository;
+    private final ChatRoomMemberRepository chatRoomMemberRepository;
     private final PartyParticipantRepository participantRepository;
     private final NotificationFacade notificationFacade;
 
@@ -111,6 +112,14 @@ public class PartyService {
         chatRoom.addMember(user);
 
         chatRoomRepository.save(chatRoom);
+
+        // 채팅방 관계 설정
+        ChatRoomMember chatRoomMember = ChatRoomMember.builder()
+                .chatRoom(chatRoom)
+                .user(user)
+                .build();
+
+        chatRoomMemberRepository.save(chatRoomMember);
 
         // Participant 생성
         PartyParticipant participant = PartyParticipant.builder()
@@ -271,6 +280,18 @@ public class PartyService {
         // 1:1 채팅방 생성 (파티장 + 신청자)
         ChatRoom oneToOneChatRoom = createOneToOneChatRoom(party, user);
 
+        ChatRoomMember participantChatRoomMember = ChatRoomMember.builder()
+                .chatRoom(oneToOneChatRoom)
+                .user(user)
+                .build();
+
+        ChatRoomMember hostChatRoomMember = ChatRoomMember.builder()
+                .chatRoom(oneToOneChatRoom)
+                .user(party.getHost())
+                .build();
+
+        chatRoomMemberRepository.saveAll(List.of(participantChatRoomMember, hostChatRoomMember));
+
         // 참여 신청 생성
         PartyParticipant participant = PartyParticipant.builder()
                 .party(party)
@@ -279,7 +300,7 @@ public class PartyService {
                 .oneToOneChatRoom(oneToOneChatRoom)
                 .build();
 
-        PartyParticipant saved = partyParticipantRepository.save(participant);
+        partyParticipantRepository.save(participant);
 
         // 즉시 알림 발송
         notificationFacade.notifyNewPartyRequest(

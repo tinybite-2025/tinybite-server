@@ -3,6 +3,7 @@ package ita.tinybite.domain.chat.dto.res;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import ita.tinybite.domain.chat.entity.ChatRoom;
+import ita.tinybite.domain.chat.entity.ChatRoomMember;
 import ita.tinybite.domain.chat.enums.ParticipantType;
 import ita.tinybite.domain.party.entity.Party;
 import ita.tinybite.domain.party.entity.PartyParticipant;
@@ -23,9 +24,9 @@ public record OneToOneChatRoomDetailResDto(
         String partyTitle
 ) {
 
-    public static OneToOneChatRoomDetailResDto of(Party party, PartyParticipant partyParticipant, User currentUser, ChatRoom groupChatRoom) {
+    public static OneToOneChatRoomDetailResDto of(Party party, PartyParticipant partyParticipant, User currentUser, ChatRoom groupChatRoom, ChatRoomMember chatRoomMembers) {
         User host = partyParticipant.getParty().getHost();
-        User participant = partyParticipant.getUser();
+        User participant = chatRoomMembers.getUser();
 
         ParticipantType type = currentUser.getUserId().equals(host.getUserId()) ? ParticipantType.HOST : ParticipantType.PARTICIPANT;
         User targetUser = currentUser.getUserId().equals(participant.getUserId()) ? host : participant; // 상대방의 유저 (호스트면 참여자 / 참여자면 호스트)

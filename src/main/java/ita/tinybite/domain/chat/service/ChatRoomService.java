@@ -113,8 +113,10 @@ public class ChatRoomService {
 
         PartyParticipant partyParticipant = partyParticipantRepository.findByOneToOneChatRoomAndStatus(chatRoom, ParticipantStatus.PENDING);
 
+        ChatRoomMember participant = chatRoom.getParticipants().stream().findFirst().get();
+
         ChatRoom groupChatRoom = chatRoomRepository.findByPartyAndType(chatRoom.getParty(), ChatRoomType.GROUP).orElseGet(null);
-        return OneToOneChatRoomDetailResDto.of(chatRoom.getParty(), partyParticipant, currentUser, groupChatRoom);
+        return OneToOneChatRoomDetailResDto.of(chatRoom.getParty(), partyParticipant, currentUser, groupChatRoom, participant);
     }
 
     public GroupChatRoomDetailResDto getGroupRoom(Long chatRoomId) {
