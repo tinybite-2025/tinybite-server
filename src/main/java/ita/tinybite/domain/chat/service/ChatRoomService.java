@@ -43,6 +43,7 @@ public class ChatRoomService {
         User user = securityProvider.getCurrentUser();
 
         List<ChatRoom> chatRooms = partyParticipantRepository.findByUser(user).stream()
+                .filter(partyParticipant -> partyParticipant.getOneToOneChatRoom() != null)
                 .map(PartyParticipant::getOneToOneChatRoom)
                 .filter(chatRoom -> chatRoom.getType() == ChatRoomType.ONE_TO_ONE)
                 .toList();
