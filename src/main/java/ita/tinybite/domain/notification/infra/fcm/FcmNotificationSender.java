@@ -51,7 +51,7 @@ public class FcmNotificationSender {
 				.setApnsConfig(APNsConfigCreator.createDefaultConfig())
 				.build();
 
-			BatchResponse response = firebaseMessaging.sendMulticast(message);
+			BatchResponse response = firebaseMessaging.sendEachForMulticast(message);
 			log.info("멀티캐스트 전송 완료. 성공: {}, 실패: {}",
 				response.getSuccessCount(), response.getFailureCount());
 			return response;
