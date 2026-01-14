@@ -28,14 +28,36 @@ public class PartyCardResponse {
     private LocalDateTime createdAt;
 
     public static PartyCardResponse from(Party party, int currentParticipants) {
+        return from(party, currentParticipants, null, null);
+    }
+
+    public static PartyCardResponse from(Party party, int currentParticipants, Double userLat, Double userLon) {
+        String distanceValue = null;
+        String distanceKmValue = null;
+
+        // 거리 계산
+        if (userLat != null && userLon != null
+                && party.getPickupLocation() != null
+                && party.getPickupLocation().getPickupLatitude() != null
+                && party.getPickupLocation().getPickupLongitude() != null) {
+            double distance = DistanceCalculator.calculateDistance(
+                    userLat,
+                    userLon,
+                    party.getPickupLocation().getPickupLatitude(),
+                    party.getPickupLocation().getPickupLongitude()
+            );
+            distanceKmValue = DistanceCalculator.formatDistance(distance);
+            distanceValue = Double.toString(distance);
+        }
+
         return PartyCardResponse.builder()
                 .partyId(party.getId())
                 .thumbnailImage(party.getThumbnailImage())
                 .title(party.getTitle())
                 .pricePerPerson(calculatePricePerPerson(party, currentParticipants))
                 .participantStatus(formatParticipantStatus(currentParticipants, party.getMaxParticipants()))
-                .distance(null) // 거리 계산은 별도 처리 필요
-                .distanceKm(null) // 거리 계산은 별도 처리 필요
+                .distance(distanceValue)
+                .distanceKm(distanceKmValue)
                 .timeAgo(calculateTimeAgo(party.getCreatedAt()))
                 .isClosed(checkIfClosed(party, currentParticipants))
                 .category(party.getCategory())

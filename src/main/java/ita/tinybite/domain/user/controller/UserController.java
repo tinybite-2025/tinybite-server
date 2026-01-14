@@ -132,8 +132,10 @@ public class UserController {
     })
     @GetMapping("/parties/hosting")
     public ResponseEntity<List<PartyCardResponse>> getHostingParties(
-            @AuthenticationPrincipal Long userId) {
-        List<PartyCardResponse> response = userService.getHostingParties(userId);
+            @AuthenticationPrincipal Long userId,
+            @Parameter(description = "사용자 위도") @RequestParam(required = false) Double latitude,
+            @Parameter(description = "사용자 경도") @RequestParam(required = false) Double longitude) {
+        List<PartyCardResponse> response = userService.getHostingParties(userId, latitude, longitude);
         return ResponseEntity.ok(response);
     }
 
@@ -157,8 +159,10 @@ public class UserController {
     })
     @GetMapping("/parties/participating")
     public ResponseEntity<List<PartyCardResponse>> getParticipatingParties(
-            @AuthenticationPrincipal Long userId) {
-        List<PartyCardResponse> response = userService.getParticipatingParties(userId);
+            @AuthenticationPrincipal Long userId,
+            @Parameter(description = "사용자 위도") @RequestParam(required = false) Double latitude,
+            @Parameter(description = "사용자 경도") @RequestParam(required = false) Double longitude) {
+        List<PartyCardResponse> response = userService.getParticipatingParties(userId, latitude, longitude);
         return ResponseEntity.ok(response);
     }
 

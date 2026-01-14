@@ -301,6 +301,7 @@ public class PartyService {
     /**
      * 파티 탈퇴 - 인원 감소 시 다시 모집 중으로 변경
      */
+    @Transactional
     public void leaveParty(Long partyId, Long userId) {
         Party party = partyRepository.findById(partyId)
                 .orElseThrow(() -> new IllegalArgumentException("파티를 찾을 수 없습니다."));
@@ -373,8 +374,6 @@ public class PartyService {
                 .title(party.getTitle())
                 .pricePerPerson(pricePerPerson)
                 .participantStatus(participantStatus)
-//                .distance(DistanceCalculator.formatDistance(distanceKm))
-//                .distanceKm(distanceKm)
                 .timeAgo(party.getTimeAgo())
                 .isClosed(party.getIsClosed())
                 .category(party.getCategory())
@@ -445,20 +444,27 @@ public class PartyService {
             );
         } else {
             // 승인된 파티원이 없는 경우, 호스트 혼자인 경우: 모든 항목 수정 가능
+            PickupLocation updatedPickupLocation = getPickUpLocationIfExists(request, party);
             party.updateAllFields(
                     request.getTitle(),
                     request.getTotalPrice(),
                     request.getMaxParticipants(),
-                    getPickUpLocationIfExists(request, party),
+                    updatedPickupLocation,
                     request.getProductLink(),
                     request.getDescription(),
                     request.getImages()
             );
 
-            // 주어진 좌표로 법정동 반환
-            String location = locationService.getLocation(request.getPickupLocation().getPickupLatitude().toString(), request.getPickupLocation().getPickupLongitude().toString());
-            // place는 pickupLocation, locaton은 town에 저장
-            party.updatePartyLocation(request.getPickupLocation(), location);
+            // pickupLocation이 변경된 경우에만 town 업데이트
+            if (request.getPickupLocation() != null
+                    && request.getPickupLocation().getPickupLatitude() != null
+                    && request.getPickupLocation().getPickupLongitude() != null) {
+                String location = locationService.getLocation(
+                        request.getPickupLocation().getPickupLatitude().toString(),
+                        request.getPickupLocation().getPickupLongitude().toString()
+                );
+                party.updatePartyLocation(updatedPickupLocation, location);
+            }
         }
     }
     private PickupLocation getPickUpLocationIfExists(PartyUpdateRequest request, Party currentParty) {
@@ -831,8 +837,11 @@ public class PartyService {
     // 정렬 기준에 따른 Comparator 반환
     private Comparator<PartyCardResponse> getComparator(PartySortType sortType) {
         if (sortType == PartySortType.DISTANCE) {
-            // 거리 가까운 순
-            return Comparator.comparing(PartyCardResponse::getDistanceKm)
+            // 거리 가까운 순 (null은 맨 뒤로)
+            return Comparator.comparing(
+                            PartyCardResponse::getDistanceKm,
+                            Comparator.nullsLast(Comparator.naturalOrder())
+                    )
                     .thenComparing((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
         } else {
             // 최신순 (createdAt 내림차순)
@@ -849,6 +858,9 @@ public class PartyService {
     }
 
     private String getMyTown(Double pickupLatitude, Double pickupLongitude) {
+        if (pickupLatitude == null || pickupLongitude == null) {
+            return null;
+        }
         return locationService.getLocation(Double.toString(pickupLatitude), Double.toString(pickupLongitude));
     }
 }
