@@ -47,7 +47,7 @@ public class ChatController {
         ChatMessage saved = chatService.saveMessage(message);
 
         // subscribe 한 사용자에게 전송
-        simpMessagingTemplate.convertAndSend("/subscribe/chat/room/" + saved.getChatRoomId(), ChatMessageResDto.of(saved, userId));
+        simpMessagingTemplate.convertAndSend("/subscribe/chat/room/" + saved.getChatRoomId(), ChatMessageResDto.of(saved));
 
         // subscribe하지 않았으나, 채팅방에 존재하는 사람들에게 전송
         chatService.sendNotification(saved, req.chatRoomId());
