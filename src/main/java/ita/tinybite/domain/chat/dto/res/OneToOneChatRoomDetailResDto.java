@@ -14,6 +14,8 @@ import lombok.Builder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record OneToOneChatRoomDetailResDto(
         Long chatRoomId,
+        Long partyId,
+        Long participantId,
         Long groupChatRoomId,
         ParticipantType participantType, // 호스트인지, 참여자인지 구분
         ParticipantStatus participantStatus, // 파티 승인 현황 (호스트, 참여자 입장 구분 O)
@@ -32,6 +34,8 @@ public record OneToOneChatRoomDetailResDto(
 
         OneToOneChatRoomDetailResDtoBuilder resDtoBuilder = OneToOneChatRoomDetailResDto.builder()
                 .chatRoomId(partyParticipant.getOneToOneChatRoom().getId())
+                .partyId(party.getId())
+                .participantId(partyParticipant.getId())
                 .participantType(type)
                 .participantStatus(ParticipantStatus.PENDING)
                 .targetName(targetUser.getNickname())
