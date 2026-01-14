@@ -454,6 +454,11 @@ public class PartyService {
                     request.getDescription(),
                     request.getImages()
             );
+
+            // 주어진 좌표로 법정동 반환
+            String location = locationService.getLocation(request.getPickupLocation().getPickupLatitude().toString(), request.getPickupLocation().getPickupLongitude().toString());
+            // place는 pickupLocation, locaton은 town에 저장
+            party.updatePartyLocation(request.getPickupLocation(), location);
         }
     }
     private PickupLocation getPickUpLocationIfExists(PartyUpdateRequest request, Party currentParty) {

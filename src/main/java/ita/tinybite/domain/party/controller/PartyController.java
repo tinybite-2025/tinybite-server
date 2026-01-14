@@ -375,23 +375,21 @@ public class PartyController {
             )
             @RequestParam(defaultValue = "ALL") PartyCategory category,
             @RequestParam(required = false, defaultValue = "LATEST") PartySortType sortType,
-            @RequestParam(required = false) String userLat,
-            @RequestParam(required = false) String userLon
+            @RequestParam(required = false) String latitude,
+            @RequestParam(required = false) String longitude
             ) {
         Double lat = null;
         Double lon = null;
-        if (userLat == null || userLon == null) {
-            throw new IllegalArgumentException("거리순 정렬을 위해서는 현재 위치 정보가 필요합니다.");
-        }
 
-        try {
-            lat = Double.parseDouble(userLat);
-            lon = Double.parseDouble(userLon);
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException(
-                    String.format("위치 정보 형식이 올바르지 않습니다. userLat: %s, userLon: %s", userLat, userLon)
-            );
-        }
+        if (latitude != null && longitude != null) {
+            try {
+                lat = Double.parseDouble(latitude);
+                lon = Double.parseDouble(longitude);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException(
+                        String.format("위치 정보 형식이 올바르지 않습니다. userLat: %s, userLon: %s", latitude, longitude)
+                );
+            }
 
         // 위도/경도 범위 검증
         if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
