@@ -97,4 +97,6 @@ public interface PartyParticipantRepository extends JpaRepository<PartyParticipa
     Optional<PartyParticipant> findByOneToOneChatRoom(ChatRoom oneToOneChatRoom);
 
     PartyParticipant findByOneToOneChatRoomAndStatus(ChatRoom oneToOneChatRoom, ParticipantStatus status);
+
+    List<PartyParticipant> findByUser(User user);
 }
