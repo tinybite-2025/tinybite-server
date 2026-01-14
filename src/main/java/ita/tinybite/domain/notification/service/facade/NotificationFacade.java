@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import ita.tinybite.domain.notification.service.ChatNotificationService;
 import ita.tinybite.domain.notification.service.PartyNotificationService;
+import ita.tinybite.domain.notification.service.TestNotificationService;
 import ita.tinybite.domain.party.entity.Party;
 import ita.tinybite.domain.party.enums.ParticipantStatus;
 import ita.tinybite.domain.party.repository.PartyParticipantRepository;
@@ -31,6 +32,7 @@ public class NotificationFacade {
 
 	private final PartyNotificationService partyNotificationService;
 	private final ChatNotificationService chatNotificationService;
+	private final TestNotificationService testNotificationService;
 
 	private final PartyRepository partyRepository;
 	private final UserRepository userRepository;
@@ -38,7 +40,13 @@ public class NotificationFacade {
 
 	private final RedisTemplate<String, String> redisTemplate;
 
-	@Transactional
+	public void notifyTest(Long targetUserId) {
+		userRepository.findById(targetUserId)
+			.orElseThrow(() -> new BusinessException(UserErrorCode.USER_NOT_EXISTS));
+
+		testNotificationService.sendTestNotification(targetUserId);
+	}
+
 	public void notifyNewPartyRequest(Long managerId, Long requesterId, Long partyId) {
 		Party party = partyRepository.findById(partyId)
 			.orElseThrow(() -> new BusinessException(PartyErrorCode.PARTY_NOT_FOUND));
