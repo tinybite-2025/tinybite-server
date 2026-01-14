@@ -66,7 +66,7 @@ public class PartyService {
     /**
      * 파티 생성
      */
-    @Transactional
+    @Transactional // 호스트 - 그룹 채팅방관계 하나 생성
     public Long createParty(Long userId, PartyCreateRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다"));
@@ -266,6 +266,7 @@ public class PartyService {
     /**
      * 파티 참여
      */
+    // 참여자와 호스트 간의 일대일 채팅 생성 -> 채팅룸관계 2개 생성 및 partyparticipant도 생성해야함
     @Transactional
     public Long joinParty(Long partyId, Long userId) {
         Party party = partyRepository.findById(partyId)
@@ -280,17 +281,12 @@ public class PartyService {
         // 1:1 채팅방 생성 (파티장 + 신청자)
         ChatRoom oneToOneChatRoom = createOneToOneChatRoom(party, user);
 
-        ChatRoomMember participantChatRoomMember = ChatRoomMember.builder()
-                .chatRoom(oneToOneChatRoom)
-                .user(user)
-                .build();
-
         ChatRoomMember hostChatRoomMember = ChatRoomMember.builder()
                 .chatRoom(oneToOneChatRoom)
                 .user(party.getHost())
                 .build();
 
-        chatRoomMemberRepository.saveAll(List.of(participantChatRoomMember, hostChatRoomMember));
+        chatRoomMemberRepository.save(hostChatRoomMember);
 
         // 참여 신청 생성
         PartyParticipant participant = PartyParticipant.builder()
