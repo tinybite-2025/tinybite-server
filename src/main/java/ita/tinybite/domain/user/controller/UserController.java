@@ -137,6 +137,10 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(
+            summary = "참가 중인 파티 목록 조회",
+            description = "현재 사용자가 참가자로 있는 활성 파티 목록을 조회합니다. (호스트 제외)"
+    )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
