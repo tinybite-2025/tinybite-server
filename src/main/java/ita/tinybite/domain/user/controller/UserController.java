@@ -132,11 +132,17 @@ public class UserController {
     })
     @GetMapping("/parties/hosting")
     public ResponseEntity<List<PartyCardResponse>> getHostingParties(
-            @AuthenticationPrincipal Long userId) {
-        List<PartyCardResponse> response = userService.getHostingParties(userId);
+            @AuthenticationPrincipal Long userId,
+            @Parameter(description = "사용자 위도") @RequestParam(required = false) Double latitude,
+            @Parameter(description = "사용자 경도") @RequestParam(required = false) Double longitude) {
+        List<PartyCardResponse> response = userService.getHostingParties(userId, latitude, longitude);
         return ResponseEntity.ok(response);
     }
 
+    @Operation(
+            summary = "참가 중인 파티 목록 조회",
+            description = "현재 사용자가 참가자로 있는 활성 파티 목록을 조회합니다. (호스트 제외)"
+    )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
@@ -153,8 +159,10 @@ public class UserController {
     })
     @GetMapping("/parties/participating")
     public ResponseEntity<List<PartyCardResponse>> getParticipatingParties(
-            @AuthenticationPrincipal Long userId) {
-        List<PartyCardResponse> response = userService.getParticipatingParties(userId);
+            @AuthenticationPrincipal Long userId,
+            @Parameter(description = "사용자 위도") @RequestParam(required = false) Double latitude,
+            @Parameter(description = "사용자 경도") @RequestParam(required = false) Double longitude) {
+        List<PartyCardResponse> response = userService.getParticipatingParties(userId, latitude, longitude);
         return ResponseEntity.ok(response);
     }
 
