@@ -234,7 +234,7 @@ public class PartyService {
 
         // 거리 계산 (사용자 위치 필요)
         double distance = 0.0;
-        if (validateLocation(user,userLat, userLon,party)) {
+        if (validateLocation(userLat, userLon, party)) {
             distance = DistanceCalculator.calculateDistance(
                     userLat,
                     userLon,
@@ -246,12 +246,12 @@ public class PartyService {
         return convertToDetailResponse(party, distance, isParticipating);
     }
 
-    private boolean validateLocation(User user, Double userLat, Double userLon, Party party) {
-        return (user != null
-                && userLat != null
-                && userLon!= null
-                && party.getPickupLocation().getPickupLatitude()!= null
-                && party.getPickupLocation().getPickupLongitude()!=null);
+    private boolean validateLocation(Double userLat, Double userLon, Party party) {
+        return (userLat != null
+                && userLon != null
+                && party.getPickupLocation() != null
+                && party.getPickupLocation().getPickupLatitude() != null
+                && party.getPickupLocation().getPickupLongitude() != null);
     }
 
     /**

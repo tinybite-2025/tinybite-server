@@ -391,9 +391,10 @@ public class PartyController {
                 );
             }
 
-        // 위도/경도 범위 검증
-        if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
-            throw new IllegalArgumentException("위도/경도 값이 유효한 범위를 벗어났습니다.");
+            // 위도/경도 범위 검증
+            if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+                throw new IllegalArgumentException("위도/경도 값이 유효한 범위를 벗어났습니다.");
+            }
         }
 
         PartyListRequest request = PartyListRequest.builder()
