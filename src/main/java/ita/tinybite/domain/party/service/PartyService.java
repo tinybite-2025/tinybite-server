@@ -841,9 +841,9 @@ public class PartyService {
         PartyCategory category = request.getCategory();
 
         if (category == PartyCategory.ALL) {
-            return partyRepository.findByTown(myTown);
+            return partyRepository.findByTown(user.getLocation());
         } else {
-            return partyRepository.findByTownAndCategory(myTown, category);
+            return partyRepository.findByTownAndCategory(user.getLocation(), category);
         }
     }
 
