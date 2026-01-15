@@ -106,7 +106,7 @@ public class ChatRoomService {
 
         if(!chatRoom.getType().equals(ChatRoomType.ONE_TO_ONE)) throw BusinessException.of(ChatRoomErrorCode.NOT_ONE_TO_ONE);
 
-        PartyParticipant partyParticipant = partyParticipantRepository.findByOneToOneChatRoomAndStatus(chatRoom, ParticipantStatus.PENDING);
+        PartyParticipant partyParticipant = partyParticipantRepository.findByOneToOneChatRoom(chatRoom).orElseThrow();
         User participant = partyParticipant.getUser();
 
         ChatRoom groupChatRoom = chatRoomRepository.findByPartyAndType(chatRoom.getParty(), ChatRoomType.GROUP).orElseGet(null);
