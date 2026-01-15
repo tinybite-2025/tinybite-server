@@ -25,6 +25,7 @@ public class SecurityConfig {
             "/api/v1/test/**",
             "/test/health",
             "/api/v1/error-code",
+            "/api/v1/fcm/**",
             "/ws-chat"
     };
 

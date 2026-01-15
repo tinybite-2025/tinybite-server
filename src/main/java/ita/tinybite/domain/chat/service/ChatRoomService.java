@@ -61,7 +61,7 @@ public class ChatRoomService {
                     PartyParticipant partyParticipant = partyParticipantRepository.findByOneToOneChatRoom(chatRoom).orElseThrow();
                     ParticipantStatus status = partyParticipant.getStatus();
 
-                    // (chatRoom, user)로 채팅참여 엔티티 조회
+                    User targetUser = partyParticipant.getUser();
                     ChatRoomMember chatRoomMember = chatRoomMemberRepository.findByChatRoomAndUser(chatRoom, user).orElseThrow();
 
                     // 마지막으로 읽은 시점을 기점으로 몇 개의 메시지가 안 읽혔는지 확인
@@ -69,7 +69,7 @@ public class ChatRoomService {
 
                     String content = recentMessage != null ? recentMessage.getContent() : "";
                     // dto로 합침
-                    return OneToOneChatRoomResDto.of(chatRoom, user, chatRoom.getParticipants().get(0).getUser(), content, timeAgo, status, unreadCnt);
+                    return OneToOneChatRoomResDto.of(chatRoom, user, targetUser, content, timeAgo, status, unreadCnt);
                 })
                 .toList();
     }
@@ -106,10 +106,11 @@ public class ChatRoomService {
 
         if(!chatRoom.getType().equals(ChatRoomType.ONE_TO_ONE)) throw BusinessException.of(ChatRoomErrorCode.NOT_ONE_TO_ONE);
 
-        PartyParticipant partyParticipant = partyParticipantRepository.findByOneToOneChatRoomAndStatus(chatRoom, ParticipantStatus.PENDING);
+        PartyParticipant partyParticipant = partyParticipantRepository.findByOneToOneChatRoom(chatRoom).orElseThrow();
+        User participant = partyParticipant.getUser();
 
         ChatRoom groupChatRoom = chatRoomRepository.findByPartyAndType(chatRoom.getParty(), ChatRoomType.GROUP).orElseGet(null);
-        return OneToOneChatRoomDetailResDto.of(chatRoom.getParty(), partyParticipant, currentUser, groupChatRoom);
+        return OneToOneChatRoomDetailResDto.of(chatRoom.getParty(), partyParticipant, currentUser, groupChatRoom, participant);
     }
 
     public GroupChatRoomDetailResDto getGroupRoom(Long chatRoomId) {

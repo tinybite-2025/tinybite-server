@@ -14,6 +14,8 @@ import lombok.Builder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record OneToOneChatRoomDetailResDto(
         Long chatRoomId,
+        Long partyId,
+        Long participantId,
         Long groupChatRoomId,
         ParticipantType participantType, // 호스트인지, 참여자인지 구분
         ParticipantStatus participantStatus, // 파티 승인 현황 (호스트, 참여자 입장 구분 O)
@@ -23,9 +25,8 @@ public record OneToOneChatRoomDetailResDto(
         String partyTitle
 ) {
 
-    public static OneToOneChatRoomDetailResDto of(Party party, PartyParticipant partyParticipant, User currentUser, ChatRoom groupChatRoom) {
+    public static OneToOneChatRoomDetailResDto of(Party party, PartyParticipant partyParticipant, User currentUser, ChatRoom groupChatRoom, User participant) {
         User host = partyParticipant.getParty().getHost();
-        User participant = partyParticipant.getUser();
 
         ParticipantType type = currentUser.getUserId().equals(host.getUserId()) ? ParticipantType.HOST : ParticipantType.PARTICIPANT;
         User targetUser = currentUser.getUserId().equals(participant.getUserId()) ? host : participant; // 상대방의 유저 (호스트면 참여자 / 참여자면 호스트)
@@ -33,6 +34,8 @@ public record OneToOneChatRoomDetailResDto(
 
         OneToOneChatRoomDetailResDtoBuilder resDtoBuilder = OneToOneChatRoomDetailResDto.builder()
                 .chatRoomId(partyParticipant.getOneToOneChatRoom().getId())
+                .partyId(party.getId())
+                .participantId(partyParticipant.getId())
                 .participantType(type)
                 .participantStatus(ParticipantStatus.PENDING)
                 .targetName(targetUser.getNickname())

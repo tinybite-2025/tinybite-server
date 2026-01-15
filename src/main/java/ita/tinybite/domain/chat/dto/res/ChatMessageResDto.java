@@ -18,8 +18,6 @@ public record ChatMessageResDto(
         LocalDateTime createdAt,
 
         Long senderId,
-        // 본인이 보낸 메시지인지 체크
-        Boolean isMine,
         String nickname,
         String text,
         String imageUrl,
@@ -55,7 +53,6 @@ public record ChatMessageResDto(
                 return messageBuilder
                         .senderId(chatMessage.getSenderId())
                         .nickname(chatMessage.getSenderName())
-                        .isMine(senderId != null && senderId.equals(chatMessage.getSenderId()))
                         .imageUrl(chatMessage.getContent())
                         .build();
 
@@ -64,7 +61,6 @@ public record ChatMessageResDto(
                 return messageBuilder
                         .senderId(chatMessage.getSenderId())
                         .nickname(chatMessage.getSenderName())
-                        .isMine(senderId != null && senderId.equals(chatMessage.getSenderId()))
                         .text(chatMessage.getContent())
                         .build();
             }

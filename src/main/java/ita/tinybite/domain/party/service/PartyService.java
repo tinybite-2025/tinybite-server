@@ -1,9 +1,10 @@
 package ita.tinybite.domain.party.service;
 
-import ita.tinybite.domain.chat.entity.ChatMessage;
 import ita.tinybite.domain.chat.entity.ChatRoom;
+import ita.tinybite.domain.chat.entity.ChatRoomMember;
 import ita.tinybite.domain.chat.enums.ChatRoomType;
 import ita.tinybite.domain.chat.repository.ChatMessageRepository;
+import ita.tinybite.domain.chat.repository.ChatRoomMemberRepository;
 import ita.tinybite.domain.chat.repository.ChatRoomRepository;
 import ita.tinybite.domain.chat.service.ChatService;
 import ita.tinybite.domain.notification.service.facade.NotificationFacade;
@@ -40,7 +41,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class PartyService {
-    private final ChatMessageRepository chatMessageRepository;
     private final ChatService chatService;
     @Value("${default.image.thumbnail.delivery}")
     private String defaultDeliveryImage;
@@ -59,13 +59,14 @@ public class PartyService {
     private final LocationService locationService;
     private final PartyParticipantRepository partyParticipantRepository;
     private final ChatRoomRepository chatRoomRepository;
+    private final ChatRoomMemberRepository chatRoomMemberRepository;
     private final PartyParticipantRepository participantRepository;
     private final NotificationFacade notificationFacade;
 
     /**
      * 파티 생성
      */
-    @Transactional
+    @Transactional // 호스트 - 그룹 채팅방관계 하나 생성
     public Long createParty(Long userId, PartyCreateRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다"));
@@ -111,6 +112,14 @@ public class PartyService {
         chatRoom.addMember(user);
 
         chatRoomRepository.save(chatRoom);
+
+        // 채팅방 관계 설정
+        ChatRoomMember chatRoomMember = ChatRoomMember.builder()
+                .chatRoom(chatRoom)
+                .user(user)
+                .build();
+
+        chatRoomMemberRepository.save(chatRoomMember);
 
         // Participant 생성
         PartyParticipant participant = PartyParticipant.builder()
@@ -257,6 +266,7 @@ public class PartyService {
     /**
      * 파티 참여
      */
+    // 참여자와 호스트 간의 일대일 채팅 생성 -> 채팅룸관계 2개 생성 및 partyparticipant도 생성해야함
     @Transactional
     public Long joinParty(Long partyId, Long userId) {
         Party party = partyRepository.findById(partyId)
@@ -271,6 +281,13 @@ public class PartyService {
         // 1:1 채팅방 생성 (파티장 + 신청자)
         ChatRoom oneToOneChatRoom = createOneToOneChatRoom(party, user);
 
+        ChatRoomMember hostChatRoomMember = ChatRoomMember.builder()
+                .chatRoom(oneToOneChatRoom)
+                .user(party.getHost())
+                .build();
+
+        chatRoomMemberRepository.save(hostChatRoomMember);
+
         // 참여 신청 생성
         PartyParticipant participant = PartyParticipant.builder()
                 .party(party)
@@ -279,7 +296,7 @@ public class PartyService {
                 .oneToOneChatRoom(oneToOneChatRoom)
                 .build();
 
-        PartyParticipant saved = partyParticipantRepository.save(participant);
+        partyParticipantRepository.save(participant);
 
         // 즉시 알림 발송
         notificationFacade.notifyNewPartyRequest(
