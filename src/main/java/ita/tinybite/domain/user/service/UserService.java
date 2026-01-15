@@ -179,9 +179,9 @@ public class UserService {
     }
 
     public List<PartyCardResponse> getHostingParties(Long userId, Double latitude, Double longitude) {
-        List<Party> parties = partyRepository.findByHostUserIdAndStatus(
+        List<Party> parties = partyRepository.findByHostUserIdAndStatusIn(
                 userId,
-                PartyStatus.RECRUITING
+                Arrays.asList(PartyStatus.RECRUITING, PartyStatus.COMPLETED)
         );
 
         return parties.stream()
