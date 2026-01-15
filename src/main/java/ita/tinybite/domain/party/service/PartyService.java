@@ -113,14 +113,6 @@ public class PartyService {
 
         chatRoomRepository.save(chatRoom);
 
-        // 채팅방 관계 설정
-        ChatRoomMember chatRoomMember = ChatRoomMember.builder()
-                .chatRoom(chatRoom)
-                .user(user)
-                .build();
-
-        chatRoomMemberRepository.save(chatRoomMember);
-
         // Participant 생성
         PartyParticipant participant = PartyParticipant.builder()
                 .party(savedParty)
