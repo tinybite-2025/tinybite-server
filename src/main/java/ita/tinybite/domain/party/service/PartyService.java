@@ -580,8 +580,8 @@ public class PartyService {
             partyId
         );
 
-        // 목표 인원 달성 확인
-        checkAndCloseIfFull(party);
+        // 정원이 찼으면 모집 완료 상태로 변경
+        checkAndCompleteIfFull(party);
     }
 
     /**
@@ -783,10 +783,14 @@ public class PartyService {
         }
     }
 
-    // ??
-    private void checkAndCloseIfFull(Party party) {
+    /**
+     * 정원이 찼으면 모집 완료 상태로 변경
+     * - COMPLETED: 정원이 찼거나 모집이 완료된 상태 (파티 진행 중)
+     * - CLOSED: 파티가 정상적으로 종료된 상태 (결산 완료 후)
+     */
+    private void checkAndCompleteIfFull(Party party) {
         if (party.getCurrentParticipants() >= party.getMaxParticipants()) {
-            party.close();
+            party.changePartyStatus(PartyStatus.COMPLETED);
         }
     }
 
