@@ -25,11 +25,7 @@ public record OneToOneChatRoomDetailResDto(
         String partyTitle
 ) {
 
-    public static OneToOneChatRoomDetailResDto of(Party party, PartyParticipant partyParticipant, User currentUser, ChatRoom groupChatRoom, User participant) {
-        User host = partyParticipant.getParty().getHost();
-
-        ParticipantType type = currentUser.getUserId().equals(host.getUserId()) ? ParticipantType.HOST : ParticipantType.PARTICIPANT;
-        User targetUser = currentUser.getUserId().equals(participant.getUserId()) ? host : participant; // 상대방의 유저 (호스트면 참여자 / 참여자면 호스트)
+    public static OneToOneChatRoomDetailResDto of(Party party, PartyParticipant partyParticipant, ChatRoom groupChatRoom, User targetUser, ParticipantType type) {
         ParticipantStatus participantStatus = partyParticipant.getStatus();
 
         OneToOneChatRoomDetailResDtoBuilder resDtoBuilder = OneToOneChatRoomDetailResDto.builder()
