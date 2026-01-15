@@ -25,6 +25,8 @@ public interface PartyRepository extends JpaRepository<Party, Long> {
 
     List<Party> findByHostUserIdAndStatusIn(Long userId, List<PartyStatus> statuses);
 
+    List<Party> findByTown(String location);
+
     List<Party> findByTown(String town);
 
     List<Party> findByTownAndCategory(String town, PartyCategory category);
