@@ -18,6 +18,7 @@ public class PartyCardResponse {
     private Long partyId;
     private String thumbnailImage; // 첫 번째 이미지 또는 기본 이미지
     private String title;
+    private PartyStatus partyStatus;
     private Integer pricePerPerson; // 1/N 가격
     private String participantStatus; // "1/4명"
     private String distance; // "300m" or "1.2km" (화면 표시용)

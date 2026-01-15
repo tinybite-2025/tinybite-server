@@ -388,6 +388,7 @@ public class PartyService {
         return PartyCardResponse.builder()
                 .partyId(party.getId())
                 .thumbnailImage(party.getThumbnailImage())
+                .partyStatus(party.getStatus())
                 .title(party.getTitle())
                 .pricePerPerson(pricePerPerson)
                 .participantStatus(participantStatus)
@@ -845,13 +846,12 @@ public class PartyService {
             return List.of();
         }
 
-        String location = user.getLocation();
         PartyCategory category = request.getCategory();
 
         if (category == PartyCategory.ALL) {
-            return partyRepository.findByTown(location);
+            return partyRepository.findByTown(myTown);
         } else {
-            return partyRepository.findByTownAndCategory(location, category);
+            return partyRepository.findByTownAndCategory(myTown, category);
         }
     }
 
