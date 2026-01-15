@@ -179,7 +179,11 @@ public class UserService {
     }
 
     public List<PartyCardResponse> getHostingParties(Long userId, Double latitude, Double longitude) {
-        List<Party> parties = partyRepository.findByHost_UserId(userId);
+        List<Party> parties = partyRepository.findByHostUserIdAndStatusIn(
+                userId,
+                Arrays.asList(PartyStatus.RECRUITING, PartyStatus.COMPLETED)
+        );
+
         return parties.stream()
                 .sorted(Comparator.comparing(Party::getCreatedAt).reversed())
                 .map(party -> {

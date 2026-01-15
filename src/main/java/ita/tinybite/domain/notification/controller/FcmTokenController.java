@@ -30,7 +30,7 @@ public class FcmTokenController {
 		return ResponseEntity.noContent().build();
 	}
 
-	@PostMapping("/test")
+	@PostMapping("/Test")
 	public ResponseEntity<Void> test(@RequestParam Long userId) {
 		notificationFacade.notifyTest(userId);
 		return ResponseEntity.ok().build();
