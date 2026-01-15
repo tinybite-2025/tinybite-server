@@ -127,11 +127,19 @@ public class ChatRoomService {
     }
 
     public GroupChatRoomDetailResDto getGroupRoom(Long chatRoomId) {
+        User currentUser = securityProvider.getCurrentUser();
+
         ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow();
+
+        User host = chatRoom.getParty().getHost();
 
         if(!chatRoom.getType().equals(ChatRoomType.GROUP)) throw BusinessException.of(ChatRoomErrorCode.NOT_GROUP);
 
-        return GroupChatRoomDetailResDto.of(chatRoom);
+        ParticipantType participantType;
+        if(currentUser.getUserId().equals(host.getUserId())) participantType = ParticipantType.HOST;
+        else participantType = ParticipantType.PARTICIPANT;
+
+        return GroupChatRoomDetailResDto.of(chatRoom, participantType);
     }
 
     private static String getTimeAgo(LocalDateTime then) {
