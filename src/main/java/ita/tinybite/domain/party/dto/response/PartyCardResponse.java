@@ -56,6 +56,7 @@ public class PartyCardResponse {
                 .thumbnailImage(party.getThumbnailImage())
                 .title(party.getTitle())
                 .pricePerPerson(calculatePricePerPerson(party, currentParticipants))
+                .partyStatus(party.getStatus())
                 .participantStatus(formatParticipantStatus(currentParticipants, party.getMaxParticipants()))
                 .distance(distanceValue)
                 .distanceKm(distanceKmValue)
