@@ -1,12 +1,14 @@
 package ita.tinybite.domain.chat.dto;
 
 import ita.tinybite.domain.chat.entity.ChatRoom;
+import ita.tinybite.domain.chat.enums.ChatRoomType;
 import ita.tinybite.domain.party.enums.PartyStatus;
 import lombok.Builder;
 
 @Builder
 public record GroupChatRoomDetailResDto(
         Long groupChatRoomId,
+        ChatRoomType roomType,
         Long partyId,
         String partyTitle,
         PartyStatus status,
@@ -17,6 +19,7 @@ public record GroupChatRoomDetailResDto(
     public static GroupChatRoomDetailResDto of(ChatRoom groupChatRoom) {
         return GroupChatRoomDetailResDto.builder()
                 .groupChatRoomId(groupChatRoom.getId())
+                .roomType(groupChatRoom.getType())
                 .partyId(groupChatRoom.getParty().getId())
                 .partyTitle(groupChatRoom.getParty().getTitle())
                 .status(groupChatRoom.getParty().getStatus())
