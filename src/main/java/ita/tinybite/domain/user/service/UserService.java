@@ -198,9 +198,9 @@ public class UserService {
 
     public List<PartyCardResponse> getParticipatingParties(Long userId, Double latitude, Double longitude) {
         List<PartyParticipant> participants = participantRepository
-                .findActivePartiesByUserIdExcludingHost(
+                .findActivePartiesByUserIdExcludingHostAndStatusIn(
                         userId,
-                        PartyStatus.RECRUITING,
+                        Arrays.asList(PartyStatus.RECRUITING, PartyStatus.COMPLETED),
                         ParticipantStatus.APPROVED
                 );
 

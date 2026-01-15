@@ -81,6 +81,19 @@ public interface PartyParticipantRepository extends JpaRepository<PartyParticipa
             @Param("participantStatus") ParticipantStatus participantStatus
     );
 
+    @Query("SELECT pp FROM PartyParticipant pp " +
+            "JOIN FETCH pp.party p " +
+            "JOIN FETCH p.host " +
+            "WHERE pp.user.userId = :userId " +
+            "AND p.host.userId != :userId " +
+            "AND p.status IN :partyStatuses " +
+            "AND pp.status = :participantStatus")
+    List<PartyParticipant> findActivePartiesByUserIdExcludingHostAndStatusIn(
+            @Param("userId") Long userId,
+            @Param("partyStatuses") List<PartyStatus> partyStatuses,
+            @Param("participantStatus") ParticipantStatus participantStatus
+    );
+
     int countByPartyIdAndStatusAndUser_UserIdNot(Long partyId, ParticipantStatus participantStatus, Long userId);
 
     List<PartyParticipant> findAllByPartyAndStatus(Party party, ParticipantStatus status);
