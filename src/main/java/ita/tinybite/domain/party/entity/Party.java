@@ -106,6 +106,10 @@ public class Party {
         this.status = partyStatus;
     }
 
+    public void closeRecruitment() {
+        this.isClosed = true;
+    }
+
     public String getTimeAgo() {
         LocalDateTime now = LocalDateTime.now();
 

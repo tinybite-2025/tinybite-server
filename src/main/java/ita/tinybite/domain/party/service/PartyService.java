@@ -346,6 +346,7 @@ public class PartyService {
         }
 
         party.changePartyStatus(PartyStatus.COMPLETED);
+        party.closeRecruitment();
         partyRepository.save(party);
     }
 
