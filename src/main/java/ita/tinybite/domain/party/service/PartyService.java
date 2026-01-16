@@ -396,7 +396,7 @@ public class PartyService {
                 .pricePerPerson(pricePerPerson)
                 .participantStatus(participantStatus)
                 .timeAgo(party.getTimeAgo())
-                .isClosed(party.getIsClosed())
+                .isClosed(party.getStatus().equals(PartyStatus.CLOSED))
                 .category(party.getCategory())
                 .createdAt(createdAt)
                 .build();
@@ -434,7 +434,7 @@ public class PartyService {
                                 .build() : null)
                 .description(party.getDescription())
                 .images(party.getImages())
-                .isClosed(party.getIsClosed())
+                .isClosed(party.getStatus().equals(PartyStatus.CLOSED))
                 .isParticipating(isParticipating)
                 .groupChatRoomId(groupChatRoomId)
                 .build();
