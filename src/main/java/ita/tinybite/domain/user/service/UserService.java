@@ -23,6 +23,7 @@ import ita.tinybite.global.exception.errorcode.UserErrorCode;
 import ita.tinybite.global.location.LocationService;
 import ita.tinybite.global.util.DistanceCalculator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,6 +46,9 @@ public class UserService {
     private final WithDrawUserRepository withDrawUserRepository;
     private final PartyParticipantRepository participantRepository;
     private final PartyRepository partyRepository;
+
+    @Value("${default.image.profile}")
+    private String defaultImage;
 
     public UserResDto getUser() {
         User user = securityProvider.getCurrentUser();
@@ -243,7 +247,7 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다"));
 
-        user.deleteProfileImage();
+        user.deleteProfileImage(defaultImage);
     }
 
     @Async
