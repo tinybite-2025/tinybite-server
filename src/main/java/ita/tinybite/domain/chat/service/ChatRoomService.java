@@ -42,10 +42,7 @@ public class ChatRoomService {
     public List<OneToOneChatRoomResDto> getOneToOneRooms() {
         User currentUser = securityProvider.getCurrentUser();
 
-        // 유저가 참여 중인 chatRoom (이면서 일대일 채팅만)
-        List<ChatRoom> chatRooms = chatRoomMemberRepository.findByUser(currentUser).stream()
-                .map(ChatRoomMember::getChatRoom)
-                .filter(chatRoom -> chatRoom.getType().equals(ChatRoomType.ONE_TO_ONE)).toList();
+        List<ChatRoom> chatRooms = chatRoomMemberRepository.findByUserOrderByLatestMessage(currentUser, ChatRoomType.ONE_TO_ONE);
 
         return chatRooms.stream()
                 .map(chatRoom -> {
@@ -84,8 +81,7 @@ public class ChatRoomService {
         User user = securityProvider.getCurrentUser();
 
         // 유저가 참여 중인 chatRoom (이면서 그룹 채팅만)
-        List<ChatRoom> chatRooms = chatRoomMemberRepository.findByUser(user).stream()
-                .map(ChatRoomMember::getChatRoom)
+        List<ChatRoom> chatRooms = chatRoomMemberRepository.findByUserOrderByLatestMessage(user, ChatRoomType.GROUP).stream()
                 .filter(chatRoom -> chatRoom.getType().equals(ChatRoomType.GROUP))
                 .filter(chatRoom -> chatRoom.getParticipants().size() > 1)
                 .toList();
