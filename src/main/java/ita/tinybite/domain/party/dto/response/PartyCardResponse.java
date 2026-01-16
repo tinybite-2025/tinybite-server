@@ -61,7 +61,7 @@ public class PartyCardResponse {
                 .distance(distanceValue)
                 .distanceKm(distanceKmValue)
                 .timeAgo(calculateTimeAgo(party.getCreatedAt()))
-                .isClosed(checkIfClosed(party, currentParticipants))
+                .isClosed(party.getStatus().equals(PartyStatus.CLOSED))
                 .category(party.getCategory())
                 .createdAt(party.getCreatedAt())
                 .build();
