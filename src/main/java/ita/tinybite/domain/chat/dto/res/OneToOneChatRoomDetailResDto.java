@@ -3,6 +3,7 @@ package ita.tinybite.domain.chat.dto.res;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import ita.tinybite.domain.chat.entity.ChatRoom;
+import ita.tinybite.domain.chat.enums.ChatRoomType;
 import ita.tinybite.domain.chat.enums.ParticipantType;
 import ita.tinybite.domain.party.entity.Party;
 import ita.tinybite.domain.party.entity.PartyParticipant;
@@ -14,6 +15,7 @@ import lombok.Builder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record OneToOneChatRoomDetailResDto(
         Long chatRoomId,
+        ChatRoomType roomType,
         Long partyId,
         Long participantId,
         Long groupChatRoomId,
@@ -25,15 +27,12 @@ public record OneToOneChatRoomDetailResDto(
         String partyTitle
 ) {
 
-    public static OneToOneChatRoomDetailResDto of(Party party, PartyParticipant partyParticipant, User currentUser, ChatRoom groupChatRoom, User participant) {
-        User host = partyParticipant.getParty().getHost();
-
-        ParticipantType type = currentUser.getUserId().equals(host.getUserId()) ? ParticipantType.HOST : ParticipantType.PARTICIPANT;
-        User targetUser = currentUser.getUserId().equals(participant.getUserId()) ? host : participant; // 상대방의 유저 (호스트면 참여자 / 참여자면 호스트)
+    public static OneToOneChatRoomDetailResDto of(Party party, PartyParticipant partyParticipant, ChatRoom groupChatRoom, User targetUser, ParticipantType type) {
         ParticipantStatus participantStatus = partyParticipant.getStatus();
 
         OneToOneChatRoomDetailResDtoBuilder resDtoBuilder = OneToOneChatRoomDetailResDto.builder()
                 .chatRoomId(partyParticipant.getOneToOneChatRoom().getId())
+                .roomType(ChatRoomType.ONE_TO_ONE)
                 .partyId(party.getId())
                 .participantId(partyParticipant.getId())
                 .participantType(type)

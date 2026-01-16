@@ -9,10 +9,10 @@ import ita.tinybite.domain.chat.entity.ChatMessage;
 import ita.tinybite.domain.chat.entity.ChatRoom;
 import ita.tinybite.domain.chat.entity.ChatRoomMember;
 import ita.tinybite.domain.chat.enums.ChatRoomType;
+import ita.tinybite.domain.chat.enums.ParticipantType;
 import ita.tinybite.domain.chat.repository.ChatMessageRepository;
 import ita.tinybite.domain.chat.repository.ChatRoomMemberRepository;
 import ita.tinybite.domain.chat.repository.ChatRoomRepository;
-import ita.tinybite.domain.party.entity.Party;
 import ita.tinybite.domain.party.entity.PartyParticipant;
 import ita.tinybite.domain.party.enums.ParticipantStatus;
 import ita.tinybite.domain.party.repository.PartyParticipantRepository;
@@ -40,10 +40,10 @@ public class ChatRoomService {
 
 
     public List<OneToOneChatRoomResDto> getOneToOneRooms() {
-        User user = securityProvider.getCurrentUser();
+        User currentUser = securityProvider.getCurrentUser();
 
         // 유저가 참여 중인 chatRoom (이면서 일대일 채팅만)
-        List<ChatRoom> chatRooms = chatRoomMemberRepository.findByUser(user).stream()
+        List<ChatRoom> chatRooms = chatRoomMemberRepository.findByUser(currentUser).stream()
                 .map(ChatRoomMember::getChatRoom)
                 .filter(chatRoom -> chatRoom.getType().equals(ChatRoomType.ONE_TO_ONE)).toList();
 
@@ -61,15 +61,20 @@ public class ChatRoomService {
                     PartyParticipant partyParticipant = partyParticipantRepository.findByOneToOneChatRoom(chatRoom).orElseThrow();
                     ParticipantStatus status = partyParticipant.getStatus();
 
-                    User targetUser = partyParticipant.getUser();
-                    ChatRoomMember chatRoomMember = chatRoomMemberRepository.findByChatRoomAndUser(chatRoom, user).orElseThrow();
+                    // 호스트 - 참여자 엔티티
+                    User partyParticipantUser = partyParticipant.getUser();
+                    User host = chatRoom.getParty().getHost();
+
+                    ChatRoomMember chatRoomMember = chatRoomMemberRepository.findByChatRoomAndUser(chatRoom, currentUser).orElseThrow();
 
                     // 마지막으로 읽은 시점을 기점으로 몇 개의 메시지가 안 읽혔는지 확인
-                    long unreadCnt = chatMessageRepository.countByChatRoomIdAndCreatedAtAfterAndSenderIdNot(chatRoom.getId(), chatRoomMember.getLastReadAt(), user.getUserId());
+                    long unreadCnt = chatMessageRepository.countByChatRoomIdAndCreatedAtAfterAndSenderIdNot(chatRoom.getId(), chatRoomMember.getLastReadAt(), currentUser.getUserId());
 
                     String content = recentMessage != null ? recentMessage.getContent() : "";
-                    // dto로 합침
-                    return OneToOneChatRoomResDto.of(chatRoom, user, targetUser, content, timeAgo, status, unreadCnt);
+
+                    // 현재 유저가 참여자라면, targetUser는 호스트
+                    User targetUser = currentUser.getUserId().equals(partyParticipantUser.getUserId()) ? host : partyParticipantUser;
+                    return OneToOneChatRoomResDto.of(chatRoom, currentUser, targetUser, content, timeAgo, status, unreadCnt);
                 })
                 .toList();
     }
@@ -81,7 +86,9 @@ public class ChatRoomService {
         // 유저가 참여 중인 chatRoom (이면서 그룹 채팅만)
         List<ChatRoom> chatRooms = chatRoomMemberRepository.findByUser(user).stream()
                 .map(ChatRoomMember::getChatRoom)
-                .filter(chatRoom -> chatRoom.getType().equals(ChatRoomType.GROUP)).toList();
+                .filter(chatRoom -> chatRoom.getType().equals(ChatRoomType.GROUP))
+                .filter(chatRoom -> chatRoom.getParticipants().size() > 1)
+                .toList();
 
         return chatRooms.stream()
                 .map(chatRoom -> {
@@ -90,7 +97,7 @@ public class ChatRoomService {
                     String recentContent = recentMessage != null ? recentMessage.getContent() : null;
                     String timeAgo = getTimeAgo(chatRoom.getCreatedAt());
 
-                    ChatRoomMember chatRoomMember = chatRoomMemberRepository.findByChatRoomAndUser(chatRoom, user).orElseThrow();
+                    ChatRoomMember chatRoomMember = chatRoomMemberRepository.findByChatRoomAndUserAndChatRoom_Type(chatRoom, user, ChatRoomType.GROUP).stream().findFirst().get();
 
                     // 마지막으로 읽은 시점을 기점으로 몇 개의 메시지가 안 읽혔는지 확인
                     long unreadCnt = chatMessageRepository.countByChatRoomIdAndCreatedAtAfterAndSenderIdNot(chatRoom.getId(), chatRoomMember.getLastReadAt(), user.getUserId());
@@ -107,18 +114,32 @@ public class ChatRoomService {
         if(!chatRoom.getType().equals(ChatRoomType.ONE_TO_ONE)) throw BusinessException.of(ChatRoomErrorCode.NOT_ONE_TO_ONE);
 
         PartyParticipant partyParticipant = partyParticipantRepository.findByOneToOneChatRoom(chatRoom).orElseThrow();
+
+        User host = partyParticipant.getParty().getHost();
         User participant = partyParticipant.getUser();
 
+        // 현재 사용자의 ParticipantType 판단
+        ParticipantType type = currentUser.getUserId().equals(host.getUserId()) ? ParticipantType.HOST : ParticipantType.PARTICIPANT;
+        User targetUser = currentUser.getUserId().equals(participant.getUserId()) ? host : participant;
+
         ChatRoom groupChatRoom = chatRoomRepository.findByPartyAndType(chatRoom.getParty(), ChatRoomType.GROUP).orElseGet(null);
-        return OneToOneChatRoomDetailResDto.of(chatRoom.getParty(), partyParticipant, currentUser, groupChatRoom, participant);
+        return OneToOneChatRoomDetailResDto.of(chatRoom.getParty(), partyParticipant, groupChatRoom, targetUser, type);
     }
 
     public GroupChatRoomDetailResDto getGroupRoom(Long chatRoomId) {
+        User currentUser = securityProvider.getCurrentUser();
+
         ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow();
+
+        User host = chatRoom.getParty().getHost();
 
         if(!chatRoom.getType().equals(ChatRoomType.GROUP)) throw BusinessException.of(ChatRoomErrorCode.NOT_GROUP);
 
-        return GroupChatRoomDetailResDto.of(chatRoom);
+        ParticipantType participantType;
+        if(currentUser.getUserId().equals(host.getUserId())) participantType = ParticipantType.HOST;
+        else participantType = ParticipantType.PARTICIPANT;
+
+        return GroupChatRoomDetailResDto.of(chatRoom, participantType);
     }
 
     private static String getTimeAgo(LocalDateTime then) {

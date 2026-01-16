@@ -113,14 +113,6 @@ public class PartyService {
 
         chatRoomRepository.save(chatRoom);
 
-        // 채팅방 관계 설정
-        ChatRoomMember chatRoomMember = ChatRoomMember.builder()
-                .chatRoom(chatRoom)
-                .user(user)
-                .build();
-
-        chatRoomMemberRepository.save(chatRoomMember);
-
         // Participant 생성
         PartyParticipant participant = PartyParticipant.builder()
                 .party(savedParty)
@@ -339,7 +331,7 @@ public class PartyService {
         }
     }
 
-
+    @Transactional
     public void completeRecruitment(Long partyId, Long userId) {
         Party party = partyRepository.findById(partyId)
                 .orElseThrow(() -> new IllegalArgumentException("파티를 찾을 수 없습니다."));
@@ -354,6 +346,7 @@ public class PartyService {
         }
 
         party.changePartyStatus(PartyStatus.COMPLETED);
+        party.closeRecruitment();
         partyRepository.save(party);
     }
 
@@ -678,17 +671,6 @@ public class PartyService {
     }
 
     /**
-     * 파티 결산 가능 여부 확인
-     */
-    public boolean canSettle(Long partyId) {
-        Party party = partyRepository.findById(partyId)
-                .orElseThrow(() -> new IllegalArgumentException("파티를 찾을 수 없습니다"));
-
-        // 목표 인원 달성 여부
-        return party.getCurrentParticipants() >= party.getMaxParticipants();
-    }
-
-    /**
      * 파티 결산 (마감)
      */
     @Transactional
@@ -698,10 +680,6 @@ public class PartyService {
 
         if (!party.getHost().getUserId().equals(hostId)) {
             throw new IllegalStateException("파티장만 결산할 수 있습니다");
-        }
-
-        if (!canSettle(partyId)) {
-            throw new IllegalStateException("목표 인원이 달성되지 않았습니다");
         }
 
         // 파티 마감
@@ -849,9 +827,9 @@ public class PartyService {
         PartyCategory category = request.getCategory();
 
         if (category == PartyCategory.ALL) {
-            return partyRepository.findByTown(myTown);
+            return partyRepository.findByTown(user.getLocation());
         } else {
-            return partyRepository.findByTownAndCategory(myTown, category);
+            return partyRepository.findByTownAndCategory(user.getLocation(), category);
         }
     }
 

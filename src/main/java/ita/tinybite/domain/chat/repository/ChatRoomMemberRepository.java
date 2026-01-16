@@ -2,6 +2,7 @@ package ita.tinybite.domain.chat.repository;
 
 import ita.tinybite.domain.chat.entity.ChatRoom;
 import ita.tinybite.domain.chat.entity.ChatRoomMember;
+import ita.tinybite.domain.chat.enums.ChatRoomType;
 import ita.tinybite.domain.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -13,4 +14,6 @@ public interface ChatRoomMemberRepository extends JpaRepository<ChatRoomMember, 
     List<ChatRoomMember> findByUser(User user);
 
     Optional<ChatRoomMember> findByChatRoomAndUser(ChatRoom chatRoom, User user);
+
+    Optional<ChatRoomMember> findByChatRoomAndUserAndChatRoom_Type(ChatRoom chatRoom, User user, ChatRoomType chatRoomType);
 }

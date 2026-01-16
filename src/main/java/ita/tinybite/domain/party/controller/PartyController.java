@@ -272,25 +272,6 @@ public class PartyController {
         return ResponseEntity.ok(chatRoom);
     }
 
-    @Operation(summary = "결산 가능 여부", description = "목표 인원 달성 시 true 반환")
-    @ApiResponses({
-        @ApiResponse(
-                responseCode = "200",
-                description = "조회 성공",
-                content = @Content(schema = @Schema(implementation = Boolean.class))
-        ),
-        @ApiResponse(
-                responseCode = "404",
-                description = "파티를 찾을 수 없음",
-                content = @Content
-        )
-    })
-    @GetMapping("/{partyId}/can-settle")
-    public ResponseEntity<Boolean> canSettle(@PathVariable Long partyId) {
-        boolean canSettle = partyService.canSettle(partyId);
-        return ResponseEntity.ok(canSettle);
-    }
-
     @Operation(summary = "파티 결산", description = "목표 인원 달성 후 파티를 마감합니다")
     @ApiResponses({
         @ApiResponse(
