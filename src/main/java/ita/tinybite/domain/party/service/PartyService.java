@@ -3,7 +3,6 @@ package ita.tinybite.domain.party.service;
 import ita.tinybite.domain.chat.entity.ChatRoom;
 import ita.tinybite.domain.chat.entity.ChatRoomMember;
 import ita.tinybite.domain.chat.enums.ChatRoomType;
-import ita.tinybite.domain.chat.repository.ChatMessageRepository;
 import ita.tinybite.domain.chat.repository.ChatRoomMemberRepository;
 import ita.tinybite.domain.chat.repository.ChatRoomRepository;
 import ita.tinybite.domain.chat.service.ChatService;
@@ -246,7 +245,16 @@ public class PartyService {
             );
         }
 
-        return convertToDetailResponse(party, distance, isParticipating);
+        // 특정 유저가 특정 파티의 그룹 채팅방에 참여중일 때, 유저-채팅방의 참여 정보 조회
+        ChatRoomMember chatRoomMember = chatRoomMemberRepository.findByUserAndChatRoom_typeAndChatRoom_Party(user, ChatRoomType.GROUP, party)
+                .orElse(null);
+
+        Long groupChatRoomId = null;
+        if(chatRoomMember != null) {
+            groupChatRoomId = chatRoomMember.getChatRoom().getId();
+        }
+
+        return convertToDetailResponse(party, distance, isParticipating, groupChatRoomId);
     }
 
     private boolean validateLocation(Double userLat, Double userLon, Party party) {
@@ -396,7 +404,7 @@ public class PartyService {
 
 
     private PartyDetailResponse convertToDetailResponse(Party party, double distance,
-                                                        boolean isParticipating) {
+                                                        boolean isParticipating, Long groupChatRoomId) {
         int currentCount = party.getCurrentParticipants();
         int pricePerPerson = party.getPrice() / party.getMaxParticipants();
 
@@ -428,6 +436,7 @@ public class PartyService {
                 .images(party.getImages())
                 .isClosed(party.getIsClosed())
                 .isParticipating(isParticipating)
+                .groupChatRoomId(groupChatRoomId)
                 .build();
     }
 

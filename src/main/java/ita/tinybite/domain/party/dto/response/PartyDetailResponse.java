@@ -1,5 +1,6 @@
 package ita.tinybite.domain.party.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import ita.tinybite.domain.party.entity.PickupLocation;
 import ita.tinybite.domain.party.enums.PartyCategory;
 import lombok.*;
@@ -10,6 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class PartyDetailResponse {
 
     private Long partyId;
@@ -48,4 +50,7 @@ public class PartyDetailResponse {
     // 상태
     private Boolean isClosed;
     private Boolean isParticipating; // 현재 사용자가 참여 중인지
+
+    // 현재 유저가 해당 파티에 참여중이라면, 그룹 채팅방 아이디 반환
+    private Long groupChatRoomId;
 }
