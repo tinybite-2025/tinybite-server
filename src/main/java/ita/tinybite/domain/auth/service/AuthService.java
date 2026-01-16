@@ -64,6 +64,9 @@ public class AuthService {
     @Value("${google.ios-id}")
     private String googleIosId;
 
+    @Value("${default.image.profile}")
+    private String DEFAULT_PROFILE_IMAGE;
+
     @Transactional
     public AuthResponse kakaoSignup(KakaoSignupRequest request) {
         // 카카오 API로 유저 정보 조회
@@ -292,6 +295,7 @@ public class AuthService {
                     .email(email)
                     .status(UserStatus.INACTIVE)
                     .type(type)
+                    .profileImage(DEFAULT_PROFILE_IMAGE)
                     .build());
             return LoginAuthResponse.builder().signup(false).build();
         }

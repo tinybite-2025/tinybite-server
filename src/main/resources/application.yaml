@@ -55,6 +55,7 @@ default:
       delivery: ${DEFAULT_DETAIL_IMAGE_DELIVERY}
       grocery: ${DEFAULT_DETAIL_IMAGE_GROCERY}
       household: ${DEFAULT_DETAIL_IMAGE_HOUSEHOLD}
+    profile: ${DEFAULT_PROFILE_IMAGE}
 
 springdoc:
   swagger-ui:
