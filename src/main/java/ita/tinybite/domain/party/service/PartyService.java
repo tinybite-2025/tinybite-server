@@ -140,9 +140,10 @@ public class PartyService {
             user = userRepository.findById(userId).orElse(null);
         }
 
+        // TODO: 페이지네이션 임시 비활성화 - 추후 복구 필요
         // 페이지네이션 파라미터 (기본값: page=0, size=20)
-        int page = request.getPage() != null ? request.getPage() : 0;
-        int size = request.getSize() != null ? request.getSize() : 20;
+        // int page = request.getPage() != null ? request.getPage() : 0;
+        // int size = request.getSize() != null ? request.getSize() : 20;
 
         String myTown = getMyTown(request.getUserLat(),request.getUserLon());
 
@@ -172,45 +173,46 @@ public class PartyService {
         List<PartyCardResponse> activeParties = cardResponses.stream()
                 .filter(p -> !p.getIsClosed())
                 .sorted(getComparator(request.getSortType()))
-                .toList();
+                .collect(Collectors.toList());
 
         // 마감된 파티 정렬
         List<PartyCardResponse> closedParties = cardResponses.stream()
                 .filter(PartyCardResponse::getIsClosed)
                 .sorted(getComparator(request.getSortType()))
-                .toList();
+                .collect(Collectors.toList());
 
+        // TODO: 페이지네이션 임시 비활성화 - 추후 복구 필요
         // 진행 중 + 마감된 파티 합치기 (진행 중이 먼저)
-        List<PartyCardResponse> allParties = new ArrayList<>();
-        allParties.addAll(activeParties);
-        allParties.addAll(closedParties);
+        // List<PartyCardResponse> allParties = new ArrayList<>();
+        // allParties.addAll(activeParties);
+        // allParties.addAll(closedParties);
 
         // 페이지네이션 적용
-        int startIndex = page * size;
-        int endIndex = Math.min(startIndex + size, allParties.size());
+        // int startIndex = page * size;
+        // int endIndex = Math.min(startIndex + size, allParties.size());
 
-        List<PartyCardResponse> paginatedParties = allParties.subList(
-                Math.min(startIndex, allParties.size()),
-                endIndex
-        );
+        // List<PartyCardResponse> paginatedParties = allParties.subList(
+        //         Math.min(startIndex, allParties.size()),
+        //         endIndex
+        // );
 
         // hasNext 계산
-        boolean hasNext = endIndex < allParties.size();
+        // boolean hasNext = endIndex < allParties.size();
 
         // 페이지네이션된 결과를 다시 진행 중/마감으로 분리
-        List<PartyCardResponse> paginatedActiveParties = paginatedParties.stream()
-                .filter(p -> !p.getIsClosed())
-                .collect(Collectors.toList());
+        // List<PartyCardResponse> paginatedActiveParties = paginatedParties.stream()
+        //         .filter(p -> !p.getIsClosed())
+        //         .collect(Collectors.toList());
 
-        List<PartyCardResponse> paginatedClosedParties = paginatedParties.stream()
-                .filter(PartyCardResponse::getIsClosed)
-                .collect(Collectors.toList());
+        // List<PartyCardResponse> paginatedClosedParties = paginatedParties.stream()
+        //         .filter(PartyCardResponse::getIsClosed)
+        //         .collect(Collectors.toList());
 
         return PartyListResponse.builder()
-                .activeParties(paginatedActiveParties)
-                .closedParties(paginatedClosedParties)
-                .totalCount(allParties.size())
-                .hasNext(hasNext)
+                .activeParties(activeParties)
+                .closedParties(closedParties)
+                .totalCount(activeParties.size() + closedParties.size())
+                .hasNext(false)
                 .build();
     }
 
