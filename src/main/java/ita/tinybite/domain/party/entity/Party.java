@@ -150,7 +150,8 @@ public class Party {
     }
 
     public void updateAllFields(String title, Integer price, Integer maxParticipants,
-                                PickupLocation pickupLocation, String productLink, String description, List<String> images) {
+                                PickupLocation pickupLocation, String productLink, String description,
+                                List<String> images, String defaultThumbnail, String defaultThumbnailDetail) {
         this.title = title != null ? title : this.title;
         this.price = price != null ? price : this.price;
         this.maxParticipants = maxParticipants != null ? maxParticipants : this.maxParticipants;
@@ -166,18 +167,35 @@ public class Party {
 
         this.description = description != null ? description : this.description;
 
-        if (images != null && !images.isEmpty()) {
-            this.images = images;
-            this.thumbnailImage = images.get(0);
+        if (images != null) {
+            if (!images.isEmpty()) {
+                this.images = images;
+                this.thumbnailImage = images.get(0);
+                this.thumbnailImageDetail = images.get(0);
+            } else {
+                // 빈 리스트면 이미지 삭제하고 기본 이미지로 설정
+                this.images = null;
+                this.thumbnailImage = defaultThumbnail;
+                this.thumbnailImageDetail = defaultThumbnailDetail;
+            }
         }
     }
 
-    public void updateLimitedFields(String description, List<String> images) {
+    public void updateLimitedFields(String description, List<String> images,
+                                    String defaultThumbnail, String defaultThumbnailDetail) {
         this.description = description != null ? description : this.description;
 
-        if (images != null && !images.isEmpty()) {
-            this.images = images;
-            this.thumbnailImage = images.get(0);
+        if (images != null) {
+            if (!images.isEmpty()) {
+                this.images = images;
+                this.thumbnailImage = images.get(0);
+                this.thumbnailImageDetail = images.get(0);
+            } else {
+                // 빈 리스트면 이미지 삭제하고 기본 이미지로 설정
+                this.images = null;
+                this.thumbnailImage = defaultThumbnail;
+                this.thumbnailImageDetail = defaultThumbnailDetail;
+            }
         }
     }
 
@@ -203,5 +221,13 @@ public class Party {
     public void updatePartyLocation(PickupLocation pickupLocation, String location) {
         this.pickupLocation = pickupLocation;
         this.town = location;
+    }
+
+    /**
+     * 대표 이미지 설정 (thumbnailImage, thumbnailImageDetail 동일하게 설정)
+     */
+    public void updateThumbnail(String thumbnailImage) {
+        this.thumbnailImage = thumbnailImage;
+        this.thumbnailImageDetail = thumbnailImage;
     }
 }

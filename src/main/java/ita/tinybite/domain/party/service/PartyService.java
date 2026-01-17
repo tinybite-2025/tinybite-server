@@ -462,7 +462,9 @@ public class PartyService {
             // 다른 승인된 파티원이 있는 경우: 설명과 이미지만 수정 가능
             party.updateLimitedFields(
                     request.getDescription(),
-                    request.getImages()
+                    request.getImages(),
+                    getThumbnailIfPresent(null, party.getCategory()),
+                    getThumbnailDetailIfPresent(null, party.getCategory())
             );
         } else {
             // 승인된 파티원이 없는 경우, 호스트 혼자인 경우: 모든 항목 수정 가능
@@ -474,7 +476,9 @@ public class PartyService {
                     updatedPickupLocation,
                     request.getProductLink(),
                     request.getDescription(),
-                    request.getImages()
+                    request.getImages(),
+                    getThumbnailIfPresent(null, party.getCategory()),
+                    getThumbnailDetailIfPresent(null, party.getCategory())
             );
 
             // pickupLocation이 변경된 경우에만 town 업데이트
@@ -706,6 +710,22 @@ public class PartyService {
         notificationFacade.notifyPartyComplete(memberIds, party.getId());
     }
 
+    /**
+     * 파티 대표 이미지 설정
+     */
+    @Transactional
+    public void updateThumbnail(Long partyId, Long userId, String thumbnailImage) {
+        Party party = partyRepository.findById(partyId)
+                .orElseThrow(() -> new IllegalArgumentException("파티를 찾을 수 없습니다"));
+
+        // 파티장 권한 확인
+        if (!party.getHost().getUserId().equals(userId)) {
+            throw new IllegalStateException("파티장만 대표 이미지를 설정할 수 있습니다");
+        }
+
+        party.updateThumbnail(thumbnailImage);
+    }
+
     // ========== Private Methods ==========
 
     private void validateJoinRequest(Party party, User user) {
@@ -809,7 +829,7 @@ public class PartyService {
             case DELIVERY -> defaultDeliveryDetailImage;
             case GROCERY -> defaultGroceryDetailImage;
             case HOUSEHOLD -> defaultHouseholdDetailImage;
-            default -> throw new IllegalArgumentException("존재하지 않는 카테고리입니다: " + category);
+            default -> throw new IllegalArgumentException("존f재하지 않는 카테고리입니다: " + category);
         };
     }
 

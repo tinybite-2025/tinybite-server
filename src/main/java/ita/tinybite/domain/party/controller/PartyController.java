@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import ita.tinybite.domain.party.dto.request.PartyCreateRequest;
 import ita.tinybite.domain.party.dto.request.PartyListRequest;
 import ita.tinybite.domain.party.dto.request.PartyQueryListResponse;
+import ita.tinybite.domain.party.dto.request.PartyThumbnailUpdateRequest;
 import ita.tinybite.domain.party.dto.request.PartyUpdateRequest;
 import ita.tinybite.domain.party.dto.response.ChatRoomResponse;
 import ita.tinybite.domain.party.dto.response.PartyDetailResponse;
@@ -520,6 +521,52 @@ public class PartyController {
             @RequestBody PartyUpdateRequest request) {
 
         partyService.updateParty(partyId, userId, request);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 파티 대표 이미지 설정
+     */
+    @Operation(
+            summary = "파티 대표 이미지 설정",
+            description = """
+            파티의 대표 이미지(썸네일)를 설정합니다.
+
+            **설정 권한**
+            - 파티 호스트만 설정 가능
+
+            **동작 방식**
+            - thumbnailImage와 thumbnailImageDetail에 동일한 이미지가 설정됩니다.
+            """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "대표 이미지 설정 성공"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 (이미지 URL 누락)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "파티장 권한 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "파티를 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @PatchMapping("/{partyId}/thumbnail")
+    public ResponseEntity<Void> updateThumbnail(
+            @PathVariable Long partyId,
+            @AuthenticationPrincipal Long userId,
+            @Valid @RequestBody PartyThumbnailUpdateRequest request) {
+
+        partyService.updateThumbnail(partyId, userId, request.getThumbnailImage());
         return ResponseEntity.ok().build();
     }
 
