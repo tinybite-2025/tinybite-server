@@ -2,13 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 permissions:
   contents: read
-
-env:
-  REGISTRY: ${{ secrets.OCIR_HOST }}
 
 jobs:
   build-and-push:
@@ -18,6 +15,47 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # --------------------------
+      # 0) Sanitize secrets (host/newlines)
+      # --------------------------
+      - name: Sanitize connection vars
+        id: sanitize
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # SSH host: remove CR/LF, strip http(s):// prefix
+          SSH_HOST_CLEAN="$(printf '%s' "${{ secrets.SSH_HOST }}" | tr -d '\r\n' | sed -E 's#^https?://##')"
+
+          # OCIR vars: remove CR/LF
+          OCIR_HOST_CLEAN="$(printf '%s' "${{ secrets.OCIR_HOST }}" | tr -d '\r\n')"
+          OCIR_NS_CLEAN="$(printf '%s' "${{ secrets.OCIR_TENANCY_NAMESPACE }}" | tr -d '\r\n')"
+          OCIR_REPO_CLEAN="$(printf '%s' "${{ secrets.OCIR_REPO }}" | tr -d '\r\n')"
+          OCIR_USER_CLEAN="$(printf '%s' "${{ secrets.OCIR_USERNAME }}" | tr -d '\r\n')"
+
+          # Validate minimal formats (fail fast)
+          if [[ -z "$SSH_HOST_CLEAN" ]]; then
+            echo "SSH_HOST is empty after sanitizing" >&2
+            exit 1
+          fi
+          if [[ "$SSH_HOST_CLEAN" == *"/"* ]]; then
+            echo "SSH_HOST should be only an IP/hostname, got: $SSH_HOST_CLEAN" >&2
+            exit 1
+          fi
+          if [[ -z "$OCIR_HOST_CLEAN" || -z "$OCIR_NS_CLEAN" || -z "$OCIR_REPO_CLEAN" || -z "$OCIR_USER_CLEAN" ]]; then
+            echo "One of OCIR secrets is empty after sanitizing" >&2
+            exit 1
+          fi
+
+          echo "ssh_host=$SSH_HOST_CLEAN" >> "$GITHUB_OUTPUT"
+          echo "ocir_host=$OCIR_HOST_CLEAN" >> "$GITHUB_OUTPUT"
+          echo "ocir_ns=$OCIR_NS_CLEAN" >> "$GITHUB_OUTPUT"
+          echo "ocir_repo=$OCIR_REPO_CLEAN" >> "$GITHUB_OUTPUT"
+          echo "ocir_user=$OCIR_USER_CLEAN" >> "$GITHUB_OUTPUT"
+
+      # --------------------------
+      # 1) Build JAR (Gradle)
+      # --------------------------
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
@@ -25,27 +63,21 @@ jobs:
           java-version: "17"
           cache: gradle
 
-      - name: Build + Test(Gradle)
+      - name: Build (Gradle)
+        if: ${{ hashFiles('**/build.gradle*') != '' }}
         run: |
           chmod +x ./gradlew
           ./gradlew clean bootJar
           JAR=$(ls build/libs/*.jar | head -n 1)
           cp "$JAR" app.jar
 
+      # --------------------------
+      # 2) Compute image name + tags
+      # --------------------------
       - name: Compute image name (OCIR)
         id: img
         run: |
-          REG="$(printf '%s' "${{ secrets.OCIR_HOST }}" | tr -d '\r\n')"
-          NS="$(printf '%s' "${{ secrets.OCIR_TENANCY_NAMESPACE }}" | tr -d '\r\n')"
-          REPO="$(printf '%s' "${{ secrets.OCIR_REPO }}" | tr -d '\r\n')"
-          echo "name=${REG}/${NS}/${REPO}" >> "$GITHUB_OUTPUT"
-
-      - name: Log in to OCIR
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ secrets.OCIR_HOST }}
-          username: ${{ secrets.OCIR_USERNAME }}
-          password: ${{ secrets.OCIR_AUTH_TOKEN }}
+          echo "name=${{ steps.sanitize.outputs.ocir_host }}/${{ steps.sanitize.outputs.ocir_ns }}/${{ steps.sanitize.outputs.ocir_repo }}" >> "$GITHUB_OUTPUT"
 
       - name: Extract Docker metadata (tags, labels)
         id: meta
@@ -56,8 +88,18 @@ jobs:
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
             type=sha
 
-      - name: Set up Docker Build
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+
+      # --------------------------
+      # 3) Login to OCIR + Build & Push
+      # --------------------------
+      - name: Log in to OCIR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ steps.sanitize.outputs.ocir_host }}
+          username: ${{ steps.sanitize.outputs.ocir_user }}
+          password: ${{ secrets.OCIR_AUTH_TOKEN }}
 
       - name: Build and push
         uses: docker/build-push-action@v6
@@ -70,23 +112,35 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # --------------------------
+      # 4) Create .env (multiline safe)
+      # --------------------------
       - name: Create .env file
-        run: echo "${{ secrets.ENV_FILE }}" > .env
+        shell: bash
+        run: |
+          # ENV_FILE이 멀티라인이라면 echo 대신 printf가 안전합니다.
+          printf "%s" "${{ secrets.ENV_FILE }}" > .env
 
+      # --------------------------
+      # 5) Copy files to OCI Compute
+      # --------------------------
       - name: Copy files to OCI Compute
         uses: appleboy/scp-action@master
         with:
-          host: ${{ secrets.SSH_HOST }}
+          host: ${{ steps.sanitize.outputs.ssh_host }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           port: 22
           source: "docker/*,.env,nginx/,deploy.sh"
           target: "/home/ubuntu/tinybite/"
 
+      # --------------------------
+      # 6) Deploy to OCI Compute
+      # --------------------------
       - name: Deploy to OCI Compute
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.SSH_HOST }}
+          host: ${{ steps.sanitize.outputs.ssh_host }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           port: 22
@@ -95,13 +149,14 @@ jobs:
             cd /home/ubuntu/tinybite
             mv /home/ubuntu/tinybite/docker/* /home/ubuntu/tinybite/ || true
 
-            echo "${{ secrets.OCIR_AUTH_TOKEN }}" | docker login "${{ secrets.OCIR_HOST }}" \
-              -u "${{ secrets.OCIR_USERNAME }}" --password-stdin
+            # OCIR login (use sanitized host/user)
+            echo "${{ secrets.OCIR_AUTH_TOKEN }}" | docker login "${{ steps.sanitize.outputs.ocir_host }}" \
+              -u "${{ steps.sanitize.outputs.ocir_user }}" --password-stdin
 
-            export APP_IMAGE="${{ secrets.OCIR_HOST }}/${{ secrets.OCIR_TENANCY_NAMESPACE }}/${{ secrets.OCIR_REPO }}:latest"
+            export APP_IMAGE="${{ steps.img.outputs.name }}:latest"
 
             docker compose -f docker-compose.blue.yml pull
             docker compose -f docker-compose.blue.yml down || true
             docker compose -f docker-compose.blue.yml up -d
 
-            docker image prune -a -f
+            docker image prune -f
