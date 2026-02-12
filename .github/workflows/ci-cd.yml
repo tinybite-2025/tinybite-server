@@ -34,7 +34,11 @@ jobs:
 
       - name: Compute image name (OCIR)
         id: img
-        run: echo "name=${{ secrets.OCIR_HOST }}/${{ secrets.OCIR_TENANCY_NAMESPACE }}/${{ secrets.OCIR_REPO }}" >> $GITHUB_OUTPUT
+        run: |
+          REG="$(printf '%s' "${{ secrets.OCIR_HOST }}" | tr -d '\r\n')"
+          NS="$(printf '%s' "${{ secrets.OCIR_TENANCY_NAMESPACE }}" | tr -d '\r\n')"
+          REPO="$(printf '%s' "${{ secrets.OCIR_REPO }}" | tr -d '\r\n')"
+          echo "name=${REG}/${NS}/${REPO}" >> "$GITHUB_OUTPUT"
 
       - name: Log in to OCIR
         uses: docker/login-action@v3
