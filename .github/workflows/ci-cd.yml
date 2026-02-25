@@ -155,8 +155,8 @@ jobs:
 
             export APP_IMAGE="${{ steps.img.outputs.name }}:latest"
 
-            docker compose -f docker-compose.blue.yml pull
-            docker compose -f docker-compose.blue.yml down || true
-            docker compose -f docker-compose.blue.yml up -d
+            sudo docker compose -f docker-compose.blue.yml pull
+            sudo docker compose -f docker-compose.blue.yml down || true
+            sudo docker compose -f docker-compose.blue.yml up -d
 
-            docker image prune -f
+            sudo docker image prune -f
