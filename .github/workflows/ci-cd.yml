@@ -90,7 +90,7 @@ jobs:
             sudo docker load < tinybite-server.tar.gz
 
             echo "🚀 컨테이너 재시작..."
-            sudo docker compose -f docker/docker-compose.yml up -d --remove-orphans
+            sudo docker compose -f docker-compose.yml up -d --remove-orphans  # 경로 수정
 
             echo "🧹 정리 중..."
             sudo rm -f tinybite-server.tar.gz
