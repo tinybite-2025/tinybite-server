@@ -81,6 +81,9 @@ jobs:
           port: 22
           script: |
             set -e
+            
+            echo "=== 디렉토리 구조 확인 ==="
+            find /home/ubuntu/tinybite -type f | sort 
             cd /home/ubuntu/tinybite
 
             echo "📦 이미지 로드 중..."
