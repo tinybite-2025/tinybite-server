@@ -84,13 +84,13 @@ jobs:
             cd /home/ubuntu/tinybite
 
             echo "📦 이미지 로드 중..."
-            docker load < tinybite-server.tar.gz
+            sudo docker load < tinybite-server.tar.gz
 
             echo "🚀 컨테이너 재시작..."
-            docker compose up -d --remove-orphans
+            sudo docker compose up -d --remove-orphans
 
             echo "🧹 정리 중..."
-            rm -f tinybite-server.tar.gz
-            docker image prune -f
+            sudo rm -f tinybite-server.tar.gz
+            sudo docker image prune -f
 
             echo "✅ 배포 완료"
