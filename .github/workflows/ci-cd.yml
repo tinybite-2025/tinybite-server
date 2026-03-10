@@ -60,7 +60,7 @@ jobs:
       # 6) SCP로 서버에 전송
       # --------------------------
       - name: Copy files to OCI server
-        uses: appleboy/scp-action@master
+        uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
@@ -73,7 +73,7 @@ jobs:
       # 7) 서버에서 이미지 load & 실행
       # --------------------------
       - name: Deploy on OCI server
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
@@ -81,19 +81,19 @@ jobs:
           port: 22
           script: |
             set -e
-            
+
             echo "=== 디렉토리 구조 확인 ==="
-            find /home/ubuntu/tinybite -type f | sort 
+            find /home/ubuntu/tinybite -type f | sort
             cd /home/ubuntu/tinybite
 
             echo "📦 이미지 로드 중..."
             sudo docker load < tinybite-server.tar.gz
-                    
+
             echo "🧹 정리 중..."
             sudo rm -f tinybite-server.tar.gz
             sudo docker image prune -f
-            
+
             echo "🚀 컨테이너 재시작..."
-            sudo docker compose -f docker/docker-compose.yml up -d
+            sudo docker compose -f /home/ubuntu/tinybite/docker-compose.yml up -d
 
             echo "✅ 배포 완료"
