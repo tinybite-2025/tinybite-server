@@ -1,4 +1,4 @@
-name: Deploy to OCI
+name: Deploy to GCP
 
 on:
   push:
@@ -12,24 +12,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # --------------------------
-      # 1) Checkout
-      # --------------------------
       - name: Checkout
         uses: actions/checkout@v4
 
-      # --------------------------
-      # 2) JDK 설정
-      # --------------------------
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      # --------------------------
-      # 3) 빌드 전 리소스 파일 생성
-      # --------------------------
       - name: Create FCM key file
         run: |
           mkdir -p src/main/resources
@@ -39,9 +30,6 @@ jobs:
         shell: bash
         run: printf "%s" "${{ secrets.ENV_FILE }}" > .env
 
-      # --------------------------
-      # 4) Gradle 빌드
-      # --------------------------
       - name: Build JAR
         run: |
           chmod +x ./gradlew
@@ -49,51 +37,37 @@ jobs:
           cp $(ls build/libs/*.jar | grep -v plain | head -n 1) app.jar
 
       # --------------------------
-      # 5) Docker 이미지 빌드 → tar 저장
+      # GCP 인증
       # --------------------------
-      - name: Build Docker image
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      # --------------------------
+      # Artifact Registry에 push
+      # --------------------------
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev
+
+      - name: Build & Push Docker image
         run: |
-          docker build -t tinybite-server:latest .
-          docker save tinybite-server:latest | gzip > tinybite-server.tar.gz
+          IMAGE=${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.AR_REPOSITORY }}/tinybite-server:${{ github.sha }}
+          docker build -t $IMAGE .
+          docker push $IMAGE
+          echo "IMAGE=$IMAGE" >> $GITHUB_ENV
 
       # --------------------------
-      # 6) SCP로 서버에 전송
+      # Cloud Run 배포
       # --------------------------
-      - name: Copy files to OCI server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_KEY }}
-          port: 22
-          source: "tinybite-server.tar.gz,.env,docker-compose.yml,nginx/"
-          target: "/home/ubuntu/tinybite/"
-
-      # --------------------------
-      # 7) 서버에서 이미지 load & 실행
-      # --------------------------
-      - name: Deploy on OCI server
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_KEY }}
-          port: 22
-          script: |
-            set -e
-
-            echo "=== 디렉토리 구조 확인 ==="
-            find /home/ubuntu/tinybite -type f | sort
-            cd /home/ubuntu/tinybite
-
-            echo "📦 이미지 로드 중..."
-            sudo docker load < tinybite-server.tar.gz
-
-            echo "🧹 정리 중..."
-            sudo rm -f tinybite-server.tar.gz
-            sudo docker image prune -f
-
-            echo "🚀 컨테이너 재시작..."
-            sudo docker compose -f /home/ubuntu/tinybite/docker-compose.yml up -d
-
-            echo "✅ 배포 완료"
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy tinybite-server \
+            --image $IMAGE \
+            --region ${{ secrets.GCP_REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --env-vars-file .env
