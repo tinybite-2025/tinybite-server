@@ -23,7 +23,7 @@ jobs:
 
       - name: Create FCM key file
         run: |
-          mkdir -p src/main/resources
+          mkdir -p src/main/resources/firebase
           echo '${{ secrets.FCM_SERVICE_ACCOUNT }}' > src/main/resources/firebase/tinybite_fcm.json
 
       - name: Create .env file
