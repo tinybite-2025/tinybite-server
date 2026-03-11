@@ -77,10 +77,10 @@ jobs:
               -u ${{ github.actor }} --password-stdin
 
             echo "📦 이미지 pull 중..."
-            docker-compose pull
+            docker-compose -f docker-compose.yml pull
 
             echo "🚀 컨테이너 재시작..."
-            docker-compose up -d
+            docker-compose -f docker-compose.yml up -d
 
             echo "🧹 정리 중..."
             docker image prune -f
