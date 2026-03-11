@@ -80,7 +80,7 @@ jobs:
             docker-compose -f docker/docker-compose.common.yml pull
 
             echo "🚀 컨테이너 재시작..."
-            docker-compose -f docker/docker-compose.common.yml up -d
+            docker-compose up -d
 
             echo "🧹 정리 중..."
             docker image prune -f
