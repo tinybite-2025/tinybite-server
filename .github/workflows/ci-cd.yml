@@ -38,7 +38,7 @@ jobs:
       - name: Create FCM key file
         run: |
           mkdir -p src/main/resources
-          echo '${{ secrets.FCM_SERVICE_ACCOUNT }}' > src/main/resources/firebase-adminsdk.json
+          echo '${{ secrets.FCM_SERVICE_ACCOUNT }}' > src/main/resources/tinybite_fcm.json
 
       # --------------------------
       # 4) Gradle 빌드
