@@ -73,7 +73,6 @@ jobs:
           docker push ${{ env.IMAGE }}:latest
 
       # --------------------------
-      # 7) Cloud Run 배포
       # 7) .env 파일 생성
       # --------------------------
       - name: Create .env file
