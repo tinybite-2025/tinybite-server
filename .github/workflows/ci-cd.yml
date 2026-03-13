@@ -77,12 +77,45 @@ jobs:
               -u ${{ github.actor }} --password-stdin
 
             echo "📦 이미지 pull 중..."
-            docker-compose -f docker-compose.common.yml pull
+            docker-compose -f docker-compose.common.yml pull || {
+              echo "❌ 이미지 pull 실패"
+              docker-compose -f docker-compose.common.yml logs
+              exit 1
+            }
 
             echo "🚀 컨테이너 재시작..."
             docker-compose -f docker-compose.common.yml up -d
+            docker-compose -f docker-compose.common.yml up -d || {
+              echo "❌ 컨테이너 실행 실패"
+              docker-compose -f docker-compose.common.yml logs
+              exit 1
+            }
+            echo "⏳ 헬스체크 대기 (15초)..."
+            sleep 15
+            docker-compose -f docker-compose.common.yml ps
+            
+            if ! docker ps | grep -q "tinybite-api"; then
+              echo "❌ tinybite-api 컨테이너가 실행되지 않음"
+              docker-compose -f docker-compose.common.yml logs --tail=50 tinybite-api
+              exit 1
+            fi
 
             echo "🧹 정리 중..."
             docker image prune -f
 
             echo "✅ 배포 완료"
+
+            - name: 배포 실패 시 로그 출력
+                if: failure()
+                uses: appleboy/ssh-action@v1.0.3
+                with:
+                  host: ${{ secrets.SSH_HOST }}
+                  username: ${{ secrets.SSH_USERNAME }}
+                  key: ${{ secrets.SSH_KEY }}
+                  port: 22
+                  script: |
+                    cd /home/ubuntu/tinybite
+                    echo "========== 컨테이너 상태 =========="
+                    docker-compose -f docker-compose.common.yml ps
+                    echo "========== 최근 로그 =========="
+                    docker-compose -f docker-compose.common.yml logs --tail=100
