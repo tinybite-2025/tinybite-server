@@ -1,4 +1,4 @@
-name: Deploy to GCP Compute Engine
+name: Deploy to OCI Compute Instance
 
 on:
   push:
@@ -52,17 +52,17 @@ jobs:
       - name: Create .env file
         run: printf "%s" "${{ secrets.ENV_FILE }}" > .env
 
-      - name: Copy files to Compute Engine
+      - name: Copy files to OCI Instance
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_KEY }}
+          username: ${{ secrets.SSH_USERNAME }}  # OCI 기본값: ubuntu
+          key: ${{ secrets.ORACLE_SSH_KEY }}
           port: 22
           source: ".env,docker-compose.common.yml,nginx/"
           target: "/home/ubuntu/tinybite/"
 
-      - name: Deploy on Compute Engine
+      - name: Deploy on OCI Instance
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -77,10 +77,10 @@ jobs:
               -u ${{ github.actor }} --password-stdin
 
             echo "📦 이미지 pull 중..."
-            docker-compose -f docker-compose.common.yml pull
+            COMPOSE_HTTP_TIMEOUT=200 docker-compose -f docker-compose.common.yml pull
 
             echo "🚀 컨테이너 재시작..."
-            docker-compose -f docker-compose.common.yml up -d
+            COMPOSE_HTTP_TIMEOUT=200 docker-compose -f docker-compose.common.yml up -d
 
             echo "🧹 정리 중..."
             docker image prune -f
