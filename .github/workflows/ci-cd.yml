@@ -90,18 +90,6 @@ jobs:
               docker-compose -f docker-compose.common.yml logs
               exit 1
             }
-            echo "⏳ 헬스체크 대기 (15초)..."
-            sleep 15
-            docker-compose -f docker-compose.common.yml ps
-            
-            if ! docker ps | grep -q "tinybite-api"; then
-              echo "❌ tinybite-api 컨테이너가 실행되지 않음"
-              docker-compose -f docker-compose.common.yml logs --tail=50 tinybite-api
-              exit 1
-            fi
-
-            echo "🧹 정리 중..."
-            docker image prune -f
 
             echo "✅ 배포 완료"
 
