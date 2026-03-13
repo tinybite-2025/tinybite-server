@@ -55,7 +55,7 @@ jobs:
       - name: Copy files to OCI Instance
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.SSH_HOST }}
+          host: ${{ secrets.ORACLE_SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}  # OCI 기본값: ubuntu
           key: ${{ secrets.ORACLE_SSH_KEY }}
           port: 22
