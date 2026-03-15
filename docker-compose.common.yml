@@ -1,7 +1,7 @@
 services:
   tinybite-api:
     image: ghcr.io/tinybite-2025/tinybite-server:latest
-    container_name: tinybite-api
+    container_name: tinybite-api-blue
     restart: always
     ports:
       - "8080:8080"
@@ -25,7 +25,7 @@ services:
       - /home/ubuntu/tinybite/data/certbot/www:/var/www/certbot
     restart: always
     depends_on:
-      - tinybite-api
+      - tinybite-api-blue
     networks:
       - tinybite-network
 
