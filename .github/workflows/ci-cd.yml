@@ -65,9 +65,9 @@ jobs:
       - name: Deploy on OCI Instance
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_KEY }}
+          host: ${{ secrets.ORACLE_SSH_HOST }}
+          username: ${{ secrets.ORACLE_SSH_USERNAME }}
+          key: ${{ secrets.ORACLE_SSH_KEY }}
           port: 22
           script: |
             set -e
