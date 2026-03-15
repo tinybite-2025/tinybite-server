@@ -1,7 +1,7 @@
 services:
   tinybite-api:
     image: ghcr.io/tinybite-2025/tinybite-server:latest
-    container_name: tinybite-api-blue
+    container_name: tinybite-api
     restart: always
     ports:
       - "8080:8080"
