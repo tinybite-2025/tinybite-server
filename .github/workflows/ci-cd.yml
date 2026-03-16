@@ -69,7 +69,7 @@ jobs:
             docker load < tinybite-server.tar.gz
 
             echo "🚀 컨테이너 재시작..."
-            docker-compose -f docker-compose.common.yml up -d
+            docker compose -f docker-compose.common.yml up -d
 
             echo "🧹 정리 중..."
             docker image prune -f
