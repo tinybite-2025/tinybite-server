@@ -69,6 +69,7 @@ jobs:
           username: ${{ secrets.ORACLE_SSH_USERNAME }}
           key: ${{ secrets.ORACLE_SSH_KEY }}
           port: 22
+          debug: true
           script: |
             set -e
             cd /home/ubuntu/tinybite
