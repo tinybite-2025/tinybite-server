@@ -74,16 +74,16 @@ jobs:
             set -e
             cd /home/ubuntu/tinybite
 
-            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io \
+            echo "${{ secrets.GHCR_TOKEN }}" | sudo docker login ghcr.io \
               -u ${{ github.actor }} --password-stdin
 
             echo "📦 이미지 pull 중..."
-            COMPOSE_HTTP_TIMEOUT=200 docker-compose -f docker-compose.common.yml pull
+            sudo docker-compose -f docker-compose.common.yml pull
 
             echo "🚀 컨테이너 재시작..."
-            COMPOSE_HTTP_TIMEOUT=200 docker-compose -f docker-compose.common.yml up -d
+            sudo docker-compose -f docker-compose.common.yml up -d
 
             echo "🧹 정리 중..."
-            docker image prune -f
+            sudo docker image prune -f
 
             echo "✅ 배포 완료"
