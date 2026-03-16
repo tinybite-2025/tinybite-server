@@ -56,7 +56,7 @@ jobs:
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.ORACLE_SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}  # OCI 기본값: ubuntu
+          username: ${{ secrets.ORACLE_SSH_USERNAME }}  # OCI 기본값: ubuntu
           key: ${{ secrets.ORACLE_SSH_KEY }}
           port: 22
           source: ".env,docker-compose.common.yml,nginx/"
