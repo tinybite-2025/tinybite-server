@@ -1,6 +1,6 @@
 services:
   tinybite-api:
-    image: ghcr.io/tinybite-2025/tinybite-server:latest
+    image: tinybite-server:latest
     container_name: tinybite-api
     restart: always
     ports:
