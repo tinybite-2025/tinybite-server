@@ -66,13 +66,13 @@ jobs:
             chmod 644 .env
 
             echo "📦 이미지 로드 중..."
-            docker load < tinybite-server.tar.gz
+            sudo docker load < tinybite-server.tar.gz
 
             echo "🚀 컨테이너 재시작..."
-            docker compose -f docker-compose.common.yml up -d
+            sudo docker compose -f docker-compose.common.yml up -d
 
             echo "🧹 정리 중..."
-            docker image prune -f
+            sudo docker image prune -f
             rm -f tinybite-server.tar.gz
 
             echo "✅ 배포 완료"
