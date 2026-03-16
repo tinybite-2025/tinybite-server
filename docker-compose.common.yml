@@ -3,6 +3,7 @@ services:
     image: tinybite-server:latest
     container_name: tinybite-api
     restart: always
+    network_mode: host
     ports:
       - "8080:8080"
     env_file:
