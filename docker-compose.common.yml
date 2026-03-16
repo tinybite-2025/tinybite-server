@@ -59,7 +59,3 @@ services:
 
 volumes:
   redis_data:
-
-networks:
-  tinybite-network:
-    driver: bridge
