@@ -7,9 +7,6 @@ permissions:
   contents: read
   packages: write
 
-env:
-  REGISTRY: ghcr.io
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -36,18 +33,10 @@ jobs:
           ./gradlew clean bootJar -x test
           cp $(ls build/libs/*.jar | grep -v plain | head -n 1) app.jar
 
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_TOKEN }}
-
-      - name: Build & Push Docker image
+      - name: Build Docker image
         run: |
-          IMAGE=${{ env.REGISTRY }}/${GITHUB_REPOSITORY,,}:latest
-          docker build -t $IMAGE .
-          docker push $IMAGE
+          docker build -t tinybite-server:latest .
+          docker save tinybite-server:latest | gzip > tinybite-server.tar.gz
 
       - name: Create .env file
         run: printf "%s" "${{ secrets.ENV_FILE }}" > .env
@@ -56,10 +45,10 @@ jobs:
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.ORACLE_SSH_HOST }}
-          username: ${{ secrets.ORACLE_SSH_USERNAME }}  # OCI 기본값: ubuntu
+          username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.ORACLE_SSH_KEY }}
           port: 22
-          source: ".env,docker-compose.common.yml,nginx/"
+          source: ".env,docker-compose.common.yml,nginx/,tinybite-server.tar.gz"
           target: "/home/ubuntu/tinybite/"
 
       - name: Deploy on OCI Instance
@@ -73,19 +62,17 @@ jobs:
           script: |
             set -e
             cd /home/ubuntu/tinybite
-            
-            chmod 644 .env 
 
-            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io \
-              -u ${{ github.actor }} --password-stdin
+            chmod 644 .env
 
-            echo "📦 이미지 pull 중..."
-            docker-compose -f docker-compose.common.yml pull
+            echo "📦 이미지 로드 중..."
+            docker load < tinybite-server.tar.gz
 
             echo "🚀 컨테이너 재시작..."
             docker-compose -f docker-compose.common.yml up -d
 
             echo "🧹 정리 중..."
             docker image prune -f
+            rm -f tinybite-server.tar.gz
 
             echo "✅ 배포 완료"
