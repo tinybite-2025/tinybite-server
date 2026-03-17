@@ -3,9 +3,10 @@ services:
     image: tinybite-server:latest
     container_name: tinybite-api
     restart: always
-    network_mode: host
-    ports:
-      - "8080:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # MySQL(호스트) 접근용
+    networks:
+      - tinybite-net
     env_file:
       - .env
     depends_on:
@@ -23,6 +24,8 @@ services:
       - /home/ubuntu/tinybite/data/certbot/conf:/etc/letsencrypt
       - /home/ubuntu/tinybite/data/certbot/www:/var/www/certbot
     restart: always
+    networks:
+      - tinybite-net
     depends_on:
       - tinybite-api
 
@@ -30,6 +33,8 @@ services:
     container_name: redis
     image: redis:7.2.4
     command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
+    networks:
+      - tinybite-net
     env_file:
       - .env
     volumes:
@@ -51,3 +56,7 @@ services:
 
 volumes:
   redis_data:
+
+networks:
+  tinybite-net:
+    driver: bridge
