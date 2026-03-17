@@ -3,10 +3,7 @@ services:
     image: tinybite-server:latest
     container_name: tinybite-api
     restart: always
-    extra_hosts:
-      - "host.docker.internal:host-gateway"  # MySQL(호스트) 접근용
-    networks:
-      - tinybite-net
+    network_mode: host    # VM 네트워크 직접 사용
     env_file:
       - .env
     depends_on:
@@ -32,16 +29,15 @@ services:
   redis:
     container_name: redis
     image: redis:7.2.4
-    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
-    networks:
-      - tinybite-net
+    command: [ "redis-server", "--requirepass", "${REDIS_PASSWORD}" ]
+    network_mode: host    # redis도 host로
     env_file:
       - .env
     volumes:
       - redis_data:/data
     restart: always
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
